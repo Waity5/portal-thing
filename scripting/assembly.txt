@@ -1,0 +1,196 @@
+initFunc:
+
+objects = {}
+
+init = objects[1]
+
+grav = {0,-9.81,0}
+
+wheelbase = 2.7/2
+trackwidth = 1.78/2
+carIndex = #objects + 1
+junk = summonObject({"car",{[1]={-0,1,0},[7]=1/1500,[8]=1/3000,[9]=grav}})
+i = 3
+summonWheels:
+	i = i-2
+	junk = summonObject({"wheel",{{0-trackwidth,1,wheelbase*i},[4]={0,0,1,0},[7]=0.005,[8]=0.1,[9]=grav}})
+	junk = summonObject({"wheel",{{trackwidth,1,wheelbase*i},[4]={1,0,0,0},[7]=0.005,[8]=0.1,[9]=grav}})
+i > 0 ~ summonWheels
+
+junk = summonObject({"track1", {{0,-1,0},[7]=0,[8]=0}})
+junk = summonObject({"track2", {{0,-3,40},[7]=0,[8]=0}})
+junk = summonObject({"track3", {{5.5,-3,40},[7]=0,[8]=0}})
+--junk = summonObject({"widest_cube", {{0,-3,0},[7]=0,[8]=0}})
+
+
+i = -3
+summonBoxes:
+	junk = summonObject({"blender_cube",{{10,1,i*5},[7]=1/1500,[8]=1/1500,[9]=grav}})
+	i = i+1
+4>i ~ summonBoxes
+
+junk = summonObject({"hump",{{-10,0,0},[7]=0,[8]=0}})
+
+springs = {} -- obj1, obj2, offset1, offset2, desired length, spring rate, dampen rate
+springs[1] = {carIndex,carIndex+1,{0-trackwidth,1,wheelbase},{0,0,0},1.2,50000,4000}
+springs[2] = {carIndex,carIndex+2,{trackwidth,1,wheelbase},{0,0,0},1.2,50000,4000}
+springs[3] = {carIndex,carIndex+3,{0-trackwidth,1,0-wheelbase},{0,0,0},1.2,50000,4000}
+springs[4] = {carIndex,carIndex+4,{trackwidth,1,0-wheelbase},{0,0,0},1.2,50000,4000}
+
+exit
+
+
+
+
+
+tickFunc:
+
+
+moveSpeedInv = 1/moveSpeed
+rotateSpeedInv = 1/rotateSpeed
+
+gB31 = gB({31})
+gB31 ~ holdingSpace
+	--camPos[1] = camPos[1] + (gN({1})*cos({camRot[1]}) - gN({2})*sin({camRot[1]})) / moveSpeedInv
+	--camPos[3] = camPos[3] + (gN({1})*sin({camRot[1]}) + gN({2})*cos({camRot[1]})) / moveSpeedInv
+	maxPushForce = 0.5
+	otherPushColours = 50
+	1 ~ endCamMove
+holdingSpace:
+	camPos[2]=camPos[2] + gN({2}) / moveSpeedInv
+	maxPushForce = 2.5
+	otherPushColours = 0
+endCamMove:
+
+camRot[1]=camRot[1] - gN({3})/rotateSpeedInv
+camRot[2]=camRot[2] + gN({4})/rotateSpeedInv
+
+pushForce = 0
+pushColour = {}
+gB1 = gB({1})
+gB1 ~ isGB1
+gB3 = gB({3})
+gB3 ~ isGB3
+	pushColour[1] = 255
+	pushColour[2] = 255
+	pushColour[3] = 255
+	1 ~ endOfPush
+isGB1:
+	pushForce = 0 - maxPushForce
+	pushColour[1] = otherPushColours
+	pushColour[2] = otherPushColours
+	pushColour[3] = 255
+	1 ~ endOfPush
+isGB3:
+	pushForce = maxPushForce - 0
+	pushColour[1] = 255
+	pushColour[2] = otherPushColours
+	pushColour[3] = otherPushColours
+endOfPush:
+
+
+camDist = 1/7
+objectPos = objects[carIndex][1]
+camPos = {}
+camPos[1] =  objectPos[1] + sin({camRot[1]})/camDist
+camPos[2] =  objectPos[2] - tan({camRot[2]})/camDist
+camPos[3] =  objectPos[3] - cos({camRot[1]})/camDist
+
+
+
+
+		
+		
+a=camRot[1]
+b=camRot[2]
+c=camRot[3]
+c_a = cos({a})
+s_a = sin({a})
+c_b = cos({b})
+s_b = sin({b})
+c_c = cos({c})
+s_c = sin({c})
+
+cameraRotationMatrix = {}
+cameraRotationMatrix[1] = {c_a*c_c - s_a*s_b*s_c , 0-c_b*s_c , c_a*s_b*s_c + c_c*s_a}
+cameraRotationMatrix[2] = {c_a*s_c + c_c*s_a*s_b , c_b*c_c , s_a*s_c - c_a*c_c*s_b}
+cameraRotationMatrix[3] = {0-c_b*s_a , s_b , c_a*c_b}
+
+cameraRotationVector = {0-s_a*c_b,s_b,c_a*c_b}
+
+exit
+
+
+postTransformFunc:
+
+maxTorque = 2000*deltaTime
+maxPower = 75000*deltaTime
+
+object1 = objects[carIndex]
+object2 = objects[carIndex+3]
+object3 = objects[carIndex+4]
+forwardForceDistance = 100
+crPointUp = multVectorByMatrix({{0,forwardForceDistance,0},object1[16]})
+crPointForward = multVectorByMatrix({{0,0,1},object1[16]})
+crPoint1 = add3({object2[1],crPointUp})
+crPoint2 = add3({object3[1],crPointUp})
+velocity1 = dot({cross({object2[5],crPointUp}),crPointForward})/forwardForceDistance
+velocity2 = dot({cross({object3[5],crPointUp}),crPointForward})/forwardForceDistance
+velocity = (velocity1 + velocity2)/2
+0>gN({2}) ~ goingBackwards
+	velocity = mx({velocity,maxPower/maxTorque})
+	1 ~ endOfThrottle
+goingBackwards:
+	velocity = mx({0-velocity,maxPower/maxTorque})
+endOfThrottle:
+curTorque = gN({2})*maxPower/velocity
+curForce = mul3({crPointForward,curTorque/forwardForceDistance})
+junk = applyForce({object2,crPoint1,curForce})
+junk = applyForce({object3,crPoint2,curForce})
+
+
+
+object = objects[carIndex]
+forward = multVectorByMatrix({{0,0,1},object[16]})
+left = multVectorByMatrix({{1,0,0},object[16]})
+velocity = add3({cross({object[5],forward}),object[2]}) -- velocity at front of car
+velocityForward = dot({velocity,forward})
+velocityLeft = dot({velocity,left})
+
+velocityDirection = atan({velocityLeft,velocityForward})
+--junk = print({velocityForward, velocityLeft,velocityDirection})
+
+turn = turn*0.95 + gN({1})*0.05
+turnCr = turn-0
+
+1 > velocityForward ~ skipTurnAdjustment
+	turnCr = turnCr + (mn({(velocityForward-1)/3,1})*velocityDirection*0.5)
+skipTurnAdjustment:
+
+turnS = sin({turnCr})/0.01
+turnC = cos({turnCr})/0.01
+
+
+pegPoints = {}
+pegPoints[1] = {carIndex+1,carIndex,carIndex,{0,0,0},{0-trackwidth,-0.25,wheelbase},{0,1,0}}
+pegPoints[2] = {carIndex+2,carIndex,carIndex,{0,0,0},{trackwidth,-0.25,wheelbase},{0,1,0}}
+pegPoints[3] = {carIndex+3,carIndex,carIndex,{0,0,0},{0-trackwidth,-0.25,0-wheelbase},{0,1,0}}
+pegPoints[4] = {carIndex+4,carIndex,carIndex,{0,0,0},{trackwidth,-0.25,0-wheelbase},{0,1,0}}
+
+pegPoints[5] = {carIndex+1,carIndex,carIndex+1,{-100,0,0},{turnC,0,0-turnS}}
+pegPoints[6] = {carIndex+2,carIndex,carIndex+2,{-100,0,0},{0-turnC,0,turnS}}
+
+pegPoints[7] = {carIndex+3,carIndex,carIndex+3,{-100,0,0},{100,0,0}}
+pegPoints[8] = {carIndex+4,carIndex,carIndex+4,{-100,0,0},{-100,0,0}}
+
+frontSpeed = sqrt({velocityForward*velocityForward + velocityLeft*velocityLeft})
+1 > frontSpeed ~ skipCameraTurnToVelocity
+	velocityDirectionGlobal = atan({0-velocity[1],velocity[3]})
+	--junk = print({velocityDirectionGlobal})
+	relativeAngle = velocityDirectionGlobal-camRot[1]+pi
+	relativeAngle = relativeAngle - (2*pi*(flr({relativeAngle/2/pi}))) - pi
+	camRot[1] = camRot[1] + (relativeAngle * 0.1 * (mn({(frontSpeed-1)/5,1})))
+skipCameraTurnToVelocity:
+
+
+exit
