@@ -17,10 +17,10 @@ summonWheels:
 	junk = summonObject({"wheel",{{trackwidth,1,wheelbase*i},[4]={1,0,0,0},[7]=0.005,[8]=0.1,[9]=grav}})
 i > 0 ~ summonWheels
 
-junk = summonObject({"track1", {{0,-1,0},[7]=0,[8]=0}})
-junk = summonObject({"track2", {{0,-3,40},[7]=0,[8]=0}})
-junk = summonObject({"track3", {{5.5,-3,40},[7]=0,[8]=0}})
---junk = summonObject({"widest_cube", {{0,-3,0},[7]=0,[8]=0}})
+--junk = summonObject({"track1", {{0,-1,0},[7]=0,[8]=0}})
+--junk = summonObject({"track2", {{0,-3,40},[7]=0,[8]=0}})
+--junk = summonObject({"track3", {{5.5,-3,40},[7]=0,[8]=0}})
+junk = summonObject({"widest_cube", {{0,-1,0},[7]=0,[8]=0}})
 
 
 i = -3
@@ -192,5 +192,39 @@ frontSpeed = sqrt({velocityForward*velocityForward + velocityLeft*velocityLeft})
 	camRot[1] = camRot[1] + (relativeAngle * 0.1 * (mn({(frontSpeed-1)/5,1})))
 skipCameraTurnToVelocity:
 
+
+
+
+--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
+
+viewBounding = {{0,-70},{100,-20},{50,70},{-50,70},{-100,-20}}
+
+viewBoundingInnerBoxL = -60
+viewBoundingInnerBoxR = 60
+viewBoundingInnerBoxT = -45
+viewBoundingInnerBoxB = 50
+viewBoundingOuterBoxL = bigNum-0
+viewBoundingOuterBoxR = 0-bigNum
+viewBoundingOuterBoxT = bigNum-0
+viewBoundingOuterBoxB = 0-bigNum
+
+i=0
+outerBoundingBoxLoop:
+i = i+1
+cr = viewBounding[i]
+crX = cr[1]
+crY = cr[2]
+viewBoundingOuterBoxL = mn({crX,viewBoundingOuterBoxL})
+viewBoundingOuterBoxR = mx({crX,viewBoundingOuterBoxR})
+viewBoundingOuterBoxT = mn({crY,viewBoundingOuterBoxT})
+viewBoundingOuterBoxB = mx({crY,viewBoundingOuterBoxB})
+#viewBounding>i ~ outerBoundingBoxLoop
+
+
+
+
+culled = 0
+accepted = 0
+processed = 0
 
 exit

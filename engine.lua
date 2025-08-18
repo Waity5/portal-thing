@@ -755,17 +755,83 @@ function onDraw()
 	--	text(20,i*6-5,M[allM[i]])
 	--end
 	
+	--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
+	--viewBoundingInnerBoxL = -90
+	--viewBoundingInnerBoxR = 100
+	--viewBoundingInnerBoxT = -50
+	--viewBoundingInnerBoxB = 50
+	--viewBoundingOuterBoxL = -100
+	--viewBoundingOuterBoxR = 100
+	--viewBoundingOuterBoxT = -60
+	--viewBoundingOuterBoxB = 50
+	--viewBounding = {{-9,-60},{10,-50},{10,50},{-10,50}}
+	--viewBounding = {{0,70},{-40,40},{-40,-40},{0,-70},{40,-40},{40,40}}
+	
+	
 	if loaded then
+		viewBoundingLen = #viewBounding
+		
 		for i=1,#renderTris do
 			curTri = renderTris[i]
 			p1 = curTri[1]
 			p2 = curTri[2]
 			p3 = curTri[3]
-			stCl(curTri[4],curTri[5],curTri[6])
-			triF(p1[1]+w2,p1[2]+h2,p2[1]+w2,p2[2]+h2,p3[1]+w2,p3[2]+h2)
-			stCl(curTri[4]*0.5,curTri[5]*0.5,curTri[6]*0.5)
-			tri(p1[1]+w2,p1[2]+h2-0.5,p2[1]+w2,p2[2]+h2-0.5,p3[1]+w2,p3[2]+h2-0.5)
+			
+			triBoundingL = mn(p1[1],p2[1],p3[1])
+			triBoundingR = mx(p1[1],p2[1],p3[1])
+			triBoundingT = mn(p1[2],p2[2],p3[2])
+			triBoundingB = mx(p1[2],p2[2],p3[2])
+			
+			if (triBoundingR>viewBoundingOuterBoxL and triBoundingL<viewBoundingOuterBoxR) and (triBoundingB>viewBoundingOuterBoxT and triBoundingT<viewBoundingOuterBoxB) then
+				shape = {p1,p2,p3}
+				if triBoundingL<viewBoundingInnerBoxL or triBoundingR>viewBoundingInnerBoxR or triBoundingT<viewBoundingInnerBoxT or triBoundingB>viewBoundingInnerBoxB then
+					for j=1,#viewBounding do
+						x1,y1=unpack(viewBounding[j])
+						x2,y2=unpack(viewBounding[j%viewBoundingLen+1])
+						newShape = {}
+						shapeLen = #shape
+						for k=1,shapeLen do
+							v3 = shape[k]
+							x3,y3=unpack(v3)
+							x4,y4=unpack(shape[k%shapeLen+1])
+							v3check = (x2-x1)*(y3-y1) - (y2-y1)*(x3-x1)
+							v4check = (x2-x1)*(y4-y1) - (y2-y1)*(x4-x1)
+							if v3check*v4check<0 then
+								uA = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
+								intersection = {x1 + (uA * (x2-x1)),y1 + (uA * (y2-y1))}
+							end
+							if v3check>0 and v4check<0 then
+								newShape[#newShape+1] = v3
+								newShape[#newShape+1] = intersection
+							elseif v3check<0 and v4check<0 then
+								
+							elseif v3check<0 and v4check>0 then
+								newShape[#newShape+1] = intersection
+							else
+								newShape[#newShape+1] = v3
+							end
+						end
+						shape = newShape
+					end
+					--processed = processed+1
+					p1 = shape[1]
+				--else
+				--	accepted = accepted + 1
+				end
+				
+				for j=3,#shape do
+					p2 = shape[j-1]
+					p3 = shape[j]
+					stCl(curTri[4],curTri[5],curTri[6])
+					triF(p1[1]+w2,p1[2]+h2,p2[1]+w2,p2[2]+h2,p3[1]+w2,p3[2]+h2)
+					stCl(curTri[4]*0.5,curTri[5]*0.5,curTri[6]*0.5)
+					tri(p1[1]+w2,p1[2]+h2-0.5,p2[1]+w2,p2[2]+h2-0.5,p3[1]+w2,p3[2]+h2-0.5)
+				end
+			--else
+			--	culled = culled + 1
+			end
 		end
+		--print(processed,accepted,culled)
 		
 		--if collideAtAll then
 		--	stCl(255,255,0)
