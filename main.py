@@ -297,8 +297,10 @@ if __name__ == '__main__':
         for j in range(len(i)):
             if i[j] in variables:
                 i[j] = replacements[variables.index(i[j])]
-            if i[j] in objects:
+            elif i[j] in objects:
                 i[j] = objects.index(i[j])+1
+            elif i[j] in replacements: # there will almost always be a variable which is compressed to "a", so if you use "a" in sscript this can cause issues
+                i[j] = variables[replacements.index(i[j])] # as a janky fix, this maps it in the opposite direction, so the sscript "a" will be replaced with whatever mapped to "a"
 
 
     for i in machine_code:

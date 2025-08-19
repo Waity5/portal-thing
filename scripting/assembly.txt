@@ -98,23 +98,38 @@ camPos[3] =  objectPos[3] - cos({camRot[1]})/camDist
 
 
 
-
-		
-		
 a=camRot[1]
 b=camRot[2]
-c=camRot[3]
 c_a = cos({a})
 s_a = sin({a})
 c_b = cos({b})
 s_b = sin({b})
-c_c = cos({c})
-s_c = sin({c})
 
-cameraRotationMatrix = {}
-cameraRotationMatrix[1] = {c_a*c_c - s_a*s_b*s_c , 0-c_b*s_c , c_a*s_b*s_c + c_c*s_a}
-cameraRotationMatrix[2] = {c_a*s_c + c_c*s_a*s_b , c_b*c_c , s_a*s_c - c_a*c_c*s_b}
-cameraRotationMatrix[3] = {0-c_b*s_a , s_b , c_a*c_b}
+--cameraRotationMatrix = {}
+--cameraRotationMatrix[1] = {c_a*c_c - s_a*s_b*s_c , 0-c_b*s_c , c_a*s_b*s_c + c_c*s_a}
+--cameraRotationMatrix[2] = {c_a*s_c + c_c*s_a*s_b , c_b*c_c , s_a*s_c - c_a*c_c*s_b}
+--cameraRotationMatrix[3] = {0-c_b*s_a , s_b , c_a*c_b}
+
+a=camRot[1]/-2
+b=camRot[2]/-2
+c=camRot[3]/-2
+
+cr = cos({b})
+sr = sin({b})
+cp = cos({a})
+sp = sin({a})
+cy = cos({c})
+sy = sin({c})
+
+
+cameraRotationQuaternion = {}
+cameraRotationQuaternion[1] = cr * cp * cy + sr * sp * sy
+cameraRotationQuaternion[2] = sr * cp * cy - cr * sp * sy
+cameraRotationQuaternion[3] = cr * sp * cy + sr * cp * sy
+cameraRotationQuaternion[4] = cr * cp * sy - sr * sp * cy
+
+cameraRotationMatrix = quaternionToMatrix({cameraRotationQuaternion})
+
 
 cameraRotationVector = {0-s_a*c_b,s_b,c_a*c_b}
 

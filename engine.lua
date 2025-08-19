@@ -483,7 +483,6 @@ function onTick()
 				--print(#object[7],#object[8],#object[9])
 				for i=1,#object[8] do
 					curTri = object[8][i],1
-					test = curTri[1]+1
 					--print(curTri[1],curTri[2],curTri[3])
 					curTri[8]=crossPoints(object[7][curTri[1]][2], object[7][curTri[2]][2], object[7][curTri[3]][2])
 				end
