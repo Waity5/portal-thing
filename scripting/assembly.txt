@@ -110,26 +110,6 @@ s_b = sin({b})
 --cameraRotationMatrix[2] = {c_a*s_c + c_c*s_a*s_b , c_b*c_c , s_a*s_c - c_a*c_c*s_b}
 --cameraRotationMatrix[3] = {0-c_b*s_a , s_b , c_a*c_b}
 
-a=camRot[1]/-2
-b=camRot[2]/-2
-c=camRot[3]/-2
-
-cr = cos({b})
-sr = sin({b})
-cp = cos({a})
-sp = sin({a})
-cy = cos({c})
-sy = sin({c})
-
-
-cameraRotationQuaternion = {}
-cameraRotationQuaternion[1] = cr * cp * cy + sr * sp * sy
-cameraRotationQuaternion[2] = sr * cp * cy - cr * sp * sy
-cameraRotationQuaternion[3] = cr * sp * cy + sr * cp * sy
-cameraRotationQuaternion[4] = cr * cp * sy - sr * sp * cy
-
-cameraRotationMatrix = quaternionToMatrix({cameraRotationQuaternion})
-
 
 cameraRotationVector = {0-s_a*c_b,s_b,c_a*c_b}
 
@@ -243,10 +223,12 @@ pegPointLoop:
 		movementFromPushing = getMovementPerUnitForce({object1,crPoint1,totalDisplacementNormalised}) + (getMovementPerUnitForce({object2,crPoint1,totalDisplacementNormalised}))
 		junk = applyInstantMovement({object1,crPoint1,mul3({totalDisplacement,-1/movementFromPushing})})
 		junk = applyInstantMovement({object2,crPoint1,mul3({totalDisplacement,1/movementFromPushing})})
+		
+		object1[16] = quaternionToMatrix({object1[4]})
+		object2[16] = quaternionToMatrix({object2[4]})
 	skipPegMovement:
 	
-	object1[16] = quaternionToMatrix({object1[4]})
-	object2[16] = quaternionToMatrix({object2[4]})
+	
 	
 	crPoint1 = add3({multVectorByMatrix({crPointLocal1,object1[16]}),object1[1]})
 	crPoint2 = add3({multVectorByMatrix({crPointLocal2,object2[16]}),object3[1]})
@@ -266,8 +248,8 @@ pegPointLoop:
 		junk = applyForce({object2,crPoint1,mul3({totalVelocity,1/movementFromPushing})})
 	skipPegForce:
 	
-	object1[16] = quaternionToMatrix({object1[4]})
-	object2[16] = quaternionToMatrix({object2[4]})
+	--object1[16] = quaternionToMatrix({object1[4]}) -- not needed, previous section of code doesn't move objects
+	--object2[16] = quaternionToMatrix({object2[4]})
 pegPointsLen > i ~ pegPointLoop
 
 i = 0
@@ -300,18 +282,75 @@ springsLoop:
 	spring[8] = distance
 springsLen > i ~ springsLoop
 
+exit
 
 
 
 
---viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
 
-viewBounding = {{0,-70},{100,-20},{50,70},{-50,70},{-100,-20}}
+renderCycleFunc:
 
-viewBoundingInnerBoxL = -60
-viewBoundingInnerBoxR = 60
-viewBoundingInnerBoxT = -40
-viewBoundingInnerBoxB = 50
+renderingPassGlobal > 1 ~ secondViewRendering
+	cameraPosition = {camPos}[1]
+	cameraRotation = {camRot}[1]
+
+	--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
+
+	--viewBounding = {{0,-70},{100,-20},{50,70},{-50,70},{-100,-20}}
+	viewBounding = {{-144,-80},{144,-80},{144,80},{-144,80}}
+
+	viewBoundingLen = #viewBounding
+
+	viewBoundingInnerBoxL = -144
+	viewBoundingInnerBoxR = 144
+	viewBoundingInnerBoxT = -80
+	viewBoundingInnerBoxB = 80
+	
+	depthMultiplier = 1
+	
+1 ~ endViewRendering
+secondViewRendering:
+	cameraPosition = {0,3,0}
+	cameraRotation = {0,0,0}
+
+	--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
+
+	viewBounding = {{0,-70},{100,-20},{50,70},{-50,70},{-100,-20}}
+	--viewBounding = {{-144,-80},{144,-80},{144,80},{-144,80}}
+
+	viewBoundingLen = #viewBounding
+
+	viewBoundingInnerBoxL = -60
+	viewBoundingInnerBoxR = 60
+	viewBoundingInnerBoxT = -40
+	viewBoundingInnerBoxB = 50
+	
+	depthMultiplier = 0.01
+	
+endViewRendering:
+
+
+a=cameraRotation[1]/-2
+b=cameraRotation[2]/-2
+c=cameraRotation[3]/-2
+
+cr = cos({b})
+sr = sin({b})
+cp = cos({a})
+sp = sin({a})
+cy = cos({c})
+sy = sin({c})
+
+
+cameraRotationQuaternion = {}
+cameraRotationQuaternion[1] = cr * cp * cy + sr * sp * sy
+cameraRotationQuaternion[2] = sr * cp * cy - cr * sp * sy
+cameraRotationQuaternion[3] = cr * sp * cy + sr * cp * sy
+cameraRotationQuaternion[4] = cr * cp * sy - sr * sp * cy
+
+cameraRotationMatrix = quaternionToMatrix({cameraRotationQuaternion})
+
+
 viewBoundingOuterBoxL = bigNum-0
 viewBoundingOuterBoxR = 0-bigNum
 viewBoundingOuterBoxT = bigNum-0
