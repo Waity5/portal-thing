@@ -31,11 +31,18 @@ class assembler:
         
         self.add_div_instruction(temp_var_name, self.const_lookup[1], arg3)
         self.add_div_instruction(arg1, arg2, temp_var_name)
+
+
+    def float_check(self, cur_num):
+        rounded_num = round(cur_num, self.precision_limit)
+        if rounded_num != cur_num:
+            print("ASSEMBLER WARNING: float",cur_num,"will be rounded to",rounded_num,"due to the precision limit of",self.precision_limit)
         
         
-    def assemble(self, text):
+    def assemble(self, text, precision_limit=3):
         self.text = text
         self.code = []
+        self.precision_limit = precision_limit
         script_markers = {}
         instruction_dividers = ",#()[]-/+*=>{}~"
         instruction_tokens = ",#()[]-/+*=>{}~"
@@ -129,7 +136,9 @@ class assembler:
 
                         elif token_string == "v=F":
                             processing = False
-                            self.code.append([1,multi_command[0][1],float(multi_command[2][1])])
+                            new_num = float(multi_command[2][1])
+                            self.float_check(new_num)
+                            self.code.append([1,multi_command[0][1],new_num])
 
                         elif token_string == "v=S":
                             processing = False
@@ -273,7 +282,10 @@ class assembler:
                                 index = cur_side.find("F")+cur_offset
                                 temp_var_name = self.get_temp_var()
 
-                                self.code.append([1,temp_var_name,float(multi_command[index][1])])
+                                new_num = float(multi_command[index][1])
+                                self.float_check(new_num)
+
+                                self.code.append([1,temp_var_name,new_num])
 
                                 multi_command[index][0] = "v"
                                 multi_command[index][1] = temp_var_name

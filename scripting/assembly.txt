@@ -194,6 +194,100 @@ skipCameraTurnToVelocity:
 
 
 
+i = 0
+pegPointsLen = #pegPoints
+pegPointLoop:
+	i = i + 1
+	pegPoint = pegPoints[i]
+	crPointLocal1 = pegPoint[4]
+	crPointLocal2 = pegPoint[5]
+	object1 = objects[pegPoint[1]]
+	object2 = objects[pegPoint[2]]
+	object3 = objects[pegPoint[3]]
+	correctionDirection = pegPoint[6]
+	correctionDirectionInverse = pegPoint[0]
+	correctionDirection ~ correctionDirectionSkip1
+		correctionDirectionInverse = 1
+	correctionDirectionSkip1:
+	
+	correctionDirectionInverse ~ correctionDirectionSkip2
+		correctionDirection = norm3({multVectorByMatrix({correctionDirection,object2[16]})})
+	correctionDirectionSkip2:
+	
+	crPoint1 = add3({multVectorByMatrix({crPointLocal1,object1[16]}),object1[1]})
+	crPoint2 = add3({multVectorByMatrix({crPointLocal2,object2[16]}),object3[1]})
+	
+	totalDisplacement = sub3({crPoint1,crPoint2})
+	correctionDirectionInverse ~ correctionDirectionSkip3
+		totalDisplacement = sub3({totalDisplacement,mul3({correctionDirection,dot({totalDisplacement,correctionDirection})})})
+	correctionDirectionSkip3:
+	
+	totalDistance = dist3({totalDisplacement,{0,0,0}})
+	0.0001 > totalDistance ~ skipPegMovement
+		totalDisplacementNormalised = norm3({totalDisplacement})
+		movementFromPushing = getMovementPerUnitForce({object1,crPoint1,totalDisplacementNormalised}) + (getMovementPerUnitForce({object2,crPoint1,totalDisplacementNormalised}))
+		junk = applyInstantMovement({object1,crPoint1,mul3({totalDisplacement,-1/movementFromPushing})})
+		junk = applyInstantMovement({object2,crPoint1,mul3({totalDisplacement,1/movementFromPushing})})
+	skipPegMovement:
+	
+	object1[16] = quaternionToMatrix({object1[4]})
+	object2[16] = quaternionToMatrix({object2[4]})
+	
+	crPoint1 = add3({multVectorByMatrix({crPointLocal1,object1[16]}),object1[1]})
+	crPoint2 = add3({multVectorByMatrix({crPointLocal2,object2[16]}),object3[1]})
+	
+	velocity1 = add3({cross({object1[5],sub3({crPoint1,object1[1]})}),object1[2]})
+	velocity2 = add3({cross({object2[5],sub3({crPoint2,object2[1]})}),object2[2]})
+	totalVelocity = sub3({velocity1,velocity2})
+	correctionDirectionInverse ~ correctionDirectionSkip4
+		totalVelocity = sub3({totalVelocity,mul3({correctionDirection,dot({totalVelocity,correctionDirection})})})
+	correctionDirectionSkip4:
+	
+	totalSpeed = dist3({totalVelocity,{0,0,0}})
+	0.0001 > totalSpeed ~ skipPegForce
+		totalVelocityNormalised = norm3({totalVelocity})
+		movementFromPushing = getMovementPerUnitForce({object1,crPoint1,totalVelocityNormalised}) + (getMovementPerUnitForce({object2,crPoint1,totalVelocityNormalised}))
+		junk = applyForce({object1,crPoint1,mul3({totalVelocity,-1/movementFromPushing})})
+		junk = applyForce({object2,crPoint1,mul3({totalVelocity,1/movementFromPushing})})
+	skipPegForce:
+	
+	object1[16] = quaternionToMatrix({object1[4]})
+	object2[16] = quaternionToMatrix({object2[4]})
+pegPointsLen > i ~ pegPointLoop
+
+i = 0
+springsLen = #springs
+springsLoop:
+	i = i + 1
+	spring = springs[i]
+	object1 = objects[spring[1]]
+	object2 = objects[spring[2]]
+	crPoint1 = add3({multVectorByMatrix({spring[3],object1[16]}),object1[1]})
+	crPoint2 = add3({multVectorByMatrix({spring[4],object2[16]}),object2[1]})
+	
+	displacement = sub3({crPoint2,crPoint1})
+	distance = dist3({displacement,{0,0,0}})
+	displacementNormalised = mul3({displacement,1/distance})
+	0.0001 > distance ~ skipSpringForce
+		force = mul3({displacementNormalised,(spring[5]-distance)*spring[6]*deltaTime})
+		junk = applyForce({object1,crPoint1,mul3({force,-1})})
+		junk = applyForce({object2,crPoint1,force})
+		
+		spring[8] ~ skipSpringInit
+		spring[8] = distance
+		skipSpringInit:
+		
+		force = mul3({displacementNormalised,(spring[8] - distance) * spring[7]})
+		junk = applyForce({object1,crPoint1,mul3({force,-1})})
+		junk = applyForce({object2,crPoint1,force})
+	skipSpringForce:
+	
+	spring[8] = distance
+springsLen > i ~ springsLoop
+
+
+
+
 
 --viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
 
@@ -201,7 +295,7 @@ viewBounding = {{0,-70},{100,-20},{50,70},{-50,70},{-100,-20}}
 
 viewBoundingInnerBoxL = -60
 viewBoundingInnerBoxR = 60
-viewBoundingInnerBoxT = -45
+viewBoundingInnerBoxT = -40
 viewBoundingInnerBoxB = 50
 viewBoundingOuterBoxL = bigNum-0
 viewBoundingOuterBoxR = 0-bigNum

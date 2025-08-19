@@ -7,6 +7,7 @@ import numpy
 from stl import mesh
 from plyfile import PlyData, PlyElement
 from scripting.assembler import assembler
+from glob import glob as glob
 
 
 def sq(a):
@@ -16,13 +17,14 @@ def sq(a):
 if __name__ == '__main__':
     packets = []
     curmax = 8192
+    precision_limit = 4
 
     
     file = open("scripting/assembly.txt")
     assembly_code = file.read()
     file.close()
 
-    machine_code,script_markers = assembler().assemble(assembly_code)
+    machine_code,script_markers = assembler().assemble(assembly_code,precision_limit=precision_limit)
 
     
 
@@ -352,7 +354,7 @@ if __name__ == '__main__':
                     if type(j) == type(""):
                         temp = j + "!"
                     else:
-                        temp = str(round(j,3))
+                        temp = str(round(j,precision_limit))
                         temp = temp[:-1]+chr(ord(temp[-1])-13)
                     
                     temp_len = len(temp)
@@ -374,7 +376,7 @@ if __name__ == '__main__':
 
     print()
     print(tt//1024,"KiB total")
-    print(t1)
+    #print(t1)
 
     sizes = [len(i) for i in parts]
     
@@ -394,16 +396,23 @@ if __name__ == '__main__':
                  '''"/></object></c>''']
     contents = ""
     
-    
+
+    textbox_location = "simulator/textboxes/"
     for i in range(len(parts)):
         contents += (text_block[0]+str(i+1)+text_block[1]+parts[i]+text_block[2]+str((i+1)*0.5)+text_block[3])
 
-        file = open("simulator/textboxes/"+str(i+1)+".txt",mode="w", newline='\n')
+        file = open(textbox_location+str(i+1)+".txt",mode="w", newline='\n')
         file.write(parts[i])
         file.close()
 
     
-
+    glob_result = glob(textbox_location+"*.txt")
+    glob_result = [i.replace("\\","/") for i in glob_result]
+    glob_result = [i[i.rfind("/")+1:] for i in glob_result]
+    for i in glob_result:
+        if int(i[:i.find(".")]) > len(parts):
+            os.remove(textbox_location+i)
+            #print(i,len(parts))
     
 
     find_start1 = '''<c type="58"><object id="84" n="text block start"><pos x="-8.25"/></object></c>'''
