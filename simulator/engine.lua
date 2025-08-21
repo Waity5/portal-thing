@@ -15,7 +15,7 @@ ba=string
 cn=O.sin
 cH=O.cos
 cm=O.tan
-dm=O.atan
+dn=O.atan
 N=table.unpack
 cb=O.huge
 
@@ -40,7 +40,7 @@ _=1
 cB=cj
 dd=0
 bI=0
-dl={0,-.4,0}aZ=62.5
+dm={0,5,-10}dl={0,-.4,0}aZ=62.5
 cT=0
 ce=cu/180
 c_=5/aZ
@@ -297,7 +297,7 @@ bI=bI+1
 if cB then
 av(1)av(42)end
 
-av(281)
+av(144)
 
 
 
@@ -316,7 +316,7 @@ end
 
 
 
-av(397)
+av(280)
 
 
 
@@ -397,7 +397,7 @@ end
 
 for co=1,2 do
 cW=co
-av(1160)
+av(656)
 
 for D=1,#ad do
 b=ad[D]

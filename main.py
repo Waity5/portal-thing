@@ -1,4 +1,4 @@
-from math import dist, floor as flr, ceil, sqrt
+from math import dist, floor as flr, ceil, sqrt, atan2
 from code_compressor import compress
 import time, json
 from copy import deepcopy as dcopy
@@ -45,7 +45,8 @@ if __name__ == '__main__':
         "track1": {"colour": (200,200,200), "shading": True},
         "track2": {"colour": (200,200,200), "shading": True},
         "track3": {"colour": (200,200,200), "shading": True},
-        "skybox": {"colour": (135,206,235), "shading": False},
+        "skybox": {"colour": (46,132,200), "shading": False},
+        "portal_orange": {"colour": (255,100,0), "shading": False},
         }
 
     object_names = [*objects]
@@ -163,10 +164,19 @@ if __name__ == '__main__':
 
             scale = 1
 
+            
+
             #print(len(your_mesh.v0), "triangles")
             points = list(your_mesh.v0)+list(your_mesh.v1)+list(your_mesh.v2)#your_mesh.points
             points = [tuple(i) for i in points]
             points = list(set(points))
+
+            
+            if object_name == "portal_orange":
+                points = [(-atan2(i[2],i[0]),i) for i in points]
+                points.sort()
+                points = [i[1] for i in points]
+                print(points)
             
             #print(len(phys_points),"phys points")
             

@@ -41,6 +41,7 @@ stg=1
 init=trueVar
 httpTk=0
 tick=0
+camPos={0,5,-10}
 camRot={0,-0.4,0}
 tickRate=62.5
 turn=0
