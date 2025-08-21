@@ -28,23 +28,43 @@ if __name__ == '__main__':
 
     
 
-    objects=["monkey","blender_cube","wide_cube","wider_cube","cylinder","utah_teapot","widest_cube","bowling_pin","wheel","island","islandphys1","car","hump","track1","track2","track3"]
-    object_colours=[(0,255,0),(255,0,255),(255,255,255),(255,255,255),(0,0,255),(0,255,0),(255,255,255),(255,255,255),(100,100,100),"ply",(0,0,0),(255,0,0),(150,150,150),(200,200,200),(200,200,200),(200,200,200)]
-    min_brightness = 0.2
+    objects = {
+        "monkey": {"colour": (0,255,0), "shading": True},
+        "blender_cube": {"colour": (255,0,255), "shading": True},
+        "wide_cube": {"colour": (255,255,255), "shading": True},
+        "wider_cube": {"colour": (255,255,255), "shading": True},
+        "cylinder": {"colour": (0,0,255), "shading": True},
+        "utah_teapot": {"colour": (0,255,0), "shading": True},
+        "widest_cube": {"colour": (255,255,255), "shading": True},
+        "bowling_pin": {"colour": (255,255,255), "shading": True},
+        "wheel": {"colour": (255,255,255), "shading": True},
+        "island": {"colour": "ply", "shading": False},
+        "islandphys1": {"colour": (0,0,0), "shading": True},
+        "car": {"colour": (255,0,0), "shading": True},
+        "hump": {"colour": (150,150,150), "shading": True},
+        "track1": {"colour": (200,200,200), "shading": True},
+        "track2": {"colour": (200,200,200), "shading": True},
+        "track3": {"colour": (200,200,200), "shading": True},
+        "skybox": {"colour": (135,206,235), "shading": False},
+        }
+
+    object_names = [*objects]
+    shading_strength = 0.75
 
     total_points = 0
     total_render_tris = 0
     
-    for index in range(len(objects)):
+    for object_name in objects:
 
-        cur_object = objects[index]
-        colour = object_colours[index]
+        cur_object = objects[object_name]
+        colour = cur_object["colour"]
+        to_shade = cur_object["shading"]
 
         path = ".\\stl\\"
 
         max_dist = 0
 
-        phys_mesh = mesh.Mesh.from_file(path+cur_object+"\\phys.stl")
+        phys_mesh = mesh.Mesh.from_file(path+object_name+"\\phys.stl")
 
         phys_points = list(phys_mesh.v0)+list(phys_mesh.v1)+list(phys_mesh.v2)#your_mesh.points
         phys_points = [tuple(i) for i in phys_points]
@@ -61,7 +81,7 @@ if __name__ == '__main__':
         
             point_map = {}
             point_map2 = {}
-            ply_mesh = PlyData.read(path+cur_object+"\\mesh.ply")
+            ply_mesh = PlyData.read(path+object_name+"\\mesh.ply")
             
             processed_points = []
             raw_points = ply_mesh.elements[0].data
@@ -98,12 +118,13 @@ if __name__ == '__main__':
                 unitNormaly = normaly/normalDist
                 if normalDist == 0:
                     print((x1,y1,z1),(x2,y2,z2),(x3,y3,z3))
-                shade = max((unitNormaly+1)/2,min_brightness)
+                shade = ((unitNormaly-1)/2) * shading_strength + 1
 
                 
                 total_render_tris += 1
-                colour = sq((int(corner_point1[3]), int(corner_point1[4]), int(corner_point1[5])))
-                colour = [min(i*3*shade,255) for i in colour]
+                colour = (int(corner_point1[3]), int(corner_point1[4]), int(corner_point1[5]))
+                if to_shade:
+                    colour = tuple([colour[i]*shade for i in range(3)])
                 cr_tri = (point_map2[tri[0][0]], point_map2[tri[0][2]], point_map2[tri[0][1]], colour[0], colour[1], colour[2])
                 packets.append((3,cr_tri))
             tris_end = total_render_tris
@@ -123,7 +144,7 @@ if __name__ == '__main__':
             #your_mesh = mesh.Mesh.from_file(path+'monkey.stl')
             #your_mesh = mesh.Mesh.from_file(path+'buff_monkey.stl')
             #your_mesh = mesh.Mesh.from_file(path+'blender_cube.stl')
-            your_mesh = mesh.Mesh.from_file(path+cur_object+"\\mesh.stl")
+            your_mesh = mesh.Mesh.from_file(path+object_name+"\\mesh.stl")
             
 
             # Or creating a new mesh (make sure not to overwrite the `mesh` import by
@@ -209,14 +230,18 @@ if __name__ == '__main__':
                 normaly = ((z2-z1)*(x3-x1))-((x2-x1)*(z3-z1))
                 normalz = ((x2-x1)*(y3-y1))-((y2-y1)*(x3-x1))
                 normalDist = sqrt((normalx**2)+(normaly**2)+(normalz**2))
-                if cur_object == "cylinder":
-                    unitNormaly = normalx/normalDist
-                else:
-                    unitNormaly = normaly/normalDist
+                #if object_name == "cylinder":
+                #    unitNormaly = normalx/normalDist
+                #else:
+                unitNormaly = normaly/normalDist
                 if normalDist == 0:
                     print((x1,y1,z1),(x2,y2,z2),(x3,y3,z3))
-                shade = max((unitNormaly+1)/2,min_brightness)
-                cur_colour = tuple([colour[i]*shade for i in range(3)])
+                shade = ((unitNormaly-1)/2) * shading_strength + 1
+                cur_colour = colour
+                if to_shade:
+                    cur_colour = tuple([cur_colour[i]*shade for i in range(3)])
+
+                cur_colour = sq(cur_colour)
                 
                 colours.append(cur_colour)
 
@@ -264,8 +289,8 @@ if __name__ == '__main__':
     file.close()
     #print(code)
 
-    for j in range(len(objects)):
-        code = code.replace('"'+objects[j]+'"',str(j+1))
+    for j in range(len(object_names)):
+        code = code.replace('"'+object_names[j]+'"',str(j+1))
 
     for j in script_markers:
         code = code.replace('"'+j+'"',str(script_markers[j]))
@@ -297,8 +322,8 @@ if __name__ == '__main__':
         for j in range(len(i)):
             if i[j] in variables:
                 i[j] = replacements[variables.index(i[j])]
-            elif i[j] in objects:
-                i[j] = objects.index(i[j])+1
+            elif i[j] in object_names:
+                i[j] = object_names.index(i[j])+1
             elif i[j] in replacements: # there will almost always be a variable which is compressed to "a", so if you use "a" in sscript this can cause issues
                 i[j] = variables[replacements.index(i[j])] # as a janky fix, this maps it in the opposite direction, so the sscript "a" will be replaced with whatever mapped to "a"
 

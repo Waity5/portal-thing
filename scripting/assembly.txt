@@ -21,6 +21,7 @@ i > 0 ~ summonWheels
 --junk = summonObject({"track2", {{0,-3,40},[7]=0,[8]=0}})
 --junk = summonObject({"track3", {{5.5,-3,40},[7]=0,[8]=0}})
 junk = summonObject({"widest_cube", {{0,-1,0},[7]=0,[8]=0}})
+junk = summonObject({"skybox", {[7]=0,[8]=0}})
 
 
 i = -3
@@ -306,7 +307,8 @@ renderingPassGlobal > 1 ~ secondViewRendering
 	viewBoundingInnerBoxT = -80
 	viewBoundingInnerBoxB = 80
 	
-	depthMultiplier = 1
+	depthScale = 1
+	depthOffset = 0
 	
 1 ~ endViewRendering
 secondViewRendering:
@@ -325,7 +327,8 @@ secondViewRendering:
 	viewBoundingInnerBoxT = -40
 	viewBoundingInnerBoxB = 50
 	
-	depthMultiplier = 0.01
+	depthScale = 0.01
+	depthOffset = 0
 	
 endViewRendering:
 
