@@ -47,6 +47,7 @@ if __name__ == '__main__':
         "track3": {"colour": (200,200,200), "shading": True},
         "skybox": {"colour": (46,132,200), "shading": False},
         "portal_orange": {"colour": (255,100,0), "shading": False},
+        "portal_blue": {"colour": (0,100,255), "shading": False},
         }
 
     object_names = [*objects]
@@ -172,7 +173,7 @@ if __name__ == '__main__':
             points = list(set(points))
 
             
-            if object_name == "portal_orange":
+            if object_name == "portal_orange" or object_name == "portal_blue":
                 points = [(-atan2(i[2],i[0]),i) for i in points]
                 points.sort()
                 points = [i[1] for i in points]

@@ -18,6 +18,9 @@ junk = summonObject({"skybox", {[7]=0,[8]=0}})
 junk = summonObject({"blender_cube", {{0,1,11},[7]=0,[8]=0}})
 junk = summonObject({"portal_orange", {{0,1,10},[7]=0,[8]=0}})
 portalOrange = objects[#objects]
+junk = summonObject({"blender_cube", {{-4,1,7},[7]=0,[8]=0}})
+junk = summonObject({"portal_blue", {{-3,1,7},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
+portalBlue = objects[#objects]
 
 i = -3
 summonBoxes:
@@ -223,105 +226,138 @@ exit
 
 
 
-renderCycleFunc:
+renderFunc:
 
-renderingPassGlobal > 1 ~ secondViewRendering
-	cameraPosition = {camPos}[1]
-	cameraRotation = {camRot}[1]
-	junk = executeScript({cameraRotationToQuaternion})
-
-	--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
-
-	--viewBounding = {{0,-70},{100,-20},{50,70},{-50,70},{-100,-20}}
-	viewBounding = {{-144,-80},{144,-80},{144,80},{-144,80}}
-
-	viewBoundingLen = #viewBounding
-
-	viewBoundingInnerBoxL = -144
-	viewBoundingInnerBoxR = 144
-	viewBoundingInnerBoxT = -80
-	viewBoundingInnerBoxB = 80
+renderingPassGlobal = 0
+renderingLoop:
+	renderingPassGlobal = renderingPassGlobal + 1
 	
-	depthScale = 1
-	depthOffset = 0
-	
-1 ~ endViewRendering
-secondViewRendering:
-	viewBounding = {}
-	
-	portalOrangeMesh = portalOrange[7]
-	portalOrangeMeshLen = #portalOrangeMesh
-	index1 = 0
-	index2 = 0
-	portalOrangeLoop:
-		index1 = index1 + 1
+	renderingPassGlobal > 2 ~ skipPortalAreaMaths
+	2 > renderingPassGlobal ~ skipPortalAreaMaths
+		portalsToAreaMath = {portalOrange,portalBlue}
+		portalAreas = {}
+		i = 0
+		skipPortalAreaMathsLoop:
+			i = i + 1
+			viewBounding = {}
+			portalMesh = portalsToAreaMath[i][7]
+			portalMeshLen = #portalMesh
+			index1 = 0
+			index2 = 0
+			portalLoop:
+				index1 = index1 + 1
+				
+				1 > portalMesh[index1][6] ~ skipCurrentPortalPoint
+					index2 = index2 + 1
+					viewBounding[index2] = portalMesh[index1][5]
+				skipCurrentPortalPoint:
+				
+			portalMeshLen > index1 ~ portalLoop
+			
+			portalAreas[i] = viewBounding
+		2 > i ~ skipPortalAreaMathsLoop
+	skipPortalAreaMaths:
+
+	renderingPassGlobal > 1 ~ portalViewRendering
+		cameraPosition = {camPos}[1]
+		cameraRotation = {camRot}[1]
+		junk = executeScript({cameraRotationToQuaternion})
+
+		--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
+
+		--viewBounding = {{0,-70},{100,-20},{50,70},{-50,70},{-100,-20}}
+		viewBounding = {{-144,-80},{144,-80},{144,80},{-144,80}}
+
+		viewBoundingLen = #viewBounding
+
+		viewBoundingInnerBoxL = -144
+		viewBoundingInnerBoxR = 144
+		viewBoundingInnerBoxT = -80
+		viewBoundingInnerBoxB = 80
 		
-		1 > portalOrangeMesh[index1][6] ~ skipCurrentPortalPoint
-			index2 = index2 + 1
-			viewBounding[index2] = portalOrangeMesh[index1][5]
-		skipCurrentPortalPoint:
+		depthScale = 1
+		depthOffset = 0
 		
-	portalOrangeMeshLen > index1 ~ portalOrangeLoop
+	1 ~ endViewRenderingMaths
+	portalViewRendering:
 	
-	
-	
-	cameraRotation = {camRot}[1]
-	
-	junk = executeScript({cameraRotationToQuaternion})
-	
-	portalOrangeViewQuaternion = norm4({{0.5,0,-0.5,0}})
-	portalOrangeViewQuaternionInverse = {0-portalOrangeViewQuaternion[1],portalOrangeViewQuaternion[2],portalOrangeViewQuaternion[3],portalOrangeViewQuaternion[4]}
-	cameraRotationQuaternion = multQuaternionByQuaternion({portalOrangeViewQuaternionInverse, cameraRotationQuaternion})
-	
-	cameraPosition = add3({{-3,1,7}, multVectorByMatrix({sub3({camPos,portalOrange[1]}), quaternionToMatrix({portalOrangeViewQuaternion})})})
-	
+		renderingPassGlobal > 2 ~ chooseBluePortal
+			portalPrimary = {portalOrange}[1]
+			portalSecondary = {portalBlue}[1]
+		1 ~ endPortalChoosing
+		chooseBluePortal:
+			portalPrimary = {portalBlue}[1]
+			portalSecondary = {portalOrange}[1]
+		endPortalChoosing:
+			
+		
+		viewBounding = portalAreas[renderingPassGlobal-1]
+		
+		
+		cameraRotation = {camRot}[1]
+		
+		junk = executeScript({cameraRotationToQuaternion})
+		
+		portalPrimaryQuaternion = portalPrimary[4]
+		portalPrimaryQuaternionInverse = {0-portalPrimaryQuaternion[1],portalPrimaryQuaternion[2],portalPrimaryQuaternion[3],portalPrimaryQuaternion[4]}
+		portalSecondaryQuaternion = multQuaternionByQuaternion({{0,0,1,0},portalSecondary[4]})
+		portalSecondaryQuaternionInverse = {0-portalSecondaryQuaternion[1],portalSecondaryQuaternion[2],portalSecondaryQuaternion[3],portalSecondaryQuaternion[4]}
+		cameraRotationQuaternion = multQuaternionByQuaternion({multQuaternionByQuaternion({portalPrimary[4],portalSecondaryQuaternionInverse}), cameraRotationQuaternion})
+		
+		cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({camPos,portalPrimary[1]}), quaternionToMatrix({multQuaternionByQuaternion({portalSecondaryQuaternion,portalPrimaryQuaternionInverse})})})})
+		
 
-	--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
+		--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
 
-	--viewBounding = {{0,-70},{100,-20},{50,70},{-50,70},{-100,-20}}
-	--viewBounding = {{-144,-80},{144,-80},{144,80},{-144,80}}
+		--viewBounding = {{0,-70},{100,-20},{50,70},{-50,70},{-100,-20}}
+		--viewBounding = {{-144,-80},{144,-80},{144,80},{-144,80}}
 
-	viewBoundingLen = #viewBounding
+		viewBoundingLen = #viewBounding
 
-	viewBoundingInnerBoxL = 0
-	viewBoundingInnerBoxR = 0
-	viewBoundingInnerBoxT = 0
-	viewBoundingInnerBoxB = 0
-	
-	depthScale = 0.0001
-	depthOffset = dist3({portalOrange[1],camPos})-1
-	
-endViewRendering:
-
-
-
-
-cameraRotationMatrix = quaternionToMatrix({cameraRotationQuaternion})
-
-
-viewBoundingOuterBoxL = bigNum-0
-viewBoundingOuterBoxR = 0-bigNum
-viewBoundingOuterBoxT = bigNum-0
-viewBoundingOuterBoxB = 0-bigNum
-
-i=0
-outerBoundingBoxLoop:
-i = i+1
-cr = viewBounding[i]
-crX = cr[1]
-crY = cr[2]
-viewBoundingOuterBoxL = mn({crX,viewBoundingOuterBoxL})
-viewBoundingOuterBoxR = mx({crX,viewBoundingOuterBoxR})
-viewBoundingOuterBoxT = mn({crY,viewBoundingOuterBoxT})
-viewBoundingOuterBoxB = mx({crY,viewBoundingOuterBoxB})
-#viewBounding>i ~ outerBoundingBoxLoop
+		viewBoundingInnerBoxL = 0
+		viewBoundingInnerBoxR = 0
+		viewBoundingInnerBoxT = 0
+		viewBoundingInnerBoxB = 0
+		
+		depthScale = 0.0001
+		depthOffset = dist3({portalPrimary[1],camPos})-1
+		
+		
+	endViewRenderingMaths:
 
 
+	3 > viewBoundingLen ~ skipViewRendering
+
+		cameraRotationMatrix = quaternionToMatrix({cameraRotationQuaternion})
 
 
-culled = 0
-accepted = 0
-processed = 0
+		viewBoundingOuterBoxL = bigNum-0
+		viewBoundingOuterBoxR = 0-bigNum
+		viewBoundingOuterBoxT = bigNum-0
+		viewBoundingOuterBoxB = 0-bigNum
+
+		i=0
+		outerBoundingBoxLoop:
+		i = i+1
+		cr = viewBounding[i]
+		crX = cr[1]
+		crY = cr[2]
+		viewBoundingOuterBoxL = mn({crX,viewBoundingOuterBoxL})
+		viewBoundingOuterBoxR = mx({crX,viewBoundingOuterBoxR})
+		viewBoundingOuterBoxT = mn({crY,viewBoundingOuterBoxT})
+		viewBoundingOuterBoxB = mx({crY,viewBoundingOuterBoxB})
+		#viewBounding>i ~ outerBoundingBoxLoop
+
+
+
+
+		culled = 0
+		accepted = 0
+		processed = 0
+		
+		junk = renderView({1})
+	skipViewRendering:
+3 > renderingPassGlobal ~ renderingLoop
 
 exit
 

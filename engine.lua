@@ -588,140 +588,10 @@ function onTick()
 		end
 		
 		
-		for renderingPass = 1,2 do
-			renderingPassGlobal = renderingPass
-			executeScript("renderCycleFunc")
+		executeScript("renderFunc")
 			
 			
-			for index = 1,#objects do -- triangle position calculation a.k.a. the 3D rendering
-				object = objects[index]
-				--object[16] = quaternionToMatrix(object[4])
 			
-				
-				
-				for i=1,#object[7] do
-					crPoint=object[7][i]
-					crPoint[2] = multVectorByMatrix(crPoint[1],object[16])
-					crPoint[2]=add3(crPoint[2],object[1])
-					crPoint[3]=sub3(crPoint[2],cameraPosition)
-					
-					crPoint[4]=multVectorByMatrix(crPoint[3],cameraRotationMatrix)
-					distances=crPoint[3]
-					crPoint[7]=sqrt(distances[1]^2 + distances[2]^2 + distances[3]^2)
-					
-					crPoint[5]={crPoint[4][1]*screenScale/crPoint[4][3],
-					-crPoint[4][2]*screenScale/crPoint[4][3]}
-					crPoint[6]=crPoint[4][3]>0 and 1 or 0
-					
-				end
-				
-				if object[11]>0 or not object[8][1][8]then
-					--print(#object[7],#object[8],#object[9])
-					for i=1,#object[8] do
-						curTri = object[8][i],1
-						--print(curTri[1],curTri[2],curTri[3])
-						curTri[8]=crossPoints(object[7][curTri[1]][2], object[7][curTri[2]][2], object[7][curTri[3]][2])
-					end
-				end
-				
-				for i=1,#object[8] do
-					curTri = object[8][i]
-					p1 = object[7][curTri[1]]
-					p2 = object[7][curTri[2]]
-					p3 = object[7][curTri[3]]
-					curTri[7]=mx(p1[7],p2[7],p3[7])
-					a=curTri[8]
-					b=p1[3]
-					if dot(a,b)>0 then
-						sideVal=p1[6]+p2[6]+p3[6]
-						if sideVal == 3 then
-							--renderTris[#renderTris+1] = {p1[5],p2[5],p3[5],curTri[4],curTri[5],curTri[6],curTri[7]}
-							shape = {p1[5],p2[5],p3[5]}
-						elseif sideVal >= 1 then
-							if p1[6]==2-sideVal then
-								screenPoint1=p1[5]
-								screenPoint2=p2[5]
-								screenPoint3=p3[5]
-							elseif p2[6]==2-sideVal then
-								screenPoint1=p2[5]
-								screenPoint2=p1[5]
-								screenPoint3=p3[5]
-							else
-								screenPoint1=p3[5]
-								screenPoint2=p2[5]
-								screenPoint3=p1[5]
-							end
-							if sideVal == 2 then
-								screenPoint4=add2(mul2(sub2(screenPoint2,screenPoint1),1000),screenPoint2)
-								screenPoint5=add2(mul2(sub2(screenPoint3,screenPoint1),1000),screenPoint3)
-								--renderTris[#renderTris+1] = {{screenPoint3,screenPoint2,screenPoint4},255,0,0,curTri[7]+0.1}
-								--renderTris[#renderTris+1] = {{screenPoint3,screenPoint4,screenPoint5},0,0,255,curTri[7]+0.1}
-								--renderTris[#renderTris+1] = {{screenPoint3,screenPoint2,screenPoint4,screenPoint5},0,0,255,curTri[7]+0.1}
-								--renderTris[#renderTris+1] = {screenPoint2,screenPoint4,screenPoint3,curTri[4],curTri[5],curTri[6],curTri[7]}
-								--renderTris[#renderTris+1] = {screenPoint3,screenPoint4,screenPoint5,curTri[4],curTri[5],curTri[6],curTri[7]}
-								shape = {screenPoint3,screenPoint2,screenPoint4,screenPoint5}
-							else
-								screenPoint4=add2(mul2(sub2(screenPoint1,screenPoint2),1000),screenPoint2)
-								screenPoint5=add2(mul2(sub2(screenPoint1,screenPoint3),1000),screenPoint3)
-								--renderTris[#renderTris+1] = {screenPoint1,screenPoint4,screenPoint5,255,0,255,curTri[7]}
-								--renderTris[#renderTris+1] = {screenPoint1,screenPoint4,screenPoint5,curTri[4],curTri[5],curTri[6],curTri[7]}
-								shape = {screenPoint1,screenPoint5,screenPoint4}
-							end
-						end
-						
-						if sideVal >= 1 then
-							p1 = shape[1]
-							p2 = shape[2]
-							p3 = shape[3]
-							
-							triBoundingL = mn(p1[1],p2[1],p3[1])
-							triBoundingR = mx(p1[1],p2[1],p3[1])
-							triBoundingT = mn(p1[2],p2[2],p3[2])
-							triBoundingB = mx(p1[2],p2[2],p3[2])
-							
-							if (triBoundingR>viewBoundingOuterBoxL and triBoundingL<viewBoundingOuterBoxR) and (triBoundingB>viewBoundingOuterBoxT and triBoundingT<viewBoundingOuterBoxB) then
-								if triBoundingL<viewBoundingInnerBoxL or triBoundingR>viewBoundingInnerBoxR or triBoundingT<viewBoundingInnerBoxT or triBoundingB>viewBoundingInnerBoxB then
-									for j=1,#viewBounding do
-										x1,y1=unpack(viewBounding[j])
-										x2,y2=unpack(viewBounding[j%viewBoundingLen+1])
-										newShape = {}
-										shapeLen = #shape
-										for k=1,shapeLen do
-											v3 = shape[k]
-											x3,y3=unpack(v3)
-											x4,y4=unpack(shape[k%shapeLen+1])
-											v3check = (x2-x1)*(y3-y1) - (y2-y1)*(x3-x1)
-											v4check = (x2-x1)*(y4-y1) - (y2-y1)*(x4-x1)
-											if v3check*v4check<0 then
-												uA = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
-												intersection = {x1 + (uA * (x2-x1)),y1 + (uA * (y2-y1))}
-											end
-											if v3check>0 and v4check<0 then
-												newShape[#newShape+1] = v3
-												newShape[#newShape+1] = intersection
-											elseif v3check<0 and v4check<0 then
-												
-											elseif v3check<0 and v4check>0 then
-												newShape[#newShape+1] = intersection
-											else
-												newShape[#newShape+1] = v3
-											end
-										end
-										shape = newShape
-									end
-									--processed = processed+1
-									
-								--else
-								--	accepted = accepted + 1
-								end
-								
-								renderTris[#renderTris+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7]*depthScale+depthOffset}
-							end
-						end
-					end
-				end
-			end
-		end
 		
 		table.sort(renderTris,function(a,b)return a[5]>b[5]end)
 		
@@ -730,6 +600,135 @@ function onTick()
 
 	--httpTk=httpTk+1
 	--async.httpGet(8,"")
+end
+
+function renderView()
+	for index = 1,#objects do -- triangle position calculation a.k.a. the 3D rendering
+		object = objects[index]
+		--object[16] = quaternionToMatrix(object[4])
+		
+		for i=1,#object[7] do
+			crPoint=object[7][i]
+			crPoint[2] = multVectorByMatrix(crPoint[1],object[16])
+			crPoint[2]=add3(crPoint[2],object[1])
+			crPoint[3]=sub3(crPoint[2],cameraPosition)
+			
+			crPoint[4]=multVectorByMatrix(crPoint[3],cameraRotationMatrix)
+			distances=crPoint[3]
+			crPoint[7]=sqrt(distances[1]^2 + distances[2]^2 + distances[3]^2)
+			
+			crPoint[5]={crPoint[4][1]*screenScale/crPoint[4][3],
+			-crPoint[4][2]*screenScale/crPoint[4][3]}
+			crPoint[6]=crPoint[4][3]>0 and 1 or 0
+			
+		end
+		
+		if object[11]>0 or not object[8][1][8]then
+			--print(#object[7],#object[8],#object[9])
+			for i=1,#object[8] do
+				curTri = object[8][i],1
+				--print(curTri[1],curTri[2],curTri[3])
+				curTri[8]=crossPoints(object[7][curTri[1]][2], object[7][curTri[2]][2], object[7][curTri[3]][2])
+			end
+		end
+		
+		for i=1,#object[8] do
+			curTri = object[8][i]
+			p1 = object[7][curTri[1]]
+			p2 = object[7][curTri[2]]
+			p3 = object[7][curTri[3]]
+			curTri[7]=mx(p1[7],p2[7],p3[7])
+			a=curTri[8]
+			b=p1[3]
+			if dot(a,b)>0 then
+				sideVal=p1[6]+p2[6]+p3[6]
+				if sideVal == 3 then
+					--renderTris[#renderTris+1] = {p1[5],p2[5],p3[5],curTri[4],curTri[5],curTri[6],curTri[7]}
+					shape = {p1[5],p2[5],p3[5]}
+				elseif sideVal >= 1 then
+					if p1[6]==2-sideVal then
+						screenPoint1=p1[5]
+						screenPoint2=p2[5]
+						screenPoint3=p3[5]
+					elseif p2[6]==2-sideVal then
+						screenPoint1=p2[5]
+						screenPoint2=p1[5]
+						screenPoint3=p3[5]
+					else
+						screenPoint1=p3[5]
+						screenPoint2=p2[5]
+						screenPoint3=p1[5]
+					end
+					if sideVal == 2 then
+						screenPoint4=add2(mul2(sub2(screenPoint2,screenPoint1),1000),screenPoint2)
+						screenPoint5=add2(mul2(sub2(screenPoint3,screenPoint1),1000),screenPoint3)
+						--renderTris[#renderTris+1] = {{screenPoint3,screenPoint2,screenPoint4},255,0,0,curTri[7]+0.1}
+						--renderTris[#renderTris+1] = {{screenPoint3,screenPoint4,screenPoint5},0,0,255,curTri[7]+0.1}
+						--renderTris[#renderTris+1] = {{screenPoint3,screenPoint2,screenPoint4,screenPoint5},0,0,255,curTri[7]+0.1}
+						--renderTris[#renderTris+1] = {screenPoint2,screenPoint4,screenPoint3,curTri[4],curTri[5],curTri[6],curTri[7]}
+						--renderTris[#renderTris+1] = {screenPoint3,screenPoint4,screenPoint5,curTri[4],curTri[5],curTri[6],curTri[7]}
+						shape = {screenPoint3,screenPoint2,screenPoint4,screenPoint5}
+					else
+						screenPoint4=add2(mul2(sub2(screenPoint1,screenPoint2),1000),screenPoint2)
+						screenPoint5=add2(mul2(sub2(screenPoint1,screenPoint3),1000),screenPoint3)
+						--renderTris[#renderTris+1] = {screenPoint1,screenPoint4,screenPoint5,255,0,255,curTri[7]}
+						--renderTris[#renderTris+1] = {screenPoint1,screenPoint4,screenPoint5,curTri[4],curTri[5],curTri[6],curTri[7]}
+						shape = {screenPoint1,screenPoint5,screenPoint4}
+					end
+				end
+				
+				if sideVal >= 1 then
+					p1 = shape[1]
+					p2 = shape[2]
+					p3 = shape[3]
+					
+					triBoundingL = mn(p1[1],p2[1],p3[1])
+					triBoundingR = mx(p1[1],p2[1],p3[1])
+					triBoundingT = mn(p1[2],p2[2],p3[2])
+					triBoundingB = mx(p1[2],p2[2],p3[2])
+					
+					if (triBoundingR>viewBoundingOuterBoxL and triBoundingL<viewBoundingOuterBoxR) and (triBoundingB>viewBoundingOuterBoxT and triBoundingT<viewBoundingOuterBoxB) then
+						if triBoundingL<viewBoundingInnerBoxL or triBoundingR>viewBoundingInnerBoxR or triBoundingT<viewBoundingInnerBoxT or triBoundingB>viewBoundingInnerBoxB then
+							for j=1,#viewBounding do
+								x1,y1=unpack(viewBounding[j])
+								x2,y2=unpack(viewBounding[j%viewBoundingLen+1])
+								newShape = {}
+								shapeLen = #shape
+								for k=1,shapeLen do
+									v3 = shape[k]
+									x3,y3=unpack(v3)
+									x4,y4=unpack(shape[k%shapeLen+1])
+									v3check = (x2-x1)*(y3-y1) - (y2-y1)*(x3-x1)
+									v4check = (x2-x1)*(y4-y1) - (y2-y1)*(x4-x1)
+									if v3check*v4check<0 then
+										uA = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
+										intersection = {x1 + (uA * (x2-x1)),y1 + (uA * (y2-y1))}
+									end
+									if v3check>0 and v4check<0 then
+										newShape[#newShape+1] = v3
+										newShape[#newShape+1] = intersection
+									elseif v3check<0 and v4check<0 then
+										
+									elseif v3check<0 and v4check>0 then
+										newShape[#newShape+1] = intersection
+									else
+										newShape[#newShape+1] = v3
+									end
+								end
+								shape = newShape
+							end
+							--processed = processed+1
+							
+						--else
+						--	accepted = accepted + 1
+						end
+						
+						renderTris[#renderTris+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7]*depthScale+depthOffset}
+					end
+				end
+			end
+		end
+	end
 end
 
 function onDraw()
