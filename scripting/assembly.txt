@@ -276,6 +276,7 @@ renderingLoop:
 		viewBoundingInnerBoxB = 80
 		
 		depthScale = 1
+		depthMinimum = 0
 		depthOffset = 0
 		
 	1 ~ endViewRenderingMaths
@@ -320,7 +321,8 @@ renderingLoop:
 		viewBoundingInnerBoxB = 0
 		
 		depthScale = 0.0001
-		depthOffset = dist3({portalPrimary[1],camPos})-1
+		depthMinimum = dist3({portalPrimary[1],camPos})
+		depthOffset = depthMinimum-1
 		
 		
 	endViewRenderingMaths:

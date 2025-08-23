@@ -640,7 +640,7 @@ function renderView()
 			curTri[7]=mx(p1[7],p2[7],p3[7])
 			a=curTri[8]
 			b=p1[3]
-			if dot(a,b)>0 then
+			if dot(a,b)>0 and curTri[7]>depthMinimum then
 				sideVal=p1[6]+p2[6]+p3[6]
 				if sideVal == 3 then
 					--renderTris[#renderTris+1] = {p1[5],p2[5],p3[5],curTri[4],curTri[5],curTri[6],curTri[7]}

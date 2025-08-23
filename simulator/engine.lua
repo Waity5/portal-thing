@@ -15,7 +15,7 @@ ba=string
 cn=O.sin
 cG=O.cos
 cm=O.tan
-dm=O.atan
+dn=O.atan
 N=table.unpack
 cb=O.huge
 
@@ -29,7 +29,7 @@ function F(a,c)return{a[1]+c[1],a[2]+c[2],a[3]+c[3]}end
 function h(a,c)return{a[1]-c[1],a[2]-c[2],a[3]-c[3]}end
 function g(a,c)return{a[1]*c,a[2]*c,a[3]*c}end
 
-function bt(a,c,E)return i(h(c,a),h(E,a))end
+function bt(a,c,E)return j(h(c,a),h(E,a))end
 function bi(a)return g(a,1/aK(a[1]^2+a[2]^2+a[3]^2))end
 function bp(a,c)return aK((a[1]-c[1])^2+(a[2]-c[2])^2+(a[3]-c[3])^2)end
 
@@ -40,7 +40,7 @@ _=1
 cA=cj
 dc=0
 bI=0
-dl={0,5,-10}dk={0,-.4,0}aZ=62.5
+dm={0,5,-10}dl={0,-.4,0}aZ=62.5
 cS=0
 ce=ct/180
 cZ=5/aZ
@@ -78,12 +78,12 @@ aP=aP+1
 end
 end
 
-function aQ(b,ar,bY)bB=h(ar,b[1])return l(i(g(i(bB,bY),b[11]),bB),bY)+b[10]end
+function aQ(b,ar,bY)bB=h(ar,b[1])return l(j(g(j(bB,bY),b[11]),bB),bY)+b[10]end
 
-function cd(b,ar,au)bv=h(ar,b[1])b[4]=bz(b[4],g(i(bv,au),-b[11]))b[1]=F(b[1],g(au,b[10]))end
+function cd(b,ar,au)bv=h(ar,b[1])b[4]=bz(b[4],g(j(bv,au),-b[11]))b[1]=F(b[1],g(au,b[10]))end
 
 function aS(b,ar,au)bv=h(ar,b[1])
-b[5]=F(b[5],g(i(bv,au),b[11]))b[2]=F(b[2],g(au,b[10]))end
+b[5]=F(b[5],g(j(bv,au),b[11]))b[2]=F(b[2],g(au,b[10]))end
 
 function an(cr,k)local ah=-cb
 for d,v in bn(cr)do
@@ -106,7 +106,7 @@ z={e,z[1],z[2],z[3]}
 a,c,E,ag=N(z)
 if ag then
 J=h(c,a)aj=h(E,a)cg=h(ag,a)A=g(a,-1)
-Z=i(J,aj)ch=i(aj,cg)cf=i(cg,J)
+Z=j(J,aj)ch=j(aj,cg)cf=j(cg,J)
 if l(Z,A)>0 then
 z={a,c,E}k=Z
 elseif l(ch,A)>0 then
@@ -167,10 +167,10 @@ return
 end
 elseif E then
 J=h(c,a)aj=h(E,a)A=g(a,-1)
-Z=i(J,aj)
-if l(i(Z,aj),A)>0 then
-z={a,E}k=i(i(aj,A),aj)elseif l(i(J,Z),A)>0 then
-z={a,c}k=i(i(J,A),J)else
+Z=j(J,aj)
+if l(j(Z,aj),A)>0 then
+z={a,E}k=j(j(aj,A),aj)elseif l(j(J,Z),A)>0 then
+z={a,c}k=j(j(J,A),J)else
 if l(Z,A)>0 then
 
 k=Z;
@@ -180,7 +180,7 @@ end
 elseif c then
 J=h(c,a)A=g(a,-1)
 if l(J,A)>0 then
-k=i(i(J,A),J)else
+k=j(j(J,A),J)else
 z={a}k=A
 end
 else
@@ -206,7 +206,7 @@ end
 cv={I[1]or{0,0,0},I[2]or{0,0,0},I[3]or{0,0,0},I[4]or{1,0,0,0},I[5]or{0,0,0},I[6]or{0,0,0},bS,bR,bT,I[7]or 1,I[8]or 1,I[9]or{0,0,0},u[1][D][7],D,{},{},}ad[#ad+1]=cv
 end
 
-function i(a,c)return{a[2]*c[3]-a[3]*c[2],a[3]*c[1]-a[1]*c[3],a[1]*c[2]-a[2]*c[1]}end
+function j(a,c)return{a[2]*c[3]-a[3]*c[2],a[3]*c[1]-a[1]*c[3],a[1]*c[2]-a[2]*c[1]}end
 
 function l(a,c)return a[1]*c[1]+a[2]*c[2]+a[3]*c[3]end
 
@@ -343,11 +343,11 @@ an(X,g(y[1],-1))ai=aM
 if#W==1 then
 p=U[W[1]][2]elseif#ai==1 then
 p=X[ai[1]][2]elseif#W==2 and#ai==2 then
-bq=h(U[W[2]][2],U[W[1]][2])bX=h(X[ai[2]][2],X[ai[1]][2])bP=i(bX,i(bq,bX))p=F(U[W[1]][2],g(bq,l(h(X[ai[1]][2],U[W[1]][2]),bP)/l(bq,bP)))else
+bq=h(U[W[2]][2],U[W[1]][2])bX=h(X[ai[2]][2],X[ai[1]][2])bP=j(bX,j(bq,bX))p=F(U[W[1]][2],g(bq,l(h(X[ai[1]][2],U[W[1]][2]),bP)/l(bq,bP)))else
 p=n[13]>r[13]and X[ai[1]][2]or U[W[1]][2]end
 
 
-aX=F(i(n[5],h(p,n[1])),n[2])aW=F(i(r[5],h(p,r[1])),r[2])aI=h(aX,aW)
+aX=F(j(n[5],h(p,n[1])),n[2])aW=F(j(r[5],h(p,r[1])),r[2])aI=h(aX,aW)
 aH=l(y[1],aI)if aH>0 then
 
 
@@ -369,7 +369,7 @@ aS(n,p,g(y[1],-bg))aS(r,p,g(y[1],bg))
 
 
 
-aX=F(i(n[5],h(p,n[1])),n[2])aW=F(i(r[5],h(p,r[1])),r[2])aI=h(aX,aW)
+aX=F(j(n[5],h(p,n[1])),n[2])aW=F(j(r[5],h(p,r[1])),r[2])aI=h(aX,aW)
 aH=l(y[1],aI)
 bG=h(aI,g(y[1],aH))
 bH=bp(bG,{0,0,0})if bH>.001 then
@@ -411,8 +411,8 @@ function cV()for D=1,#ad do
 b=ad[D]
 
 for d=1,#b[7]do
-e=b[7][d]e[2]=bk(e[1],b[16])e[2]=F(e[2],b[1])e[3]=h(e[2],dj)
-e[4]=bk(e[3],di)bo=e[3]e[7]=aK(bo[1]^2+bo[2]^2+bo[3]^2)
+e=b[7][d]e[2]=bk(e[1],b[16])e[2]=F(e[2],b[1])e[3]=h(e[2],dk)
+e[4]=bk(e[3],dj)bo=e[3]e[7]=aK(bo[1]^2+bo[2]^2+bo[3]^2)
 e[5]={e[4][1]*bb/e[4][3],-e[4][2]*bb/e[4][3]}e[6]=e[4][3]>0 and 1 or 0
 
 end
@@ -420,13 +420,13 @@ end
 if b[11]>0 or not b[8][1][8]then
 
 for d=1,#b[8]do
-j=b[8][d],1
+i=b[8][d],1
 
-j[8]=bt(b[7][j[1]][2],b[7][j[2]][2],b[7][j[3]][2])end
+i[8]=bt(b[7][i[1]][2],b[7][i[2]][2],b[7][i[3]][2])end
 end
 
 for d=1,#b[8]do
-j=b[8][d]m=b[7][j[1]]q=b[7][j[2]]s=b[7][j[3]]j[7]=aN(m[7],q[7],s[7])a=j[8]c=m[3]if l(a,c)>0 then
+i=b[8][d]m=b[7][i[1]]q=b[7][i[2]]s=b[7][i[3]]i[7]=aN(m[7],q[7],s[7])a=i[8]c=m[3]if l(a,c)>0 and i[7]>di then
 ak=m[6]+q[6]+s[6]if ak==3 then
 
 t={m[5],q[5],s[5]}elseif ak>=1 then
@@ -475,7 +475,7 @@ end
 
 end
 
-aq[#aq+1]={t,j[4],j[5],j[6],j[7]*dg+dh}end
+aq[#aq+1]={t,i[4],i[5],i[6],i[7]*dg+dh}end
 end
 end
 end
@@ -516,9 +516,9 @@ bb=cm(cE/2)*B
 if bm then
 
 for d=1,#aq do
-j=aq[d]t=j[1]
+i=aq[d]t=i[1]
 m=t[1]for f=3,#t do
-q=t[f-1]s=t[f]bK(j[2],j[3],j[4])ck(m[1]+B,m[2]+am,q[1]+B,q[2]+am,s[1]+B,s[2]+am)bK(j[2]*.5,j[3]*.5,j[4]*.5)cl(m[1]+B,m[2]+am-.5,q[1]+B,q[2]+am-.5,s[1]+B,s[2]+am-.5)end
+q=t[f-1]s=t[f]bK(i[2],i[3],i[4])ck(m[1]+B,m[2]+am,q[1]+B,q[2]+am,s[1]+B,s[2]+am)bK(i[2]*.5,i[3]*.5,i[4]*.5)cl(m[1]+B,m[2]+am-.5,q[1]+B,q[2]+am-.5,s[1]+B,s[2]+am-.5)end
 end
 
 
