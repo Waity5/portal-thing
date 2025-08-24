@@ -561,7 +561,7 @@ function onTick()
 								if totalSpeedTangential>0.001 then
 									unitFriction = norm3(totalVelocityTangential)
 									movementFromFriction = getMovementPerUnitForce(object1,trueContactPoint,unitFriction) + getMovementPerUnitForce(object2,trueContactPoint,unitFriction)
-									frictionForce = mn(totalSpeedTangential/movementFromFriction, pushForce)
+									frictionForce = mn(totalSpeedTangential/movementFromFriction, pushForce*0.5)
 									
 									applyForce(object1,trueContactPoint,mul3(unitFriction,-frictionForce))
 									applyForce(object2,trueContactPoint,mul3(unitFriction,frictionForce))
@@ -588,6 +588,28 @@ function onTick()
 		end
 		
 		
+			
+		for index = 1,#objects do -- pre-rendering maths
+			object = objects[index]
+			--object[16] = quaternionToMatrix(object[4])
+			
+			for i=1,#object[7] do
+				crPoint=object[7][i]
+				crPoint[2] = multVectorByMatrix(crPoint[1],object[16])
+				crPoint[2]=add3(crPoint[2],object[1])
+				
+			end
+			
+			if object[11]>0 or not object[8][1][8]then
+				--print(#object[7],#object[8],#object[9])
+				for i=1,#object[8] do
+					curTri = object[8][i],1
+					--print(curTri[1],curTri[2],curTri[3])
+					curTri[8]=crossPoints(object[7][curTri[1]][2], object[7][curTri[2]][2], object[7][curTri[3]][2])
+				end
+			end
+		end
+		
 		executeScript("renderFunc")
 			
 			
@@ -609,8 +631,6 @@ function renderView()
 		
 		for i=1,#object[7] do
 			crPoint=object[7][i]
-			crPoint[2] = multVectorByMatrix(crPoint[1],object[16])
-			crPoint[2]=add3(crPoint[2],object[1])
 			crPoint[3]=sub3(crPoint[2],cameraPosition)
 			
 			crPoint[4]=multVectorByMatrix(crPoint[3],cameraRotationMatrix)
@@ -623,14 +643,6 @@ function renderView()
 			
 		end
 		
-		if object[11]>0 or not object[8][1][8]then
-			--print(#object[7],#object[8],#object[9])
-			for i=1,#object[8] do
-				curTri = object[8][i],1
-				--print(curTri[1],curTri[2],curTri[3])
-				curTri[8]=crossPoints(object[7][curTri[1]][2], object[7][curTri[2]][2], object[7][curTri[3]][2])
-			end
-		end
 		
 		for i=1,#object[8] do
 			curTri = object[8][i]

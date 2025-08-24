@@ -48,6 +48,7 @@ if __name__ == '__main__':
         "skybox": {"colour": (46,132,200), "shading": False},
         "portal_orange": {"colour": (255,100,0), "shading": False},
         "portal_blue": {"colour": (0,100,255), "shading": False},
+        "player_bounding": {"colour": (255,0,0), "shading": True},
         }
 
     object_names = [*objects]

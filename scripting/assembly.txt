@@ -6,8 +6,7 @@ init = objects[1]
 
 grav = {0,-9.81,0}
 
-wheelbase = 2.7/2
-trackwidth = 1.78/2
+playerMoveForce = 10
 
 
 --junk = summonObject({"track1", {{0,-1,0},[7]=0,[8]=0}})
@@ -15,16 +14,19 @@ trackwidth = 1.78/2
 --junk = summonObject({"track3", {{5.5,-3,40},[7]=0,[8]=0}})
 junk = summonObject({"widest_cube", {{0,-1,0},[7]=0,[8]=0}})
 junk = summonObject({"skybox", {[7]=0,[8]=0}})
-junk = summonObject({"blender_cube", {{0,1,11},[7]=0,[8]=0}})
+--junk = summonObject({"blender_cube", {{0,1,11},[7]=0,[8]=0}})
+--junk = summonObject({"blender_cube", {{-4,1,7},[7]=0,[8]=0}})
+
 junk = summonObject({"portal_orange", {{0,1,10},[7]=0,[8]=0}})
 portalOrange = objects[#objects]
-junk = summonObject({"blender_cube", {{-4,1,7},[7]=0,[8]=0}})
 junk = summonObject({"portal_blue", {{-3,1,7},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
 portalBlue = objects[#objects]
+junk = summonObject({"player_bounding", {{0,3,0},[7]=1,[8]=0,[9]=grav}})
+player = objects[#objects]
 
 i = -3
 summonBoxes:
-	junk = summonObject({"blender_cube",{{10,1,i*5},[7]=1/1500,[8]=1/1500,[9]=grav}})
+	junk = summonObject({"blender_cube",{{10,1,i*5},[7]=1,[8]=1,[9]=grav}})
 	i = i+1
 4>i ~ summonBoxes
 
@@ -46,18 +48,23 @@ tickFunc:
 moveSpeedInv = 1/moveSpeed
 rotateSpeedInv = 1/rotateSpeed
 
-gB31 = gB({31})
-gB31 ~ holdingSpace
-	camPos[1] = camPos[1] + (gN({1})*cos({camRot[1]}) - gN({2})*sin({camRot[1]})) / moveSpeedInv
-	camPos[3] = camPos[3] + (gN({1})*sin({camRot[1]}) + gN({2})*cos({camRot[1]})) / moveSpeedInv
-	maxPushForce = 0.5
-	otherPushColours = 50
-	1 ~ endCamMove
-holdingSpace:
-	camPos[2]=camPos[2] + gN({2}) / moveSpeedInv
-	maxPushForce = 2.5
-	otherPushColours = 0
-endCamMove:
+--gB31 = gB({31})
+--gB31 ~ holdingSpace
+--	camPos[1] = camPos[1] + (gN({1})*cos({camRot[1]}) - gN({2})*sin({camRot[1]})) / moveSpeedInv
+--	camPos[3] = camPos[3] + (gN({1})*sin({camRot[1]}) + gN({2})*cos({camRot[1]})) / moveSpeedInv
+--	maxPushForce = 0.5
+--	otherPushColours = 50
+--	1 ~ endCamMove
+--holdingSpace:
+--	camPos[2]=camPos[2] + gN({2}) / moveSpeedInv
+--	maxPushForce = 2.5
+--	otherPushColours = 0
+--endCamMove:
+camPos = player[1]
+
+playerMoveForceCr = mul3({{gN({1})*cos({camRot[1]}) - (gN({2})*sin({camRot[1]})), 0, gN({1})*sin({camRot[1]}) + (gN({2})*cos({camRot[1]}))}, playerMoveForce*deltaTime})
+
+junk = applyForce({player,player[1],playerMoveForceCr})
 
 camRot[1]=camRot[1] - gN({3})/rotateSpeedInv
 camRot[2]=camRot[2] + gN({4})/rotateSpeedInv
@@ -106,21 +113,20 @@ cameraRotationVector = {0-s_a*c_b,s_b,c_a*c_b}
 exit
 
 
+
+
+
+
+
 postTransformFunc:
 
 
-turn = turn*0.95 + gN({1})*0.05
-turnCr = turn-0
 
-turnS = sin({turnCr})/0.01
-turnC = cos({turnCr})/0.01
-
-
-pegPoints = {}
 
 
 
 
+pegPoints = {}
 
 
 i = 0
@@ -227,6 +233,23 @@ exit
 
 
 renderFunc:
+
+-- temporarily put this here
+
+isColliding = gjkCollisionDetection({portalOrange[7],player[9]})
+isColliding ~ dontSkipOrangeCollision
+1 ~ skipOrangeCollision
+dontSkipOrangeCollision:
+	sideVal = dot({sub3({player[1],portalOrange[1]}), portalOrange[8][1][8]})
+	0 > sideVal ~ skipOrangeTeleport
+		player[1] = add3({sub3({player[1],portalOrange[1]}), portalBlue[1]})
+		camRot[1] = camRot[1] - (pi/2)
+		
+	skipOrangeTeleport:
+skipOrangeCollision:
+
+
+
 
 renderingPassGlobal = 0
 renderingLoop:
