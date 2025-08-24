@@ -276,7 +276,7 @@ function summonObject(index,conditions)
 	j=1
 	for i=M[1][index][3],M[1][index][4] do
 		cr=M[3][i]
-		newTris[j]=cr
+		newTris[j]={unpack(cr)}
 		j=j+1
 	end
 	newPhys={}
@@ -603,7 +603,7 @@ function onTick()
 			if object[11]>0 or not object[8][1][8]then
 				--print(#object[7],#object[8],#object[9])
 				for i=1,#object[8] do
-					curTri = object[8][i],1
+					curTri = object[8][i]
 					--print(curTri[1],curTri[2],curTri[3])
 					curTri[8]=crossPoints(object[7][curTri[1]][2], object[7][curTri[2]][2], object[7][curTri[3]][2])
 				end
@@ -625,6 +625,9 @@ function onTick()
 end
 
 function renderView()
+	
+	
+	
 	for index = 1,#objects do -- triangle position calculation a.k.a. the 3D rendering
 		object = objects[index]
 		--object[16] = quaternionToMatrix(object[4])
@@ -643,6 +646,9 @@ function renderView()
 			
 		end
 		
+
+
+		
 		
 		for i=1,#object[8] do
 			curTri = object[8][i]
@@ -650,9 +656,8 @@ function renderView()
 			p2 = object[7][curTri[2]]
 			p3 = object[7][curTri[3]]
 			curTri[7]=mx(p1[7],p2[7],p3[7])
-			a=curTri[8]
 			b=p1[3]
-			if dot(a,b)>0 and curTri[7]>depthMinimum then
+			if dot(curTri[8],b)>0 and curTri[7]>depthMinimum then
 				sideVal=p1[6]+p2[6]+p3[6]
 				if sideVal == 3 then
 					--renderTris[#renderTris+1] = {p1[5],p2[5],p3[5],curTri[4],curTri[5],curTri[6],curTri[7]}
