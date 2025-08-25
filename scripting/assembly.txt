@@ -17,9 +17,9 @@ junk = summonObject({"skybox", {[7]=0,[8]=0}})
 --junk = summonObject({"blender_cube", {{0,1,11},[7]=0,[8]=0}})
 --junk = summonObject({"blender_cube", {{-4,1,7},[7]=0,[8]=0}})
 
-junk = summonObject({"portal_orange", {{0,1,10},[7]=0,[8]=0}})
+junk = summonObject({"portal_orange", {{0,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
 portalOrange = objects[#objects]
-junk = summonObject({"portal_blue", {{-3,1,7},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
+junk = summonObject({"portal_blue", {{0,2,7},[4]={0.75,0.25,0,0},[7]=0,[8]=0}})
 portalBlue = objects[#objects]
 junk = summonObject({"player_bounding", {{0,3,0},[7]=1,[8]=0,[9]=grav}})
 player = objects[#objects]
@@ -120,6 +120,27 @@ exit
 
 postTransformFunc:
 
+portalOrangeQuaternion = portalOrange[4]
+portalOrangeQuaternionInverse = {0-portalOrangeQuaternion[1],portalOrangeQuaternion[2],portalOrangeQuaternion[3],portalOrangeQuaternion[4]}
+portalBlueQuaternion = multQuaternionByQuaternion({{0,0,1,0},portalBlue[4]})
+portalBlueQuaternionInverse = {0-portalBlueQuaternion[1],portalBlueQuaternion[2],portalBlueQuaternion[3],portalBlueQuaternion[4]}
+
+--cameraRotationQuaternion = multQuaternionByQuaternion({multQuaternionByQuaternion({portalBlueQuaternionInverse,portalOrangeQuaternion}), cameraRotationQuaternion})
+
+portalBlueToOrangeCamQuaternion = multQuaternionByQuaternion({portalBlueQuaternionInverse,portalOrangeQuaternion})
+portalOrangeToBluePosQuaternion = multQuaternionByQuaternion({portalOrangeQuaternionInverse,portalBlueQuaternion})
+portalOrangeToBlueCamQuaternion = {portalBlueToOrangeCamQuaternion[1], 0-portalBlueToOrangeCamQuaternion[2], 0-portalBlueToOrangeCamQuaternion[3], 0-portalBlueToOrangeCamQuaternion[4]}
+portalBlueToOrangePosQuaternion = {portalOrangeToBluePosQuaternion[1], 0-portalOrangeToBluePosQuaternion[2], 0-portalOrangeToBluePosQuaternion[3], 0-portalOrangeToBluePosQuaternion[4]}
+
+
+
+--portalPrimaryQuaternion = portalPrimary[4]
+--portalPrimaryQuaternionInverse = {0-portalPrimaryQuaternion[1],portalPrimaryQuaternion[2],portalPrimaryQuaternion[3],portalPrimaryQuaternion[4]}
+--portalSecondaryQuaternion = multQuaternionByQuaternion({{0,0,1,0},portalSecondary[4]})
+--portalSecondaryQuaternionInverse = {0-portalSecondaryQuaternion[1],portalSecondaryQuaternion[2],portalSecondaryQuaternion[3],portalSecondaryQuaternion[4]}
+--cameraRotationQuaternion = multQuaternionByQuaternion({multQuaternionByQuaternion({portalSecondaryQuaternionInverse,portalPrimaryQuaternion}), cameraRotationQuaternion})
+--
+--cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({camPos,portalPrimary[1]}), quaternionToMatrix({multQuaternionByQuaternion({portalPrimaryQuaternionInverse,portalSecondaryQuaternion})})})})
 
 
 
@@ -308,10 +329,14 @@ renderingLoop:
 		renderingPassGlobal > 2 ~ chooseBluePortal
 			portalPrimary = {portalOrange}[1]
 			portalSecondary = {portalBlue}[1]
+			portalSecondaryToPrimaryCamQuaternion = {portalBlueToOrangeCamQuaternion}[1]
+			portalPrimarytoSecondaryPosQuaternion = {portalOrangeToBluePosQuaternion}[1]
 		1 ~ endPortalChoosing
 		chooseBluePortal:
 			portalPrimary = {portalBlue}[1]
 			portalSecondary = {portalOrange}[1]
+			portalSecondaryToPrimaryCamQuaternion = {portalOrangeToBlueCamQuaternion}[1]
+			portalPrimarytoSecondaryPosQuaternion = {portalBlueToOrangePosQuaternion}[1]
 		endPortalChoosing:
 			
 		
@@ -322,13 +347,9 @@ renderingLoop:
 		
 		junk = executeScript({cameraRotationToQuaternion})
 		
-		portalPrimaryQuaternion = portalPrimary[4]
-		portalPrimaryQuaternionInverse = {0-portalPrimaryQuaternion[1],portalPrimaryQuaternion[2],portalPrimaryQuaternion[3],portalPrimaryQuaternion[4]}
-		portalSecondaryQuaternion = multQuaternionByQuaternion({{0,0,1,0},portalSecondary[4]})
-		portalSecondaryQuaternionInverse = {0-portalSecondaryQuaternion[1],portalSecondaryQuaternion[2],portalSecondaryQuaternion[3],portalSecondaryQuaternion[4]}
-		cameraRotationQuaternion = multQuaternionByQuaternion({multQuaternionByQuaternion({portalPrimary[4],portalSecondaryQuaternionInverse}), cameraRotationQuaternion})
 		
-		cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({camPos,portalPrimary[1]}), quaternionToMatrix({multQuaternionByQuaternion({portalSecondaryQuaternion,portalPrimaryQuaternionInverse})})})})
+		cameraRotationQuaternion = multQuaternionByQuaternion({portalSecondaryToPrimaryCamQuaternion, cameraRotationQuaternion})
+		cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({camPos,portalPrimary[1]}), quaternionToMatrix({portalPrimarytoSecondaryPosQuaternion})})})
 		
 
 		--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
