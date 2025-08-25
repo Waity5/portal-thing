@@ -285,7 +285,7 @@ renderingLoop:
 			i = i + 1
 			viewBounding = {}
 			portalMesh = portalsToAreaMath[i][7]
-			portalMeshLen = #portalMesh
+			portalMeshLen = 8 --#portalMesh -- no longer uses entire mesh
 			index1 = 0
 			index2 = 0
 			portalLoop:

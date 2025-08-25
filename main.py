@@ -174,11 +174,14 @@ if __name__ == '__main__':
             points = list(set(points))
 
             
-            if object_name == "portal_orange" or object_name == "portal_blue":
+            if object_name == "portal_orange" or object_name == "portal_blue": #with a better way to edit meshes this wouldn't be needed
                 points = [(-atan2(i[2],i[0]),i) for i in points]
                 points.sort()
                 points = [i[1] for i in points]
-                print(points)
+                for i in range(len(points)):
+                    points.append(points[i])
+                    points[i] = [j*0.9 for j in points[i]]
+                #print(points)
             
             #print(len(phys_points),"phys points")
             
