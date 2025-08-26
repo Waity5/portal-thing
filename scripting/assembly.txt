@@ -134,13 +134,11 @@ portalBlueQuaternionInverse = {0-portalBlueQuaternion[1],portalBlueQuaternion[2]
 
 --cameraRotationQuaternion = multQuaternionByQuaternion({multQuaternionByQuaternion({portalBlueQuaternionInverse,portalOrangeQuaternion}), cameraRotationQuaternion})
 
-portalBlueToOrangeCamQuaternion = multQuaternionByQuaternion({portalBlueQuaternionInverse,portalOrangeQuaternion})
-portalOrangeToBluePosQuaternion = multQuaternionByQuaternion({portalOrangeQuaternionInverse,portalBlueQuaternion})
-portalOrangeToBlueCamQuaternion = {portalBlueToOrangeCamQuaternion[1], 0-portalBlueToOrangeCamQuaternion[2], 0-portalBlueToOrangeCamQuaternion[3], 0-portalBlueToOrangeCamQuaternion[4]}
-portalBlueToOrangePosQuaternion = {portalOrangeToBluePosQuaternion[1], 0-portalOrangeToBluePosQuaternion[2], 0-portalOrangeToBluePosQuaternion[3], 0-portalOrangeToBluePosQuaternion[4]}
+portalBlueToOrangeQuaternion = multQuaternionByQuaternion({portalBlueQuaternionInverse,portalOrangeQuaternion})
+portalOrangeToBlueQuaternion = {portalBlueToOrangeQuaternion[1], 0-portalBlueToOrangeQuaternion[2], 0-portalBlueToOrangeQuaternion[3], 0-portalBlueToOrangeQuaternion[4]}
 
-portalOrangeToBluePosMatrix = quaternionToMatrix({portalOrangeToBluePosQuaternion})
-portalBlueToOrangePosMatrix = quaternionToMatrix({portalBlueToOrangePosQuaternion})
+portalOrangeToBlueMatrix = quaternionToMatrix({portalOrangeToBlueQuaternion})
+portalBlueToOrangeMatrix = quaternionToMatrix({portalBlueToOrangeQuaternion})
 
 
 --portalPrimaryQuaternion = portalPrimary[4]
@@ -274,12 +272,12 @@ dontSkipOrangeCollision:
 	0 > sideVal ~ skipOrangeTeleport
 		player[1] = add3({sub3({player[1],portalOrange[1]}), portalBlue[1]})
 		--camRot[1] = camRot[1] - (pi/2)
-		player[2] = multVectorByMatrix({player[2],portalOrangeToBluePosMatrix})
+		player[2] = multVectorByMatrix({player[2],portalOrangeToBlueMatrix})
 		
 		cameraRotation = {camRot}[1]
 		junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
 		cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-		cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalOrangeToBlueCamQuaternion})
+		cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalOrangeToBlueQuaternion})
 		cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
 		junk = executeScript({quaternionToCameraRotation})
 		
@@ -353,14 +351,14 @@ renderingLoop:
 		renderingPassGlobal > 2 ~ chooseBluePortal
 			portalPrimary = {portalOrange}[1]
 			portalSecondary = {portalBlue}[1]
-			portalSecondaryToPrimaryCamQuaternion = {portalBlueToOrangeCamQuaternion}[1]
-			portalPrimarytoSecondaryPosMatrix = {portalOrangeToBluePosMatrix}[1]
+			portalSecondaryToPrimaryQuaternion = {portalBlueToOrangeQuaternion}[1]
+			portalPrimarytoSecondaryMatrix = {portalOrangeToBlueMatrix}[1]
 		1 ~ endPortalChoosing
 		chooseBluePortal:
 			portalPrimary = {portalBlue}[1]
 			portalSecondary = {portalOrange}[1]
-			portalSecondaryToPrimaryCamQuaternion = {portalOrangeToBlueCamQuaternion}[1]
-			portalPrimarytoSecondaryPosMatrix = {portalBlueToOrangePosMatrix}[1]
+			portalSecondaryToPrimaryQuaternion = {portalOrangeToBlueQuaternion}[1]
+			portalPrimarytoSecondaryMatrix = {portalBlueToOrangeMatrix}[1]
 		endPortalChoosing:
 			
 		
@@ -372,8 +370,8 @@ renderingLoop:
 		junk = executeScript({cameraRotationToQuaternion})
 		
 		
-		cameraRotationQuaternion = multQuaternionByQuaternion({portalSecondaryToPrimaryCamQuaternion, cameraRotationQuaternion})
-		cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({camPos,portalPrimary[1]}), portalPrimarytoSecondaryPosMatrix})})
+		cameraRotationQuaternion = multQuaternionByQuaternion({portalSecondaryToPrimaryQuaternion, cameraRotationQuaternion})
+		cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({camPos,portalPrimary[1]}), portalPrimarytoSecondaryMatrix})})
 		
 
 		--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
