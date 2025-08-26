@@ -16,13 +16,14 @@ sin=m.sin
 cos=m.cos
 tan=m.tan
 atan=m.atan
+asin=m.asin
 unpack=table.unpack
 bigNum=m.huge
 
 function add2(a,b)return{(a[1]+b[1]),(a[2]+b[2])}end
 function sub2(a,b)return{(a[1]-b[1]),(a[2]-b[2])}end
 function mul2(a,b)return{a[1]*b,a[2]*b}end
---function clmp(a,b,c)return mn(mx(b,a),c)end
+function clmp(a,b,c)return mn(mx(b,a),c)end
 --function rnd(a)return flr(a+0.5)end
 --function dist(a,b)return sqrt(((a[1]-b[1])^2)+((a[2]-b[2])^2)+((a[3]-b[3])^2))end
 function add3(a,b)return{a[1]+b[1],a[2]+b[2],a[3]+b[3]}end
@@ -42,7 +43,7 @@ init=trueVar
 httpTk=0
 tick=0
 camPos={0,5,-10}
-camRot={0,-0.4,0}
+camRot={0,0,0}
 tickRate=62.5
 turn=0
 angleConvert=pi/180

@@ -8,6 +8,8 @@ grav = {0,-9.81,0}
 
 playerMoveForce = 10
 
+maxRollCorrection = 1
+
 
 --junk = summonObject({"track1", {{0,-1,0},[7]=0,[8]=0}})
 --junk = summonObject({"track2", {{0,-3,40},[7]=0,[8]=0}})
@@ -19,7 +21,7 @@ junk = summonObject({"skybox", {[7]=0,[8]=0}})
 
 junk = summonObject({"portal_orange", {{0,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
 portalOrange = objects[#objects]
-junk = summonObject({"portal_blue", {{0,2,7},[4]={0.75,0.25,0,0},[7]=0,[8]=0}})
+junk = summonObject({"portal_blue", {{0,2,7},[4]={0.75,-0.25,0,0},[7]=0,[8]=0}})
 portalBlue = objects[#objects]
 junk = summonObject({"player_bounding", {{0,3,0},[7]=1,[8]=0,[9]=grav}})
 player = objects[#objects]
@@ -68,6 +70,11 @@ junk = applyForce({player,player[1],playerMoveForceCr})
 
 camRot[1]=camRot[1] - gN({3})/rotateSpeedInv
 camRot[2]=camRot[2] + gN({4})/rotateSpeedInv
+--camRot[3]=camRot[3] + gN({1})/rotateSpeedInv
+
+maxRollCorrectionCur = maxRollCorrection*deltaTime
+camRot[3] = clmp({0, camRot[3]-maxRollCorrectionCur, camRot[3]+maxRollCorrectionCur})
+
 
 pushForce = 0
 pushColour = {}
@@ -132,6 +139,8 @@ portalOrangeToBluePosQuaternion = multQuaternionByQuaternion({portalOrangeQuater
 portalOrangeToBlueCamQuaternion = {portalBlueToOrangeCamQuaternion[1], 0-portalBlueToOrangeCamQuaternion[2], 0-portalBlueToOrangeCamQuaternion[3], 0-portalBlueToOrangeCamQuaternion[4]}
 portalBlueToOrangePosQuaternion = {portalOrangeToBluePosQuaternion[1], 0-portalOrangeToBluePosQuaternion[2], 0-portalOrangeToBluePosQuaternion[3], 0-portalOrangeToBluePosQuaternion[4]}
 
+portalOrangeToBluePosMatrix = quaternionToMatrix({portalOrangeToBluePosQuaternion})
+portalBlueToOrangePosMatrix = quaternionToMatrix({portalBlueToOrangePosQuaternion})
 
 
 --portalPrimaryQuaternion = portalPrimary[4]
@@ -264,7 +273,21 @@ dontSkipOrangeCollision:
 	sideVal = dot({sub3({player[1],portalOrange[1]}), portalOrange[8][1][8]})
 	0 > sideVal ~ skipOrangeTeleport
 		player[1] = add3({sub3({player[1],portalOrange[1]}), portalBlue[1]})
-		camRot[1] = camRot[1] - (pi/2)
+		--camRot[1] = camRot[1] - (pi/2)
+		player[2] = multVectorByMatrix({player[2],portalOrangeToBluePosMatrix})
+		
+		cameraRotation = {camRot}[1]
+		junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
+		cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+		cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalOrangeToBlueCamQuaternion})
+		cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+		junk = executeScript({quaternionToCameraRotation})
+		
+		--junk = print(portalOrangeToBlueCamQuaternion)
+		--junk = print(portalOrangeToBluePosQuaternion)
+		
+		--junk = print({"OK"})
+
 		
 	skipOrangeTeleport:
 skipOrangeCollision:
@@ -306,6 +329,7 @@ renderingLoop:
 		cameraPosition = {camPos}[1]
 		cameraRotation = {camRot}[1]
 		junk = executeScript({cameraRotationToQuaternion})
+		
 
 		--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
 
@@ -330,13 +354,13 @@ renderingLoop:
 			portalPrimary = {portalOrange}[1]
 			portalSecondary = {portalBlue}[1]
 			portalSecondaryToPrimaryCamQuaternion = {portalBlueToOrangeCamQuaternion}[1]
-			portalPrimarytoSecondaryPosQuaternion = {portalOrangeToBluePosQuaternion}[1]
+			portalPrimarytoSecondaryPosMatrix = {portalOrangeToBluePosMatrix}[1]
 		1 ~ endPortalChoosing
 		chooseBluePortal:
 			portalPrimary = {portalBlue}[1]
 			portalSecondary = {portalOrange}[1]
 			portalSecondaryToPrimaryCamQuaternion = {portalOrangeToBlueCamQuaternion}[1]
-			portalPrimarytoSecondaryPosQuaternion = {portalBlueToOrangePosQuaternion}[1]
+			portalPrimarytoSecondaryPosMatrix = {portalBlueToOrangePosMatrix}[1]
 		endPortalChoosing:
 			
 		
@@ -349,7 +373,7 @@ renderingLoop:
 		
 		
 		cameraRotationQuaternion = multQuaternionByQuaternion({portalSecondaryToPrimaryCamQuaternion, cameraRotationQuaternion})
-		cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({camPos,portalPrimary[1]}), quaternionToMatrix({portalPrimarytoSecondaryPosQuaternion})})})
+		cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({camPos,portalPrimary[1]}), portalPrimarytoSecondaryPosMatrix})})
 		
 
 		--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
@@ -418,18 +442,41 @@ a=cameraRotation[1]/-2
 b=cameraRotation[2]/-2
 c=cameraRotation[3]/-2
 
-cr = cos({b})
-sr = sin({b})
-cp = cos({a})
-sp = sin({a})
-cy = cos({c})
-sy = sin({c})
+cr = cos({c})
+sr = sin({c})
+cp = cos({b})
+sp = sin({b})
+cy = cos({a})
+sy = sin({a})
 
 
 cameraRotationQuaternion = {}
 cameraRotationQuaternion[1] = cr * cp * cy + sr * sp * sy
-cameraRotationQuaternion[2] = sr * cp * cy - cr * sp * sy
-cameraRotationQuaternion[3] = cr * sp * cy + sr * cp * sy
-cameraRotationQuaternion[4] = cr * cp * sy - sr * sp * cy
+cameraRotationQuaternion[4] = sr * cp * cy - cr * sp * sy
+cameraRotationQuaternion[2] = cr * sp * cy + sr * cp * sy
+cameraRotationQuaternion[3] = cr * cp * sy - sr * sp * cy
+
+exit
+
+quaternionToCameraRotation:
+
+
+qw = cameraRotationQuaternion[1]
+qx = cameraRotationQuaternion[4] -- the yaw pitch and roll axis weren't the same, ok?
+qy = cameraRotationQuaternion[2]
+qz = cameraRotationQuaternion[3]
+
+-- Roll (x-axis rotation)
+roll = 0-(atan({2 * (qw * qx + qy * qz), 1 - (2 * (qx*qx + qy*qy))}))
+
+-- Pitch (y-axis rotation)
+pitch = 0-(asin({2 * (qw * qy - qz * qx)}))
+
+-- Yaw (z-axis rotation)
+yaw = 0-(atan({2 * (qw * qz + qx * qy), 1 - (2 * (qy*qy + qz*qz))}))
+
+--junk = print({yaw,pitch,roll})
+--junk = print(cameraRotation)
+camRot = {yaw,pitch,roll}
 
 exit

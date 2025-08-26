@@ -193,6 +193,8 @@ class assembler:
                                 left_side = token_string[:token_string.find("=")]
                                 right_side_offset = token_string.find("=")+1
                                 right_side = token_string[right_side_offset:]
+
+                                assert  len(right_side)>0, "Invalid command "+cur_text+"\n"+"Got processed to "+token_string
                         
                                 if len(right_side) > 1 or right_side[0] != "v":
                                     cur_side = right_side
