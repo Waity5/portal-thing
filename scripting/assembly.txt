@@ -264,7 +264,7 @@ renderFunc:
 
 -- temporarily put this here
 
-isColliding = gjkCollisionDetection({portalOrange[7],player[9]})
+isColliding = gjkCollisionDetection({portalOrange[7],player[9][1]})
 isColliding ~ dontSkipOrangeCollision
 1 ~ skipOrangeCollision
 dontSkipOrangeCollision:
