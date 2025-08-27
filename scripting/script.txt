@@ -1,3 +1,14 @@
+-- This is sscript, a scripting langauge made for StEVE (should pick a better name)
+-- It is used to get around the 8k character limit
+
+-- The syntax is lua-like but has its oddities due to the symplistic interpreter
+-- e.g. using a table and a table.unpack on every function call
+
+
+
+
+
+
 initFunc:
 
 objects = {}
@@ -128,11 +139,8 @@ exit
 postTransformFunc:
 
 portalOrangeQuaternion = portalOrange[4]
-portalOrangeQuaternionInverse = {0-portalOrangeQuaternion[1],portalOrangeQuaternion[2],portalOrangeQuaternion[3],portalOrangeQuaternion[4]}
 portalBlueQuaternion = multQuaternionByQuaternion({{0,0,1,0},portalBlue[4]})
 portalBlueQuaternionInverse = {0-portalBlueQuaternion[1],portalBlueQuaternion[2],portalBlueQuaternion[3],portalBlueQuaternion[4]}
-
---cameraRotationQuaternion = multQuaternionByQuaternion({multQuaternionByQuaternion({portalBlueQuaternionInverse,portalOrangeQuaternion}), cameraRotationQuaternion})
 
 portalBlueToOrangeQuaternion = multQuaternionByQuaternion({portalBlueQuaternionInverse,portalOrangeQuaternion})
 portalOrangeToBlueQuaternion = {portalBlueToOrangeQuaternion[1], 0-portalBlueToOrangeQuaternion[2], 0-portalBlueToOrangeQuaternion[3], 0-portalBlueToOrangeQuaternion[4]}
@@ -141,20 +149,11 @@ portalOrangeToBlueMatrix = quaternionToMatrix({portalOrangeToBlueQuaternion})
 portalBlueToOrangeMatrix = quaternionToMatrix({portalBlueToOrangeQuaternion})
 
 
---portalPrimaryQuaternion = portalPrimary[4]
---portalPrimaryQuaternionInverse = {0-portalPrimaryQuaternion[1],portalPrimaryQuaternion[2],portalPrimaryQuaternion[3],portalPrimaryQuaternion[4]}
---portalSecondaryQuaternion = multQuaternionByQuaternion({{0,0,1,0},portalSecondary[4]})
---portalSecondaryQuaternionInverse = {0-portalSecondaryQuaternion[1],portalSecondaryQuaternion[2],portalSecondaryQuaternion[3],portalSecondaryQuaternion[4]}
---cameraRotationQuaternion = multQuaternionByQuaternion({multQuaternionByQuaternion({portalSecondaryQuaternionInverse,portalPrimaryQuaternion}), cameraRotationQuaternion})
---
---cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({camPos,portalPrimary[1]}), quaternionToMatrix({multQuaternionByQuaternion({portalPrimaryQuaternionInverse,portalSecondaryQuaternion})})})})
 
 
 
 
-
-
-pegPoints = {}
+pegPoints = {} -- used to attach one point on an object to another point on another object
 
 
 i = 0

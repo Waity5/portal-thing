@@ -1,6 +1,10 @@
+# sscript compiler
+# should be made more object orientedy
+
+
 import re
 
-class assembler:
+class compiler:
     def get_temp_var(self):
         temp_var_name = "temp"+str(self.temp_var_num)
         self.temp_var_num += 1
@@ -39,7 +43,7 @@ class assembler:
             print("ASSEMBLER WARNING: float",cur_num,"will be rounded to",rounded_num,"due to the precision limit of",self.precision_limit)
         
         
-    def assemble(self, text, precision_limit=3):
+    def compile(self, text, precision_limit=3):
         self.text = text
         self.code = []
         self.precision_limit = precision_limit
@@ -378,13 +382,13 @@ class assembler:
 
 
 if __name__ == '__main__':
-    file = open("assembly.txt")
+    file = open("script.txt")
     text = file.read()
     file.close()
 
-    code_assembler = assembler()
+    code_compiler = compiler()
 
-    code, script_markers = code_assembler.assemble(text)
+    code, script_markers = code_compiler.compile(text)
     
     [print(i) for i in code]
     print(len(code),"instructions")

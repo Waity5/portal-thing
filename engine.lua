@@ -1,3 +1,7 @@
+-- main lua code, it's what's compressed and put into the sw vehicle
+-- if something seems missing, it's probably done by sscript
+
+
 m=math
 mx=m.max
 mn=m.min
@@ -80,7 +84,7 @@ function executeScript(line,opcode) -- do not input anything for opcode
 			if _ENVvar[arg1] then
 				line = arg2var-1
 			end
-		elseif opcode == 10 then
+		elseif opcode == 10 then -- greater than
 			_ENVvar[arg1] = arg2var>arg3var
 		end
 		

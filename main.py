@@ -1,3 +1,5 @@
+# makes a stormworks vehicle & sets up the simulator
+
 from math import dist, floor as flr, ceil, sqrt, atan2
 from code_compressor import compress
 import time, json
@@ -6,8 +8,8 @@ import os
 import numpy
 from stl import mesh
 from plyfile import PlyData, PlyElement
-from scripting.assembler import assembler
-from glob import glob as glob
+from scripting.compiler import compiler
+from glob import glob as glob # glob
 
 
 def sq(a):
@@ -17,14 +19,14 @@ def sq(a):
 if __name__ == '__main__':
     packets = []
     curmax = 8192
-    precision_limit = 4
+    precision_limit = 4 # number of decimal places used for numbers in property text boxes
 
     
-    file = open("scripting/assembly.txt")
-    assembly_code = file.read()
+    file = open("scripting/script.txt")
+    sscript_code = file.read()
     file.close()
 
-    machine_code,script_markers = assembler().assemble(assembly_code,precision_limit=precision_limit)
+    machine_code,script_markers = compiler().compile(sscript_code,precision_limit=precision_limit)
 
     
 
@@ -63,11 +65,11 @@ if __name__ == '__main__':
         colour = cur_object["colour"]
         to_shade = cur_object["shading"]
 
-        path = ".\\stl\\"
+        path = "./stl/"
 
         max_dist = 0
 
-        phys_mesh = mesh.Mesh.from_file(path+object_name+"\\phys.stl")
+        phys_mesh = mesh.Mesh.from_file(path+object_name+"/phys.stl")
 
         phys_points = list(phys_mesh.v0)+list(phys_mesh.v1)+list(phys_mesh.v2)#your_mesh.points
         phys_points = [tuple(i) for i in phys_points]
@@ -84,7 +86,7 @@ if __name__ == '__main__':
         
             point_map = {}
             point_map2 = {}
-            ply_mesh = PlyData.read(path+object_name+"\\mesh.ply")
+            ply_mesh = PlyData.read(path+object_name+"/mesh.ply")
             
             processed_points = []
             raw_points = ply_mesh.elements[0].data
@@ -147,7 +149,7 @@ if __name__ == '__main__':
             #your_mesh = mesh.Mesh.from_file(path+'monkey.stl')
             #your_mesh = mesh.Mesh.from_file(path+'buff_monkey.stl')
             #your_mesh = mesh.Mesh.from_file(path+'blender_cube.stl')
-            your_mesh = mesh.Mesh.from_file(path+object_name+"\\mesh.stl")
+            your_mesh = mesh.Mesh.from_file(path+object_name+"/mesh.stl")
             
 
             # Or creating a new mesh (make sure not to overwrite the `mesh` import by
@@ -232,7 +234,7 @@ if __name__ == '__main__':
             
             #print(your_mesh.v0[0])
 
-            pnts = ["\\left[" for i in range(3)]
+            pnts = ["/left[" for i in range(3)]
             length = len(things[0])
             colours = []
 
@@ -286,7 +288,7 @@ if __name__ == '__main__':
     obj_name = "Driving Thing"
     base_name = "base_vehicle"
 
-    path_bits = [os.getenv('APPDATA')+"\\Stormworks\\data\\vehicles\\",".xml"]
+    path_bits = [os.getenv('APPDATA')+"/Stormworks/data/vehicles/",".xml"]
     path_in = base_name+".xml"
     path_out = path_bits[0]+obj_name+path_bits[1]
     
@@ -320,7 +322,7 @@ if __name__ == '__main__':
                 print(cur,"found",code.count(cur),"times")
 
 
-    simulator_code,junk,junk = compress(code,print_vars=i==-1,silent=True)
+    simulator_code,junk,junk = compress(code,print_vars=False,delete_newlines=True,silent=True)
 
     
     file = open("simulator\engine.lua",mode="w", newline='\n')
@@ -330,7 +332,7 @@ if __name__ == '__main__':
     
             
     print(name)
-    code, variables, replacements = compress(code,print_vars=i==-1,delete_newlines=True,lua_5_3_only_compression=True)
+    code, variables, replacements = compress(code,print_vars=False,delete_newlines=True,lua_5_3_only_compression=True)
     print()
 
     for i in machine_code:
@@ -451,7 +453,7 @@ if __name__ == '__main__':
     glob_result = glob(textbox_location+"*.txt")
     glob_result = [i.replace("\\","/") for i in glob_result]
     glob_result = [i[i.rfind("/")+1:] for i in glob_result]
-    for i in glob_result:
+    for i in glob_result: # delete extra text box files
         if int(i[:i.find(".")]) > len(parts):
             os.remove(textbox_location+i)
             #print(i,len(parts))

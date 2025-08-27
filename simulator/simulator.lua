@@ -1,3 +1,7 @@
+-- Simulates the Stormworks environment
+-- Currently made to use lua 5.4 because I can't figure out how to use 5.3 with MoonGL
+
+
 local gl = require("moongl")
 local glfw = require("moonglfw")
 

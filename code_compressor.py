@@ -1,3 +1,7 @@
+# it's a lua code compressor/minimiser
+# used instead of lifeboatapi to allow variable compatibility with sscript
+# could do with being cleaned up
+
 def compress(text,print_vars=False,delete_newlines=False,lua_5_3_only_compression=False,silent=False):
     text=" "+text
 
