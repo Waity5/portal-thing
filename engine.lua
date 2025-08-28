@@ -14,7 +14,6 @@ trueVar=true
 falseVar=false
 ipairsVar=ipairs
 abs=m.abs
-tableRemove=table.remove
 str=string
 sin=m.sin
 cos=m.cos
@@ -22,6 +21,7 @@ tan=m.tan
 atan=m.atan
 asin=m.asin
 unpack=table.unpack
+remove=table.remove
 bigNum=m.huge
 
 function add2(a,b)return{(a[1]+b[1]),(a[2]+b[2])}end
@@ -196,7 +196,7 @@ function gjkCollisionDetection(points1,points2)
 								crEdge = {crFace[j],crFace[(j%3)+1]}
 								for k,crLooseEdge in ipairs(looseEdges) do
 									if crLooseEdge[1]==crEdge[2] and crLooseEdge[2]==crEdge[1] then -- edge is in list already, delete both
-										tableRemove(looseEdges,k)
+										remove(looseEdges,k)
 										crEdge=nilVar
 										break
 									end
@@ -209,7 +209,7 @@ function gjkCollisionDetection(points1,points2)
 							
 							-- now that its edges are dealt with, the triangle can be removed from the list
 							
-							tableRemove(faces,i)
+							remove(faces,i)
 						end
 					end
 					
@@ -588,7 +588,7 @@ function onTick()
 									end
 									--end
 									--if #goodCollPoints>3 then
-									--	tableRemove(goodCollPoints,1)
+									--	remove(goodCollPoints,1)
 									--end
 									--object1[15][j] = goodCollPoints
 								end
@@ -718,34 +718,7 @@ function renderView()
 					
 					if (triBoundingR>viewBoundingOuterBoxL and triBoundingL<viewBoundingOuterBoxR) and (triBoundingB>viewBoundingOuterBoxT and triBoundingT<viewBoundingOuterBoxB) then
 						if triBoundingL<viewBoundingInnerBoxL or triBoundingR>viewBoundingInnerBoxR or triBoundingT<viewBoundingInnerBoxT or triBoundingB>viewBoundingInnerBoxB then
-							for j=1,#viewBounding do
-								x1,y1=unpack(viewBounding[j])
-								x2,y2=unpack(viewBounding[j%viewBoundingLen+1])
-								newShape = {}
-								shapeLen = #shape
-								for k=1,shapeLen do
-									v3 = shape[k]
-									x3,y3=unpack(v3)
-									x4,y4=unpack(shape[k%shapeLen+1])
-									v3check = (x2-x1)*(y3-y1) - (y2-y1)*(x3-x1)
-									v4check = (x2-x1)*(y4-y1) - (y2-y1)*(x4-x1)
-									if v3check*v4check<0 then
-										uA = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
-										intersection = {x1 + (uA * (x2-x1)),y1 + (uA * (y2-y1))}
-									end
-									if v3check>0 and v4check<0 then
-										newShape[#newShape+1] = v3
-										newShape[#newShape+1] = intersection
-									elseif v3check<0 and v4check<0 then
-										
-									elseif v3check<0 and v4check>0 then
-										newShape[#newShape+1] = intersection
-									else
-										newShape[#newShape+1] = v3
-									end
-								end
-								shape = newShape
-							end
+							shape = intersectShapeWithShape(shape,viewBounding)
 							--processed = processed+1
 							
 						--else
@@ -758,6 +731,39 @@ function renderView()
 			end
 		end
 	end
+end
+
+function intersectShapeWithShape(shape1,shape2)
+	shape2Len = #shape2
+	for j=1,#shape2 do
+		x1,y1=unpack(shape2[j])
+		x2,y2=unpack(shape2[j%shape2Len+1])
+		newShape1 = {}
+		shape1Len = #shape1
+		for k=1,shape1Len do
+			v3 = shape1[k]
+			x3,y3=unpack(v3)
+			x4,y4=unpack(shape1[k%shape1Len+1])
+			v3check = (x2-x1)*(y3-y1) - (y2-y1)*(x3-x1)
+			v4check = (x2-x1)*(y4-y1) - (y2-y1)*(x4-x1)
+			if v3check*v4check<0 then
+				uA = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
+				intersection = {x1 + (uA * (x2-x1)),y1 + (uA * (y2-y1))}
+			end
+			if v3check>0 and v4check<0 then
+				newShape1[#newShape1+1] = v3
+				newShape1[#newShape1+1] = intersection
+			elseif v3check<0 and v4check<0 then
+				
+			elseif v3check<0 and v4check>0 then
+				newShape1[#newShape1+1] = intersection
+			else
+				newShape1[#newShape1+1] = v3
+			end
+		end
+		shape1 = newShape1
+	end
+	return shape1
 end
 
 function onDraw()
