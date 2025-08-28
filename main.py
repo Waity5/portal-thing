@@ -348,6 +348,9 @@ if __name__ == '__main__':
     for i in machine_code:
         #print(i)
         packets.append((5,i))
+        
+
+    
     
     find_start = """<c type="56"><object id="130" script='"""
     find_end = """'>"""
@@ -365,7 +368,11 @@ if __name__ == '__main__':
 
     #packets = [(1,(1,2)), (1,(1,2)), (1,(1,2))]
 
-    type_map = {20:"colours",21:"wall textures",22:"flat textures",23:"sprites",24:"sky textures",25:"orange"}
+    type_map = {2:"vertexes",3:"triangles",5:"sscript"}#1:"object lookups",
+    type_names = [*type_map]
+    type_counts = {}
+    for i in type_names:
+        type_counts[i] = 0
     parts = []
     cur=[]
     t=0
@@ -374,12 +381,14 @@ if __name__ == '__main__':
     num_packets = len(packets)
     num_packets = len(packets)
     for index in range(num_packets+1):
+        
         if index<num_packets:
             i = packets[index]
             if i[0]==1:
                 t1+=1
             #if index>2900:
             #    print(i)
+        
         if len(cur)==0 or len(cur[0][1])!=len(i[1]) or cur[0][0]!=i[0] or index==num_packets:
             if len(cur)>0:
                 out_vars = [cur[0][0],len(cur[0][1]),len(cur)]
@@ -411,7 +420,9 @@ if __name__ == '__main__':
                     t+=temp_len
                     
                 
-                if i[0]!=cur[0][0]:
+                if i[0]!=cur[0][0] or index==num_packets:
+                    if cur[0][0] in type_names:
+                        type_counts[cur[0][0]] += t
                     tt+=t
                     t=0
             cur=[i]
@@ -419,6 +430,8 @@ if __name__ == '__main__':
             cur.append(i)
 
     print()
+    for i in type_names:
+        print(type_counts[i]//1024,"KiB of",type_map[i])
     print(tt//1024,"KiB total")
     #print(t1)
 
