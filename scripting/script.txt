@@ -294,29 +294,35 @@ skipOrangeCollision:
 
 renderingPassGlobal = 0
 renderingLoop:
+	portalsBoth = {portalOrange,portalBlue}
+	
 	renderingPassGlobal = renderingPassGlobal + 1
 	
 	renderingPassGlobal > 2 ~ skipPortalAreaMaths
 	2 > renderingPassGlobal ~ skipPortalAreaMaths
-		portalsToAreaMath = {portalOrange,portalBlue}
 		portalAreas = {}
 		i = 0
 		skipPortalAreaMathsLoop:
 			i = i + 1
 			viewBounding = {}
-			portalMesh = portalsToAreaMath[i][7]
-			portalMeshLen = 8 --#portalMesh -- no longer uses entire mesh
-			index1 = 0
-			index2 = 0
-			portalLoop:
-				index1 = index1 + 1
+			curTri = portalsBoth[i][8][1]
+			portalMesh = portalsBoth[i][7]
+			0 > dot({curTri[8],portalMesh[curTri[1]][3]}) ~ skipCurrentPortal -- skip portal if portal is facing away from player
 				
-				1 > portalMesh[index1][6] ~ skipCurrentPortalPoint
-					index2 = index2 + 1
-					viewBounding[index2] = portalMesh[index1][5]
-				skipCurrentPortalPoint:
+				portalMeshLen = 8 --#portalMesh -- no longer uses entire mesh
+				index1 = 0
+				index2 = 0
+				portalLoop:
+					index1 = index1 + 1
+					
+					1 > portalMesh[index1][6] ~ skipCurrentPortalPoint
+						index2 = index2 + 1
+						viewBounding[index2] = portalMesh[index1][5]
+					skipCurrentPortalPoint:
+					
+				portalMeshLen > index1 ~ portalLoop
 				
-			portalMeshLen > index1 ~ portalLoop
+			skipCurrentPortal:
 			
 			portalAreas[i] = viewBounding
 		2 > i ~ skipPortalAreaMathsLoop
@@ -379,11 +385,19 @@ renderingLoop:
 		--viewBounding = {{-144,-80},{144,-80},{144,80},{-144,80}}
 
 		viewBoundingLen = #viewBounding
-
-		viewBoundingInnerBoxL = 0
-		viewBoundingInnerBoxR = 0
-		viewBoundingInnerBoxT = 0
-		viewBoundingInnerBoxB = 0
+		
+		8 > viewBoundingLen ~ skipInnerBoxCalc
+			viewBoundingInnerBoxL = mx({viewBounding[2][1],viewBounding[8][1]})
+			viewBoundingInnerBoxR = mn({viewBounding[4][1],viewBounding[6][1]})
+			viewBoundingInnerBoxT = mx({viewBounding[2][2],viewBounding[4][2]})
+			viewBoundingInnerBoxB = mn({viewBounding[6][2],viewBounding[8][2]})
+		1 ~ endOfBoxCalc
+		skipInnerBoxCalc:
+			viewBoundingInnerBoxL = 0
+			viewBoundingInnerBoxR = 0
+			viewBoundingInnerBoxT = 0
+			viewBoundingInnerBoxB = 0
+		endOfBoxCalc:
 		
 		depthScale = 0.0001
 		depthMinimum = dist3({portalPrimary[1],camPos})
@@ -402,19 +416,31 @@ renderingLoop:
 		viewBoundingOuterBoxR = 0-bigNum
 		viewBoundingOuterBoxT = bigNum-0
 		viewBoundingOuterBoxB = 0-bigNum
+		
 
 		i=0
 		outerBoundingBoxLoop:
-		i = i+1
-		cr = viewBounding[i]
-		crX = cr[1]
-		crY = cr[2]
-		viewBoundingOuterBoxL = mn({crX,viewBoundingOuterBoxL})
-		viewBoundingOuterBoxR = mx({crX,viewBoundingOuterBoxR})
-		viewBoundingOuterBoxT = mn({crY,viewBoundingOuterBoxT})
-		viewBoundingOuterBoxB = mx({crY,viewBoundingOuterBoxB})
+			i = i+1
+			cr = viewBounding[i]
+			crX = cr[1]
+			crY = cr[2]
+			viewBoundingOuterBoxL = mn({crX,viewBoundingOuterBoxL})
+			viewBoundingOuterBoxR = mx({crX,viewBoundingOuterBoxR})
+			viewBoundingOuterBoxT = mn({crY,viewBoundingOuterBoxT})
+			viewBoundingOuterBoxB = mx({crY,viewBoundingOuterBoxB})
 		#viewBounding>i ~ outerBoundingBoxLoop
-
+		
+		2 > renderingPassGlobal ~ skipAddingDebugTris
+			gB({6}) ~ showAddingDebugTris
+			1 ~ skipAddingDebugTris
+			showAddingDebugTris:
+			debugTris[#debugTris+1] = {{viewBoundingOuterBoxL,viewBoundingOuterBoxT},{viewBoundingOuterBoxR,viewBoundingOuterBoxT},{viewBoundingOuterBoxL,viewBoundingOuterBoxB},{255,0,0}}
+			debugTris[#debugTris+1] = {{viewBoundingOuterBoxR,viewBoundingOuterBoxB},{viewBoundingOuterBoxR,viewBoundingOuterBoxT},{viewBoundingOuterBoxL,viewBoundingOuterBoxB},{255,0,0}}
+			
+			debugTris[#debugTris+1] = {{viewBoundingInnerBoxL,viewBoundingInnerBoxT},{viewBoundingInnerBoxR,viewBoundingInnerBoxT},{viewBoundingInnerBoxL,viewBoundingInnerBoxB},{0,255,0}}
+			debugTris[#debugTris+1] = {{viewBoundingInnerBoxR,viewBoundingInnerBoxB},{viewBoundingInnerBoxR,viewBoundingInnerBoxT},{viewBoundingInnerBoxL,viewBoundingInnerBoxB},{0,255,0}}
+		
+		skipAddingDebugTris:
 
 
 

@@ -459,6 +459,7 @@ function onTick()
 		--keyboardRotationInput = {-0.01*gN(2),0.01*gN(1),0.01*gN(3)}
 		--overalRayHit = falseVar
 		renderTris = {}
+		debugTris = {}
 		
 		for index = 1,#objects do
 			object = objects[index]
@@ -808,6 +809,12 @@ function onDraw()
 				stCl(curTri[2]*0.5,curTri[3]*0.5,curTri[4]*0.5)
 				tri(p1[1]+w2,p1[2]+h2-0.5,p2[1]+w2,p2[2]+h2-0.5,p3[1]+w2,p3[2]+h2-0.5)
 			end
+		end
+		
+		for i,debugTri in ipairsVar(debugTris) do
+			p1,p2,p3 = unpack(debugTri)
+			junk =stCl(unpack(debugTri[4]))
+			triF(p1[1]+w2,p1[2]+h2,p2[1]+w2,p2[2]+h2,p3[1]+w2,p3[2]+h2)
 		end
 		--print(processed,accepted,culled)
 		
