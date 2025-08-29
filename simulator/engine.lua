@@ -2,27 +2,27 @@ H=math
 aw=H.max
 aT=H.min
 aO=math.sqrt
-dn=H.floor
+dq=H.floor
 cz=H.pi
-dm=input.getNumber
+dp=input.getNumber
 cK=input.getBool
 cp=true
-dp=false
+dr=false
 Z=ipairs
 cQ=H.abs
 bf=string
 cs=H.sin
 cO=H.cos
 cr=H.tan
-dy=H.atan
-dz=H.asin
+dA=H.atan
+dB=H.asin
 y=table.unpack
 bQ=table.remove
 ch=H.huge
 function aY(a,c)return{(a[1]+c[1]),(a[2]+c[2])}end
 function aN(a,c)return{(a[1]-c[1]),(a[2]-c[2])}end
 function aS(a,c)return{a[1]*c,a[2]*c}end
-function dt(a,c,v)return aT(aw(c,a),v)end
+function dv(a,c,v)return aT(aw(c,a),v)end
 function E(a,c)return{a[1]+c[1],a[2]+c[2],a[3]+c[3]}end
 function h(a,c)return{a[1]-c[1],a[2]-c[2],a[3]-c[3]}end
 function g(a,c)return{a[1]*c,a[2]*c,a[3]*c}end
@@ -30,15 +30,15 @@ function bz(a,c,v)return j(h(c,a),h(v,a))end
 function bo(a)return g(a,1/aO(a[1]^2+a[2]^2+a[3]^2))end
 function bv(a,c)return aO((a[1]-c[1])^2+(a[2]-c[2])^2+(a[3]-c[3])^2)end
 P={}bk=1
-dh=3
+di=3
 ad=1
 cH=cp
-dl=0
+dn=0
 bO=0
-dx={0,5,-10}dw={0,0,0}bd=62.5
+dz={0,5,-10}dy={0,0,0}bd=62.5
 c_=0
 ck=cz/180
-dg=5/bd
+dh=5/bd
 db=90*ck/bd
 cL=90*ck
 bh=1
@@ -81,7 +81,7 @@ end
 end
 return cy
 end
-function cJ(bT,bS)l={1,0,0}B={}for dk=1,32 do
+function cJ(bT,bS)l={1,0,0}B={}for dl=1,32 do
 e=h(ap(bT,l),ap(bS,g(l,-1)))if o(e,l)<=0 then
 return
 end
@@ -95,7 +95,7 @@ B={a,aj,c}l=cl
 else
 ai={{a,c,v},{a,v,aj},{a,aj,c},{c,aj,v}}for d,u in ipairs(ai)do
 u[4]=bo(bz(u[1],u[2],u[3]))end
-for dj=1,32 do
+for dk=1,32 do
 ak=ch
 for d,u in ipairs(ai)do
 aq=o(u[1],u[4])if aq<ak then
@@ -110,7 +110,7 @@ aW=ai[d]if o(aW[4],h(e,aW[1]))>0 then
 for f=1,3 do
 aB={aW[f],aW[(f%3)+1]}for V,cf in ipairs(ax)do
 if cf[1]==aB[2]and cf[2]==aB[1]then
-bQ(ax,V)aB=de
+bQ(ax,V)aB=df
 break
 end
 end
@@ -237,7 +237,7 @@ for V,J in Z(p[9])do
 for br,aa in Z(s[9])do
 if#J>0 and#aa>0 then
 A=cJ(J,aa)if A then
-df=p[15][f]or{}ap(J,A[1])_=aR
+dg=p[15][f]or{}ap(J,A[1])_=aR
 ap(aa,g(A[1],-1))al=aR
 if#_==1 then
 r=J[_[1]][2]elseif#al==1 then
@@ -269,11 +269,12 @@ end
 az(713)table.sort(at,function(a,c)return a[5]>c[5]end)end
 end
 function dc()for W=1,#T do
-b=T[W]for d=1,#b[7]do
-e=b[7][d]e[3]=h(e[2],dv)e[4]=bs(e[3],du)bu=e[3]e[7]=aO(bu[1]^2+bu[2]^2+bu[3]^2)e[5]={e[4][1]*bh/e[4][3],-e[4][2]*bh/e[4][3]}e[6]=e[4][3]>0 and 1 or 0
+b=T[W]if b~=de or dm>1 then
+for d=1,#b[7]do
+e=b[7][d]e[3]=h(e[2],dx)e[4]=bs(e[3],dw)bu=e[3]e[7]=aO(bu[1]^2+bu[2]^2+bu[3]^2)e[5]={e[4][1]*bh/e[4][3],-e[4][2]*bh/e[4][3]}e[6]=e[4][3]>0 and 1 or 0
 end
 for d=1,#b[8]do
-i=b[8][d]k=b[7][i[1]]m=b[7][i[2]]n=b[7][i[3]]i[7]=aw(k[7],m[7],n[7])c=k[3]if o(i[8],c)>0 and i[7]>ds then
+i=b[8][d]k=b[7][i[1]]m=b[7][i[2]]n=b[7][i[3]]i[7]=aw(k[7],m[7],n[7])c=k[3]if o(i[8],c)>0 and i[7]>du then
 an=k[6]+m[6]+n[6]if an==3 then
 z={k[5],m[5],n[5]}elseif an>=1 then
 if k[6]==2-an then
@@ -288,7 +289,8 @@ if an>=1 then
 k=z[1]m=z[2]n=z[3]bK=aT(k[1],m[1],n[1])bJ=aw(k[1],m[1],n[1])bI=aT(k[2],m[2],n[2])bL=aw(k[2],m[2],n[2])if(bJ>cT and bK<cS)and(bL>cR and bI<cU)then
 if bK<cX or bJ>cW or bI<cV or bL>cY then
 z=cF(z,cZ)end
-at[#at+1]={z,i[4],i[5],i[6],i[7]*dq+dr}end
+at[#at+1]={z,i[4],i[5],i[6],i[7]*ds+dt}end
+end
 end
 end
 end
@@ -325,6 +327,6 @@ i=at[d]z=i[1]k=z[1]for f=3,#z do
 m=z[f-1]n=z[f]bg(i[2],i[3],i[4])bH(k[1]+t,k[2]+X,m[1]+t,m[2]+X,n[1]+t,n[2]+X)bg(i[2]*.5,i[3]*.5,i[4]*.5)cq(k[1]+t,k[2]+X-.5,m[1]+t,m[2]+X-.5,n[1]+t,n[2]+X-.5)end
 end
 for d,cd in Z(cN)do
-k,m,n=y(cd)di=bg(y(cd[4]))bH(k[1]+t,k[2]+X,m[1]+t,m[2]+X,n[1]+t,n[2]+X)end
+k,m,n=y(cd)dj=bg(y(cd[4]))bH(k[1]+t,k[2]+X,m[1]+t,m[2]+X,n[1]+t,n[2]+X)end
 end
 end
