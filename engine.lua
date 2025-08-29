@@ -22,6 +22,7 @@ atan=m.atan
 asin=m.asin
 unpack=table.unpack
 remove=table.remove
+move=table.move
 bigNum=m.huge
 
 function add2(a,b)return{(a[1]+b[1]),(a[2]+b[2])}end
@@ -458,7 +459,7 @@ function onTick()
 		
 		--keyboardRotationInput = {-0.01*gN(2),0.01*gN(1),0.01*gN(3)}
 		--overalRayHit = falseVar
-		renderTris = {}
+		
 		debugTris = {}
 		
 		for index = 1,#objects do
@@ -627,7 +628,7 @@ function onTick()
 			
 			
 		
-		table.sort(renderTris,function(a,b)return a[5]>b[5]end)
+		
 		
 		
 	end
@@ -637,7 +638,7 @@ function onTick()
 end
 
 function renderView()
-	
+	renderShapes = {}
 	
 	
 	for index = 1,#objects do -- triangle position calculation a.k.a. the 3D rendering
@@ -673,7 +674,7 @@ function renderView()
 				if dot(curTri[8],b)>0 and curTri[7]>depthMinimum then
 					sideVal=p1[6]+p2[6]+p3[6]
 					if sideVal == 3 then
-						--renderTris[#renderTris+1] = {p1[5],p2[5],p3[5],curTri[4],curTri[5],curTri[6],curTri[7]}
+						--renderShapes[#renderShapes+1] = {p1[5],p2[5],p3[5],curTri[4],curTri[5],curTri[6],curTri[7]}
 						shape = {p1[5],p2[5],p3[5]}
 					elseif sideVal >= 1 then
 						if p1[6]==2-sideVal then
@@ -692,17 +693,17 @@ function renderView()
 						if sideVal == 2 then
 							screenPoint4=add2(mul2(sub2(screenPoint2,screenPoint1),1000),screenPoint2)
 							screenPoint5=add2(mul2(sub2(screenPoint3,screenPoint1),1000),screenPoint3)
-							--renderTris[#renderTris+1] = {{screenPoint3,screenPoint2,screenPoint4},255,0,0,curTri[7]+0.1}
-							--renderTris[#renderTris+1] = {{screenPoint3,screenPoint4,screenPoint5},0,0,255,curTri[7]+0.1}
-							--renderTris[#renderTris+1] = {{screenPoint3,screenPoint2,screenPoint4,screenPoint5},0,0,255,curTri[7]+0.1}
-							--renderTris[#renderTris+1] = {screenPoint2,screenPoint4,screenPoint3,curTri[4],curTri[5],curTri[6],curTri[7]}
-							--renderTris[#renderTris+1] = {screenPoint3,screenPoint4,screenPoint5,curTri[4],curTri[5],curTri[6],curTri[7]}
+							--renderShapes[#renderShapes+1] = {{screenPoint3,screenPoint2,screenPoint4},255,0,0,curTri[7]+0.1}
+							--renderShapes[#renderShapes+1] = {{screenPoint3,screenPoint4,screenPoint5},0,0,255,curTri[7]+0.1}
+							--renderShapes[#renderShapes+1] = {{screenPoint3,screenPoint2,screenPoint4,screenPoint5},0,0,255,curTri[7]+0.1}
+							--renderShapes[#renderShapes+1] = {screenPoint2,screenPoint4,screenPoint3,curTri[4],curTri[5],curTri[6],curTri[7]}
+							--renderShapes[#renderShapes+1] = {screenPoint3,screenPoint4,screenPoint5,curTri[4],curTri[5],curTri[6],curTri[7]}
 							shape = {screenPoint3,screenPoint2,screenPoint4,screenPoint5}
 						else
 							screenPoint4=add2(mul2(sub2(screenPoint1,screenPoint2),1000),screenPoint2)
 							screenPoint5=add2(mul2(sub2(screenPoint1,screenPoint3),1000),screenPoint3)
-							--renderTris[#renderTris+1] = {screenPoint1,screenPoint4,screenPoint5,255,0,255,curTri[7]}
-							--renderTris[#renderTris+1] = {screenPoint1,screenPoint4,screenPoint5,curTri[4],curTri[5],curTri[6],curTri[7]}
+							--renderShapes[#renderShapes+1] = {screenPoint1,screenPoint4,screenPoint5,255,0,255,curTri[7]}
+							--renderShapes[#renderShapes+1] = {screenPoint1,screenPoint4,screenPoint5,curTri[4],curTri[5],curTri[6],curTri[7]}
 							shape = {screenPoint1,screenPoint5,screenPoint4}
 						end
 					end
@@ -726,13 +727,15 @@ function renderView()
 							--	accepted = accepted + 1
 							end
 							
-							renderTris[#renderTris+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7]*depthScale+depthOffset}
+							renderShapes[#renderShapes+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7]*depthScale+depthOffset}
 						end
 					end
 				end
 			end
 		end
 	end
+	
+	table.sort(renderShapes,function(a,b)return a[5]>b[5]end)
 end
 
 function intersectShapeWithShape(shape1,shape2)
@@ -804,17 +807,17 @@ function onDraw()
 	
 	if loaded then
 		
-		for i=1,#renderTris do
-			curTri = renderTris[i]
-			shape = curTri[1]
+		for i=1,#renderShapesAll do
+			curShape = renderShapesAll[i]
+			shape = curShape[1]
 			
 			p1 = shape[1]
 			for j=3,#shape do
 				p2 = shape[j-1]
 				p3 = shape[j]
-				stCl(curTri[2],curTri[3],curTri[4])
+				stCl(curShape[2],curShape[3],curShape[4])
 				triF(p1[1]+w2,p1[2]+h2,p2[1]+w2,p2[2]+h2,p3[1]+w2,p3[2]+h2)
-				stCl(curTri[2]*0.5,curTri[3]*0.5,curTri[4]*0.5)
+				stCl(curShape[2]*0.5,curShape[3]*0.5,curShape[4]*0.5)
 				tri(p1[1]+w2,p1[2]+h2-0.5,p2[1]+w2,p2[2]+h2-0.5,p3[1]+w2,p3[2]+h2-0.5)
 			end
 		end

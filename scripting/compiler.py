@@ -212,7 +212,7 @@ class compiler:
                                 cur_offset = 0
 
 
-                            array_check = re.search(r'{(v,|\[v\]=v,)*(v|\[v\]=v)}', cur_side)
+                            array_check = re.search(r'{(v,|\[v\]=v,)*(v|\[v\]=v)?}', cur_side)
 
                             if array_check:
                                 index1 = array_check.start() + cur_offset
