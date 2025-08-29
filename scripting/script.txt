@@ -30,9 +30,11 @@ junk = summonObject({"skybox", {[7]=0,[8]=0}})
 --junk = summonObject({"blender_cube", {{0,1,11},[7]=0,[8]=0}})
 --junk = summonObject({"blender_cube", {{-4,1,7},[7]=0,[8]=0}})
 
-junk = summonObject({"portal_orange", {{-2,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
+junk = summonObject({"portal_orange", {{-1,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
+--junk = summonObject({"portal_orange", {{-0.6,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
 portalOrange = objects[#objects]
-junk = summonObject({"portal_blue", {{2,1,10},[4]={0.5,0,-0.5,0},[7]=0,[8]=0}})
+junk = summonObject({"portal_blue", {{1,1,10},[4]={0.5,0,-0.5,0},[7]=0,[8]=0}})
+--junk = summonObject({"portal_blue", {{0,1,10.6},[4]={1,0,0,0},[7]=0,[8]=0}})
 portalBlue = objects[#objects]
 junk = summonObject({"player_bounding", {{0,3,0},[7]=1,[8]=0,[9]=grav}})
 player = objects[#objects]
@@ -493,7 +495,7 @@ viewProcessingLoop1:
 			--junk = move({viewToAdd,1,#viewToAdd,#curViewShapes+1,curViewShapes})
 		skipViewAdding:
 		
-	1>j ~ viewProcessingLoop2
+	2>j ~ viewProcessingLoop2
 	
 	i = i - 1
 i > 0 ~ viewProcessingLoop1

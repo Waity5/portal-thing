@@ -225,13 +225,13 @@ if bu then
 bP=bP+1
 if cJ then
 az(1)az(57)end
-az(188)cP={}for W=1,#T do
+az(187)cP={}for W=1,#T do
 b=T[W]b[4]=bF(b[4],g(b[5],-by))b[1]=E(b[1],g(b[2],by))b[2]=E(b[2],g(b[3],by))b[3]=g(b[12],1)b[16]=cw(b[4])for f,J in Z(b[9])do
 for V,e in Z(J)do
 e[2]=bt(e[1],b[16])e[2]=E(e[2],b[1])end
 end
 end
-az(326)for d,o in Z(T)do
+az(325)for d,o in Z(T)do
 for f,r in Z(T)do
 if d~=f and(o[10]>0 or r[10]>0 or o[11]>0 or r[11]>0)and bw(o[1],r[1])<=o[13]+r[13]then
 for V,J in Z(o[9])do
@@ -267,7 +267,7 @@ for d=1,#b[8]do
 t=b[8][d]t[8]=bA(b[7][t[1]][2],b[7][t[2]][2],b[7][t[3]][2])end
 end
 end
-az(723)end
+az(722)end
 end
 function de()bm={}for W=1,#T do
 b=T[W]if b~=dg or dq>1 then
