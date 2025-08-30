@@ -18,7 +18,7 @@ def sq(a):
 
 if __name__ == '__main__':
     packets = []
-    curmax = 8192
+    curmax = 4096 # 8192
     precision_limit = 4 # number of decimal places used for numbers in property text boxes
 
     
@@ -265,6 +265,7 @@ if __name__ == '__main__':
             tris_start = total_render_tris+1
             for i in range(len(your_mesh.v0)):
                 cur_colour = colours[i]
+                
                 packets.append((3,(points.index(tuple(your_mesh.v0[i]))+1,
                                 points.index(tuple(your_mesh.v1[i]))+1,
                                 points.index(tuple(your_mesh.v2[i]))+1,
@@ -272,6 +273,7 @@ if __name__ == '__main__':
                                 cur_colour[1],
                                 cur_colour[2],
                                 )))
+                #print(packets[-1])
                 total_render_tris += 1
             tris_end = total_render_tris
 
@@ -285,7 +287,7 @@ if __name__ == '__main__':
 
         
 
-    obj_name = "Driving Thing"
+    obj_name = "Portal Thing"
     base_name = "base_vehicle"
 
     path_bits = [os.getenv('APPDATA')+"/Stormworks/data/vehicles/",".xml"]
@@ -345,7 +347,9 @@ if __name__ == '__main__':
                 i[j] = variables[replacements.index(i[j])] # as a janky fix, this maps it in the opposite direction, so the sscript "a" will be replaced with whatever mapped to "a"
 
 
+    
     for i in machine_code:
+        None
         #print(i)
         packets.append((5,i))
         
@@ -367,6 +371,8 @@ if __name__ == '__main__':
     text = text[:start+len(find_start)]+code+text[end:]
 
     #packets = [(1,(1,2)), (1,(1,2)), (1,(1,2))]
+
+    #packets = [(1,[0,0,0,0])]
 
     type_map = {2:"vertexes",3:"triangles",5:"sscript"}#1:"object lookups",
     type_names = [*type_map]
@@ -408,7 +414,7 @@ if __name__ == '__main__':
                         temp = j + "!"
                     else:
                         temp = str(round(j,precision_limit))
-                        temp = temp[:-1]+chr(ord(temp[-1])-13)
+                        temp = temp[:-1]+chr(ord(temp[-1])-29) #13
                     
                     temp_len = len(temp)
                     if len(parts)==0 or len(parts[-1])+temp_len>curmax:

@@ -410,8 +410,8 @@ function onTick()
 			while cr~=""do
 				pos=str.byte(cr)
 				if pos<45 then
-					if pos>33 then
-						nm=(nm..pos-35)+0
+					if pos<33 then
+						nm=(nm..pos-19)+0
 					end
 					--print(nm,stg,count,curLength)
 					if stg==1 then
@@ -817,8 +817,8 @@ function onDraw()
 				p3 = shape[j]
 				stCl(curShape[2],curShape[3],curShape[4])
 				triF(p1[1]+w2,p1[2]+h2,p2[1]+w2,p2[2]+h2,p3[1]+w2,p3[2]+h2)
-				stCl(curShape[2]*0.5,curShape[3]*0.5,curShape[4]*0.5)
-				tri(p1[1]+w2,p1[2]+h2-0.5,p2[1]+w2,p2[2]+h2-0.5,p3[1]+w2,p3[2]+h2-0.5)
+				--stCl(curShape[2]*0.5,curShape[3]*0.5,curShape[4]*0.5)
+				--tri(p1[1]+w2,p1[2]+h2-0.5,p2[1]+w2,p2[2]+h2-0.5,p3[1]+w2,p3[2]+h2-0.5)
 			end
 		end
 		

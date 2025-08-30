@@ -21,6 +21,7 @@ grav = {0,-9.81,0}
 playerMoveForce = 10
 
 maxRollCorrection = 1
+itterMax = 7
 
 --junk = summonObject({"track1", {{0,-1,0},[7]=0,[8]=0}})
 --junk = summonObject({"track2", {{0,-3,40},[7]=0,[8]=0}})
@@ -28,12 +29,12 @@ maxRollCorrection = 1
 junk = summonObject({"widest_cube", {{0,-1,0},[7]=0,[8]=0}})
 junk = summonObject({"skybox", {[7]=0,[8]=0}})
 --junk = summonObject({"blender_cube", {{0,1,11},[7]=0,[8]=0}})
---junk = summonObject({"blender_cube", {{-4,1,7},[7]=0,[8]=0}})
+junk = summonObject({"blender_cube", {{-4,1,7},[7]=0,[8]=0}})
 
-junk = summonObject({"portal_orange", {{-0.5,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
+junk = summonObject({"portal_orange", {{-0.75,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=1}})
 --junk = summonObject({"portal_orange", {{-0.6,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
 portalOrange = objects[#objects]
-junk = summonObject({"portal_blue", {{0.5,1,10},[4]={0.51,0,-0.5,0},[7]=0,[8]=0}})
+junk = summonObject({"portal_blue", {{0.75,1,10},[4]={0.53,0,-0.5,0},[7]=0,[8]=0}})
 --junk = summonObject({"portal_blue", {{0,1,10.6},[4]={1,0,0,0},[7]=0,[8]=0}})
 portalBlue = objects[#objects]
 junk = summonObject({"player_bounding", {{0,3,0},[7]=1,[8]=0,[9]=grav}})
@@ -95,22 +96,23 @@ gB1 = gB({1})
 gB1 ~ isGB1
 gB3 = gB({3})
 gB3 ~ isGB3
-	pushColour[1] = 255
-	pushColour[2] = 255
-	pushColour[3] = 255
+gB4 = gB({4})
+gB4 ~ isGB4
+	
 	1 ~ endOfPush
 isGB1:
-	pushForce = 0 - maxPushForce
-	pushColour[1] = otherPushColours
-	pushColour[2] = otherPushColours
-	pushColour[3] = 255
+	
 	1 ~ endOfPush
 isGB3:
-	pushForce = maxPushForce - 0
-	pushColour[1] = 255
-	pushColour[2] = otherPushColours
-	pushColour[3] = otherPushColours
+	
+	1 ~ endOfPush
+isGB4:
+	portalOrange[1]={-4,2.5,10}
+	portalOrange[4]={0.75,-0.25,0,0}
+	portalBlue[1]={0.75,1,11}
+	
 endOfPush:
+
 
 
 
@@ -265,31 +267,49 @@ renderFunc:
 
 -- temporarily put this here
 
-isColliding = gjkCollisionDetection({portalOrange[7],player[9][1]})
-isColliding ~ dontSkipOrangeCollision
-1 ~ skipOrangeCollision
-dontSkipOrangeCollision:
-	sideVal = dot({sub3({player[1],portalOrange[1]}), portalOrange[8][1][8]})
-	0 > sideVal ~ skipOrangeTeleport
-		player[1] = add3({sub3({player[1],portalOrange[1]}), portalBlue[1]})
-		--camRot[1] = camRot[1] - (pi/2)
-		player[2] = multVectorByMatrix({player[2],portalOrangeToBlueMatrix})
-		
-		cameraRotation = {camRot}[1]
-		junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
-		cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-		cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalOrangeToBlueQuaternion})
-		cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-		junk = executeScript({quaternionToCameraRotation})
-		
-		--junk = print(portalOrangeToBlueCamQuaternion)
-		--junk = print(portalOrangeToBluePosQuaternion)
-		
-		--junk = print({"OK"})
+i = 0
+portalCollisionLoop:
+	i = i+1
+	
+	i > 1 ~ chooseBluePortalCollision
+		portalPrimary = {portalOrange}[1]
+		portalSecondary = {portalBlue}[1]
+		portalPrimarytoSecondaryQuaternion = {portalOrangeToBlueQuaternion}[1]
+		portalPrimarytoSecondaryMatrix = {portalOrangeToBlueMatrix}[1]
+	1 ~ endPortalChoosingCollision
+	chooseBluePortalCollision:
+		portalPrimary = {portalBlue}[1]
+		portalSecondary = {portalOrange}[1]
+		portalPrimarytoSecondaryQuaternion = {portalBlueToOrangeQuaternion}[1]
+		portalPrimarytoSecondaryMatrix = {portalBlueToOrangeMatrix}[1]
+	endPortalChoosingCollision:
+	
+	isColliding = gjkCollisionDetection({portalPrimary[7],player[9][1]})
+	isColliding ~ dontSkipPortalCollision
+	1 ~ skipPortalCollision
+	dontSkipPortalCollision:
+		sideVal = dot({sub3({player[1],portalPrimary[1]}), portalPrimary[8][1][8]})
+		0 > sideVal ~ skipPortalTeleport
+			player[1] = add3({sub3({player[1],portalPrimary[1]}), portalSecondary[1]})
+			--camRot[1] = camRot[1] - (pi/2)
+			player[2] = multVectorByMatrix({player[2],portalPrimarytoSecondaryMatrix})
+			
+			cameraRotation = {camRot}[1]
+			junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
+			cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+			cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalPrimarytoSecondaryQuaternion})
+			cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+			junk = executeScript({quaternionToCameraRotation})
+			
+			--junk = print(portalOrangeToBlueCamQuaternion)
+			--junk = print(portalOrangeToBluePosQuaternion)
+			
+			--junk = print({"OK"})
 
-		
-	skipOrangeTeleport:
-skipOrangeCollision:
+			
+		skipPortalTeleport:
+	skipPortalCollision:
+2>i ~ portalCollisionLoop
 
 
 
@@ -358,7 +378,7 @@ renderingLoop:
 	skipViewWriting:
 	
 	
-	itterLevel > 40 ~ skipAllPortalRendering
+	itterLevel > itterMax ~ skipAllPortalRendering
 		cameraPositionOld = {cameraPosition}[1]
 		cameraRotationQuaternionOld = {cameraRotationQuaternion}[1]
 		viewBoundingOld = {viewBounding}[1]
@@ -372,18 +392,18 @@ renderingLoop:
 			i = i + 1
 			
 			
-			i > 1 ~ chooseBluePortal
+			i > 1 ~ chooseBluePortalRender
 				portalPrimary = {portalOrange}[1]
 				portalSecondary = {portalBlue}[1]
 				portalSecondaryToPrimaryQuaternion = {portalBlueToOrangeQuaternion}[1]
 				portalPrimarytoSecondaryMatrix = {portalOrangeToBlueMatrix}[1]
-			1 ~ endPortalChoosing
-			chooseBluePortal:
+			1 ~ endPortalChoosingRender
+			chooseBluePortalRender:
 				portalPrimary = {portalBlue}[1]
 				portalSecondary = {portalOrange}[1]
 				portalSecondaryToPrimaryQuaternion = {portalOrangeToBlueQuaternion}[1]
 				portalPrimarytoSecondaryMatrix = {portalBlueToOrangeMatrix}[1]
-			endPortalChoosing:
+			endPortalChoosingRender:
 			
 			portalMesh = portalPrimary[7]
 			portalTris = portalPrimary[8]
