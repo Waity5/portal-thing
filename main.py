@@ -16,6 +16,11 @@ def sq(a):
     factor=2.2
     return tuple([round((i**factor)/(255**(factor-1))) for i in a])
 
+def process_glob_result(glob_result):
+    glob_result = [i.replace("\\","/") for i in glob_result]
+    glob_result = [i[i.rfind("/")+1:] for i in glob_result]
+    return glob_result
+
 if __name__ == '__main__':
     packets = []
     curmax = 4096 # 8192
@@ -67,20 +72,7 @@ if __name__ == '__main__':
 
         path = "./stl/"
 
-        max_dist = 0
-
-        phys_mesh = mesh.Mesh.from_file(path+object_name+"/phys.stl")
-
-        phys_points = list(phys_mesh.v0)+list(phys_mesh.v1)+list(phys_mesh.v2)#your_mesh.points
-        phys_points = [tuple(i) for i in phys_points]
-        phys_points = list(set(phys_points))
-
-        points_phys_start = total_points+1
-        for i in phys_points:
-            packets.append((2,(i[0],i[2],i[1])))
-            total_points += 1
-            max_dist = max(max_dist, dist(i,(0,0,0)))
-        points_phys_end = total_points
+        
 
         if colour == "ply":
         
@@ -145,32 +137,9 @@ if __name__ == '__main__':
         else:
         
 
-            # Using an existing stl file:
-            #your_mesh = mesh.Mesh.from_file(path+'monkey.stl')
-            #your_mesh = mesh.Mesh.from_file(path+'buff_monkey.stl')
-            #your_mesh = mesh.Mesh.from_file(path+'blender_cube.stl')
             your_mesh = mesh.Mesh.from_file(path+object_name+"/mesh.stl")
-            
 
-            # Or creating a new mesh (make sure not to overwrite the `mesh` import by
-            # naming it `mesh`):
 
-            # The mesh normals (calculated automatically)
-            #print(your_mesh.normals)
-            # The mesh vectors
-            #your_mesh.v0
-            your_mesh.v0, your_mesh.v1, your_mesh.v2
-            # Accessing individual points (concatenation of v0, v1 and v2 in triplets)
-            assert (your_mesh.points[0][0:3] == your_mesh.v0[0]).all()
-            assert (your_mesh.points[0][3:6] == your_mesh.v1[0]).all()
-            assert (your_mesh.points[0][6:9] == your_mesh.v2[0]).all()
-            assert (your_mesh.points[1][0:3] == your_mesh.v0[1]).all()
-
-            scale = 1
-
-            
-
-            #print(len(your_mesh.v0), "triangles")
             points = list(your_mesh.v0)+list(your_mesh.v1)+list(your_mesh.v2)#your_mesh.points
             points = [tuple(i) for i in points]
             points = list(set(points))
@@ -184,57 +153,18 @@ if __name__ == '__main__':
                     points.append(points[i])
                     points[i] = [j*0.9 for j in points[i]]
                 #print(points)
-            
-            #print(len(phys_points),"phys points")
-            
-            #print(points)
-            #vectors = your_mesh.vectors*scale
-            #print(vectors)
-            #vectors = [[tuple([j[0],j[1],j[2]]) for j in i] for i in vectors]
-            #print(vectors[0][0])
-            #vectors_indexed = [[points.index(j)+1 for j in i] for i in vectors]
-            #vectors_indexed = [[i[0:2],i[1:3],[i[2],i[0]]] for i in vectors_indexed]
-            #for i in range(len(vectors_indexed)-1,-1,-1):
-            #    vectors_indexed += vectors_indexed[i]
-            #    vectors_indexed.pop(i)
 
-            
-
-            #[i.sort() for i in vectors_indexed]
-            #vectors_indexed = [tuple(i) for i in vectors_indexed]
-
-            #vectors_indexed = list(set(vectors_indexed))
-            #print(vectors_indexed)
-
-            #print(vectors)
             things = [your_mesh.v0,your_mesh.v1,your_mesh.v2]
 
-            pnt = ""
-
-            
 
             points_mesh_start = total_points+1
             for i in points:
                 packets.append((2,(i[0],i[2],i[1])))
                 total_points += 1
-                max_dist = max(max_dist, dist(i,(0,0,0)))
+                #max_dist = max(max_dist, dist(i,(0,0,0)))
             points_mesh_end = total_points
 
-            
-            #print(max_dist,"max dist")
 
-            #pnt = ""
-            #for i in vectors_indexed:
-            #    pnt += (str(i[0])+"\t"+str(i[1])+"\n")
-            #SetC(pnt)
-            #input("hit enter to go to next thing (from vectors)")
-
-            
-
-            
-            #print(your_mesh.v0[0])
-
-            pnts = ["/left[" for i in range(3)]
             length = len(things[0])
             colours = []
 
@@ -247,9 +177,6 @@ if __name__ == '__main__':
                 normaly = ((z2-z1)*(x3-x1))-((x2-x1)*(z3-z1))
                 normalz = ((x2-x1)*(y3-y1))-((y2-y1)*(x3-x1))
                 normalDist = sqrt((normalx**2)+(normaly**2)+(normalz**2))
-                #if object_name == "cylinder":
-                #    unitNormaly = normalx/normalDist
-                #else:
                 unitNormaly = normaly/normalDist
                 if normalDist == 0:
                     print((x1,y1,z1),(x2,y2,z2),(x3,y3,z3))
@@ -277,10 +204,55 @@ if __name__ == '__main__':
                 total_render_tris += 1
             tris_end = total_render_tris
 
+
+
+        max_dist = 0
+        points_phys_starts = []
+        points_phys_ends = []
+
+        glob_result = glob(path+object_name+"/phys*")
+        glob_result = process_glob_result(glob_result)
+        if "phys.stl" in glob_result:
+
+
+            phys_mesh = mesh.Mesh.from_file(path+object_name+"/phys.stl")
+
+            phys_points = list(phys_mesh.v0)+list(phys_mesh.v1)+list(phys_mesh.v2)#your_mesh.points
+            phys_points = [tuple(i) for i in phys_points]
+            phys_points = list(set(phys_points))
+
+            points_phys_starts.append(total_points+1)
+            for i in phys_points:
+                packets.append((2,(i[0],i[2],i[1])))
+                total_points += 1
+                max_dist = max(max_dist, dist(i,(0,0,0)))
+            points_phys_ends.append(total_points)
+        else:
+            number = 1
+            while "phys"+str(number)+".ply" in glob_result:
+                phys_mesh = PlyData.read(path+object_name+"/phys"+str(number)+".ply")
+                
+                phys_points = phys_mesh.elements[0].data
+                #phys_points = list(set(list(phys_points)))
+
+                points_phys_starts.append(total_points+1)
+                for point in phys_points:
+                    cr_point = (point[0], point[2], point[1])
+                    
+                    packets.append((2,cr_point))
+                    total_points += 1
+                    max_dist = max(max_dist, dist(cr_point,(0,0,0)))
+                points_phys_ends.append(total_points)
+
+                number += 1
+
+        all_phys_markers = tuple()
+        for i in range(len(points_phys_starts)):
+            all_phys_markers += (points_phys_starts[i], points_phys_ends[i])
+
         packets.append((1,(
             points_mesh_start,points_mesh_end,
-            tris_start,tris_end,
-            points_phys_start,points_phys_end,
+            tris_start,tris_end,)+all_phys_markers+(
             max_dist,
             )))
         #print(packets[-1])
@@ -470,8 +442,7 @@ if __name__ == '__main__':
 
     
     glob_result = glob(textbox_location+"*.txt")
-    glob_result = [i.replace("\\","/") for i in glob_result]
-    glob_result = [i[i.rfind("/")+1:] for i in glob_result]
+    glob_result = process_glob_result(glob_result)
     for i in glob_result: # delete extra text box files
         if int(i[:i.find(".")]) > len(parts):
             os.remove(textbox_location+i)

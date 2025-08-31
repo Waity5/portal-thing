@@ -31,7 +31,7 @@ junk = summonObject({"skybox", {[7]=0,[8]=0}})
 --junk = summonObject({"blender_cube", {{0,1,11},[7]=0,[8]=0}})
 junk = summonObject({"blender_cube", {{-4,1,7},[7]=0,[8]=0}})
 
-junk = summonObject({"portal_orange", {{-0.75,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=1}})
+junk = summonObject({"portal_orange", {{-0.75,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
 --junk = summonObject({"portal_orange", {{-0.6,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
 portalOrange = objects[#objects]
 junk = summonObject({"portal_blue", {{0.75,1,10},[4]={0.53,0,-0.5,0},[7]=0,[8]=0}})
