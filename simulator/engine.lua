@@ -225,13 +225,13 @@ if bt then
 bO=bO+1
 if cK then
 ay(1)ay(61)end
-ay(208)cQ={}for W=1,#T do
+ay(192)cQ={}for W=1,#T do
 b=T[W]b[4]=bE(b[4],g(b[5],-bx))b[1]=E(b[1],g(b[2],bx))b[2]=E(b[2],g(b[3],bx))b[3]=g(b[12],1)b[16]=cx(b[4])for f,J in Y(b[9])do
 for V,e in Y(J)do
 e[2]=bs(e[1],b[16])e[2]=E(e[2],b[1])end
 end
 end
-ay(357)for d,l in Y(T)do
+ay(341)for d,l in Y(T)do
 if l[10]>0 or l[11]>0 then
 for f,r in Y(T)do
 if d~=f and bv(l[1],r[1])<=l[13]+r[13]then
@@ -274,7 +274,7 @@ for d=1,#b[8]do
 s=b[8][d]s[8]=bz(b[7][s[1]][2],b[7][s[2]][2],b[7][s[3]][2])end
 end
 end
-ay(754)end
+ay(738)end
 end
 function dg()bl={}for W=1,#T do
 b=T[W]if b~=bV or dr>1 then

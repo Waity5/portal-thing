@@ -16,9 +16,9 @@ objects = {}
 nilTable = {}
 init = nilTable[1]
 
-grav = {0,-9.81,0}
+grav = {0,-600,0}
 
-playerMoveForce = 10
+playerMoveForce = 5000
 
 maxRollCorrection = 1
 itterMax = 7
@@ -26,27 +26,27 @@ itterMax = 7
 --junk = summonObject({"track1", {{0,-1,0},[7]=0,[8]=0}})
 --junk = summonObject({"track2", {{0,-3,40},[7]=0,[8]=0}})
 --junk = summonObject({"track3", {{5.5,-3,40},[7]=0,[8]=0}})
-junk = summonObject({"widest_cube", {{0,-1,0},[7]=0,[8]=0}})
+junk = summonObject({"platform", {{0,-8,0},[7]=0,[8]=0}})
 junk = summonObject({"skybox", {[7]=0,[8]=0}})
 --junk = summonObject({"blender_cube", {{0,1,11},[7]=0,[8]=0}})
-junk = summonObject({"blender_cube", {{-4,1,7},[7]=0,[8]=0}})
+--junk = summonObject({"cube", {{-4,1,7},[7]=0,[8]=0}})
 
-junk = summonObject({"portal_orange", {{-0.75,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
+junk = summonObject({"portal_orange", {{-64,56,320},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
 --junk = summonObject({"portal_orange", {{-0.6,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
 portalOrange = objects[#objects]
-junk = summonObject({"portal_blue", {{0.75,1,10},[4]={0.53,0,-0.5,0},[7]=0,[8]=0}})
+junk = summonObject({"portal_blue", {{64,56,320},[4]={0.53,0,-0.5,0},[7]=0,[8]=0}})
 --junk = summonObject({"portal_blue", {{0,1,10.6},[4]={1,0,0,0},[7]=0,[8]=0}})
 portalBlue = objects[#objects]
-junk = summonObject({"player_bounding", {{0,3,0},[7]=1,[8]=0,[9]=grav}})
+junk = summonObject({"player_bounding", {{0,64,0},[7]=0.02,[8]=0,[9]=grav}})
 player = objects[#objects]
 
 i = -3
 summonBoxes:
-	junk = summonObject({"blender_cube",{{10,1,i*5},[7]=1,[8]=1,[9]=grav}})
+	junk = summonObject({"cube",{{160,20,i*64},[7]=0.1,[8]=0.0001,[9]=grav}})
 	i = i+1
 4>i ~ summonBoxes
 
-junk = summonObject({"hump",{{-10,0,0},[7]=0,[8]=0}})
+--junk = summonObject({"hump",{{-10,0,0},[7]=0,[8]=0}})
 
 springs = {} -- obj1, obj2, offset1, offset2, desired length, spring rate, dampen rate
 

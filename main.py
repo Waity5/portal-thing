@@ -11,7 +11,6 @@ from plyfile import PlyData, PlyElement
 from scripting.compiler import compiler
 from glob import glob as glob # glob
 
-
 def sq(a):
     factor=2.2
     return tuple([round((i**factor)/(255**(factor-1))) for i in a])
@@ -20,6 +19,12 @@ def process_glob_result(glob_result):
     glob_result = [i.replace("\\","/") for i in glob_result]
     glob_result = [i[i.rfind("/")+1:] for i in glob_result]
     return glob_result
+
+def read_ply_file(path):
+    file = open(path,"rb")
+    ply_file = PlyData.read(file)
+    file.close()
+    return ply_file
 
 if __name__ == '__main__':
     packets = []
@@ -36,22 +41,10 @@ if __name__ == '__main__':
     
 
     objects = {
+        "cube": {"colour": (160,160,150), "shading": True},
+        "platform": {"colour": (255,255,255), "shading": True},
         "monkey": {"colour": (0,255,0), "shading": True},
-        "blender_cube": {"colour": (255,0,255), "shading": True},
-        "wide_cube": {"colour": (255,255,255), "shading": True},
-        "wider_cube": {"colour": (255,255,255), "shading": True},
-        "cylinder": {"colour": (0,0,255), "shading": True},
         "utah_teapot": {"colour": (0,255,0), "shading": True},
-        "widest_cube": {"colour": (255,255,255), "shading": True},
-        "bowling_pin": {"colour": (255,255,255), "shading": True},
-        "wheel": {"colour": (255,255,255), "shading": True},
-        "island": {"colour": "ply", "shading": False},
-        "islandphys1": {"colour": (0,0,0), "shading": True},
-        "car": {"colour": (255,0,0), "shading": True},
-        "hump": {"colour": (150,150,150), "shading": True},
-        "track1": {"colour": (200,200,200), "shading": True},
-        "track2": {"colour": (200,200,200), "shading": True},
-        "track3": {"colour": (200,200,200), "shading": True},
         "skybox": {"colour": (46,132,200), "shading": False},
         "portal_orange": {"colour": (255,100,0), "shading": False},
         "portal_blue": {"colour": (0,100,255), "shading": False},
@@ -78,7 +71,8 @@ if __name__ == '__main__':
         
             point_map = {}
             point_map2 = {}
-            ply_mesh = PlyData.read(path+object_name+"/mesh.ply")
+            ply_mesh = read_ply_file(path+object_name+"/mesh.ply")
+            
             
             processed_points = []
             raw_points = ply_mesh.elements[0].data
@@ -230,7 +224,7 @@ if __name__ == '__main__':
         else:
             number = 1
             while "phys"+str(number)+".ply" in glob_result:
-                phys_mesh = PlyData.read(path+object_name+"/phys"+str(number)+".ply")
+                phys_mesh = read_ply_file(path+object_name+"/phys"+str(number)+".ply")
                 
                 phys_points = phys_mesh.elements[0].data
                 #phys_points = list(set(list(phys_points)))
