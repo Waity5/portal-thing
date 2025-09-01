@@ -95,7 +95,7 @@ end
 
 function getMovementPerUnitForce(object,position,direction)
 	trueContactPoint1 = sub3(position,object[1])
-	return dot(cross(mul3(cross(trueContactPoint1,direction),object[11]),trueContactPoint1),direction) + object[10]
+	return dot3(cross(mul3(cross(trueContactPoint1,direction),object[11]),trueContactPoint1),direction) + object[10]
 end
 
 function applyInstantMovement(object,position,force)
@@ -114,7 +114,7 @@ end
 function gjkSupport(points,searchDirection)
 	local crDist=-bigNum
 	for i,v in ipairsVar(points) do
-		crDot = dot(v[2],searchDirection)
+		crDot = dot3(v[2],searchDirection)
 		if abs(crDot-crDist)<0.0005 then -- must be more strict than the epa's exit condition to prevent unreachable conditions
 			pointList[#pointList+1]=i
 		elseif crDot>crDist then
@@ -132,7 +132,7 @@ function gjkCollisionDetection(points1,points2)
 	for itteration1 = 1,32 do
 		crPoint = sub3(gjkSupport(points1,searchDirection),gjkSupport(points2,mul3(searchDirection,-1)))
 		
-		if dot(crPoint,searchDirection)<=0 then
+		if dot3(crPoint,searchDirection)<=0 then
 			return
 		end
 		
@@ -150,13 +150,13 @@ function gjkCollisionDetection(points1,points2)
 			acd = cross(ac,ad)
 			adb = cross(ad,ab)
 			
-			if dot(abc, ao)>0 then
+			if dot3(abc, ao)>0 then
 				collPoints = {a,b,c}
 				searchDirection = abc
-			elseif dot(acd, ao)>0 then
+			elseif dot3(acd, ao)>0 then
 				collPoints = {a,c,d}
 				searchDirection = acd
-			elseif dot(adb, ao)>0 then
+			elseif dot3(adb, ao)>0 then
 				collPoints = {a,d,b}
 				searchDirection = adb
 			else -- expanded polytope algorithm
@@ -175,7 +175,7 @@ function gjkCollisionDetection(points1,points2)
 				for itteration2 = 1,32 do
 					crDist=bigNum -- zero should work
 					for i,v in ipairs(faces) do -- find closest face to origin
-						crDot = dot(v[1],v[4])
+						crDot = dot3(v[1],v[4])
 						if crDot<crDist then
 							crDist = crDot
 							closestFace = v
@@ -185,14 +185,14 @@ function gjkCollisionDetection(points1,points2)
 					
 					crPoint = sub3(gjkSupport(points1,searchDirection),gjkSupport(points2,mul3(searchDirection,-1)))
 					
-					if dot(crPoint,searchDirection)-0.001 <= crDist then
-						return {closestFace[4],dot(crPoint,searchDirection)}
+					if dot3(crPoint,searchDirection)-0.001 <= crDist then
+						return {closestFace[4],dot3(crPoint,searchDirection)}
 					end
 					
 					looseEdges={}
 					for i=#faces,1,-1 do
 						crFace=faces[i]
-						if dot(crFace[4],sub3(crPoint,crFace[1]))>0 then -- triangle faces new point, remove it
+						if dot3(crFace[4],sub3(crPoint,crFace[1]))>0 then -- triangle faces new point, remove it
 							for j=1,3 do
 								crEdge = {crFace[j],crFace[(j%3)+1]}
 								for k,crLooseEdge in ipairs(looseEdges) do
@@ -220,7 +220,7 @@ function gjkCollisionDetection(points1,points2)
 						newFace = {v[1],v[2],crPoint}
 						newFace[4] = norm3(crossPoints(newFace[1],newFace[2],newFace[3]))
 						
-						--if dot(newFace[1], newFace[4]) < 0 then -- I don't think this is needed, the winding should be preserved naturally
+						--if dot3(newFace[1], newFace[4]) < 0 then -- I don't think this is needed, the winding should be preserved naturally
 						--	newFace[1],newFace[2]=newFace[2],newFace[1]
 						--	newFace[4] = mul3(newFace[4],-1)
 						--end
@@ -236,14 +236,14 @@ function gjkCollisionDetection(points1,points2)
 			
 			abc = cross(ab,ac)
 			
-			if dot(cross(abc, ac), ao)>0 then -- closest to edge AC
+			if dot3(cross(abc, ac), ao)>0 then -- closest to edge AC
 				collPoints = {a,c}
 				searchDirection = cross(cross(ac, ao), ac)
-			elseif dot(cross(ab, abc), ao)>0 then --closest to edge AB
+			elseif dot3(cross(ab, abc), ao)>0 then --closest to edge AB
 				collPoints = {a,b}
 				searchDirection = cross(cross(ab, ao), ab)
 			else
-				if dot(abc, ao)>0 then
+				if dot3(abc, ao)>0 then
 					--collPoints = {a,b,c} --above triangle
 					searchDirection = abc;
 				else
@@ -255,7 +255,7 @@ function gjkCollisionDetection(points1,points2)
 			ab = sub3(b,a)
 			ao = mul3(a,-1)
 			
-			if dot(ab, ao)>0 then
+			if dot3(ab, ao)>0 then
 				searchDirection = cross(cross(ab, ao), ab)
 			else
 				collPoints = {a}
@@ -323,7 +323,7 @@ function cross(a,b)
 	return {a[2]*b[3] - a[3]*b[2], a[3]*b[1] - a[1]*b[3], a[1]*b[2] - a[2]*b[1]}
 end
 
-function dot(a,b)
+function dot3(a,b)
 	return a[1]*b[1]+a[2]*b[2]+a[3]*b[3]
 end
 
@@ -502,11 +502,11 @@ function onTick()
 									isColliding = gjkCollisionDetection(collMesh1,collMesh2)
 									--monkeyCollision = gjkCollisionDetection(objects[1][7],objects[2][7])
 									if isColliding then
-										if object1 == player or object2 == player then
-											coefficientOfFriction = 0
-										else
-											coefficientOfFriction = 1
-										end
+										--if object1 == player or object2 == player then
+										--	coefficientOfFriction = 1
+										--else
+										--	coefficientOfFriction = 1
+										--end
 										newAndOldCollPoints = object1[15][j] or {}
 										
 										--collideAtAll = trueVar
@@ -530,7 +530,7 @@ function onTick()
 											normal2 = cross(direction2,cross(direction1,direction2))
 											trueContactPoint = add3(collMesh1[collPoints1[1]][2],
 											mul3(direction1,
-											dot(sub3(collMesh2[collPoints2[1]][2],collMesh1[collPoints1[1]][2]),normal2) / dot(direction1,normal2)))
+											dot3(sub3(collMesh2[collPoints2[1]][2],collMesh1[collPoints1[1]][2]),normal2) / dot3(direction1,normal2)))
 										else
 											trueContactPoint = object1[13]>object2[13] and collMesh2[collPoints2[1]][2] or collMesh1[collPoints1[1]][2]
 										end
@@ -540,7 +540,7 @@ function onTick()
 										velocity2 = add3(cross(object2[5],sub3(trueContactPoint,object2[1])),object2[2])
 										totalVelocity = sub3(velocity1,velocity2)
 										
-										totalVelocityNormal = dot(isColliding[1],totalVelocity)
+										totalVelocityNormal = dot3(isColliding[1],totalVelocity)
 										if totalVelocityNormal>0 then
 											--goodCollPoints[#goodCollPoints+1] = collPoints
 											
@@ -569,7 +569,7 @@ function onTick()
 											velocity2 = add3(cross(object2[5],sub3(trueContactPoint,object2[1])),object2[2])
 											totalVelocity = sub3(velocity1,velocity2)
 											
-											totalVelocityNormal = dot(isColliding[1],totalVelocity)
+											totalVelocityNormal = dot3(isColliding[1],totalVelocity)
 											
 											totalVelocityTangential = sub3(totalVelocity,mul3(isColliding[1],totalVelocityNormal))
 											
@@ -677,7 +677,7 @@ function renderView()
 				p3 = object[7][curTri[3]]
 				curTri[7]=mx(p1[7],p2[7],p3[7])
 				b=p1[3]
-				if dot(curTri[8],b)>0 and curTri[7]>depthMinimum then
+				if dot3(curTri[8],b)>0 and curTri[7]>depthMinimum then
 					sideVal=p1[6]+p2[6]+p3[6]
 					if sideVal == 3 then
 						--renderShapes[#renderShapes+1] = {p1[5],p2[5],p3[5],curTri[4],curTri[5],curTri[6],curTri[7]}
