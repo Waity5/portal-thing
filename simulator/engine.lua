@@ -207,14 +207,14 @@ end
 if bp then
 bK=bK+1
 if cA then
-av(1)av(77)end
-av(204)cG={}for at=1,#ac do
-b=ac[at]b[4]=bA(b[4],f(b[5],-bt))b[1]=D(b[1],f(b[2],bt))b[2]=D(b[2],f(b[3],bt))b[3]=f(b[12],1)b[16]=co(b[4])for p,H in T(b[9])do
+av(1)av(80)end
+av(208)cG={}for at=1,#ac do
+b=ac[at]b[4]=bA(b[4],f(b[5],-bt))b[2]=D(b[2],f(b[12],bt))b[1]=D(b[1],f(b[2],bt))b[16]=co(b[4])for p,H in T(b[9])do
 for R,e in T(H)do
 e[2]=bo(e[1],b[16])e[2]=D(e[2],b[1])end
 end
 end
-av(386)for d,m in T(ac)do
+av(414)for d,m in T(ac)do
 if m[10]>0 or m[11]>0 then
 for p,q in T(ac)do
 if d~=p and br(m[1],q[1])<=m[13]+q[13]then
@@ -252,7 +252,7 @@ for d=1,#b[8]do
 r=b[8][d]r[8]=bv(b[7][r[1]][2],b[7][r[2]][2],b[7][r[3]][2])end
 end
 end
-av(783)end
+av(811)end
 end
 function cW()bj={}for at=1,#ac do
 b=ac[at]if b~=cY or dh>1 then

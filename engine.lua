@@ -415,9 +415,9 @@ function onTick()
 		for index = 1,#objects do
 			object = objects[index]
 			object[4] = updateQuaternionByVector(object[4],mul3(object[5],-deltaTime)) -- apply rotational velocity to orientation, not sure why the minus is needed
-			object[1] = add3(object[1],mul3(object[2],deltaTime)) -- apply velocity to position
-			object[2] = add3(object[2],mul3(object[3],deltaTime)) -- apply acceleration to velocity
-			object[3] = mul3(object[12],1) -- reset acceleration to gravity
+			object[2] = add3(object[2],mul3(object[12],deltaTime)) -- apply acceleration to velocity
+			object[1] = add3(object[1],mul3(object[2],deltaTime)) -- apply velocity to position			
+			--object[3] = mul3(object[12],1) -- reset acceleration to gravity
 			--object[2] = mul3(object[2],0.9995) -- slow down velocity, optional
 			--object[5] = mul3(object[5],0.9995) -- slow down rotation, optional
 			

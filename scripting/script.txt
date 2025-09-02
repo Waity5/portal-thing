@@ -24,6 +24,8 @@ walkingAccelerate = 10
 maxRollCorrection = 1
 itterMax = 7
 
+playerYVelocityOld = 0
+
 coefficientOfFriction = 1
 
 index = "platform"
@@ -88,6 +90,11 @@ rotateSpeedInv = 1/rotateSpeed
 --endCamMove:
 camPos = player[1]
 
+playerYVelocity = player[2][2]
+playerGrounded = 1 > abs({playerYVelocity-playerYVelocityOld})
+playerYVelocityOld = player[2][2]
+
+
 wishVelocity = mul3({{gN({1})*cos({camRot[1]}) - (gN({2})*sin({camRot[1]})), 0, gN({1})*sin({camRot[1]}) + (gN({2})*cos({camRot[1]}))}, walkingSpeed})
 wishSpeed = dist3({wishVelocity,{0,0,0}})
 0.001 > wishSpeed ~ skipPlayerAccelerate
@@ -104,6 +111,16 @@ addSpeed = wishSpeed - currentSpeed
 	player[2] = add3({mul3({wishVelocity, addSpeed}), player[2]})
 	
 skipPlayerAccelerate:
+
+playerGrounded ~ doPlayerJump1
+1 ~ skipPlayerJump
+doPlayerJump1:
+gB({31}) ~ doPlayerJump2
+1 ~ skipPlayerJump
+doPlayerJump2:
+	player[2][2] = player[2][2] + 150
+skipPlayerJump:
+
 
 
 camRot[1]=camRot[1] - gN({3})/rotateSpeedInv
