@@ -8,3 +8,4 @@ cache.txt
 Citrus Doom/_build/libs/LifeBoatAPI/
 code/_build/libs/LifeBoatAPI/
 /simulator/textboxes
+simulator/engine.lua
