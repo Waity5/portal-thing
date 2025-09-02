@@ -442,7 +442,7 @@ function onTick()
 		for i,object1 in ipairsVar(objects) do
 			if object1[10]>0 or object1[11]>0 then
 				for j,object2 in ipairsVar(objects) do
-					if i~=j and dist3(object1[1],object2[1])<=object1[13]+object2[13] then
+					if i~=j and dist3(object1[1],object2[1])<=object1[13]+object2[13] and object1[17]~=object2 and object2[17]~=object1 then
 						for k,collMesh1 in ipairsVar(object1[9]) do
 							for n,collMesh2 in ipairsVar(object2[9]) do
 								--collCals=collCals+1

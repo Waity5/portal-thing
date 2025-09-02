@@ -21,7 +21,10 @@ grav = {0,-600,0}
 walkingSpeed = 150
 walkingAccelerate = 10
 
-maxRollCorrection = 1
+verticalLookLimiter = pi/2-0.001
+
+maxRollCorrection = 3
+maxThroughPortalSpeed = 1000
 itterMax = 7
 
 playerYVelocityOld = 0
@@ -36,14 +39,16 @@ conditions = {[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 
 index = "portal_orange"
-conditions = {{-64,56,320},[4]={0.5,0,0.5,0},[7]=0,[8]=0}
+conditions = {{0,0,200},[4]={0.5,-0.5,0,0},[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 portalOrange = objects[#objects]
+portalOrange[17] = objects[1]
 
 index = "portal_blue"
-conditions = {{64,56,320},[4]={0.53,0,-0.5,0},[7]=0,[8]=0}
+conditions = {{0,300,200},[4]=multQuaternionByQuaternion({norm4({{0.5,0.5,0,0}}),{0,0,1,0}}),[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 portalBlue = objects[#objects]
+--portalBlue[17] = objects[1]
 
 index = "player_bounding"
 conditions = {{0,64,0},[7]=0.02,[8]=0,[9]=grav}
@@ -124,7 +129,7 @@ skipPlayerJump:
 
 
 camRot[1]=camRot[1] - gN({3})/rotateSpeedInv
-camRot[2]=camRot[2] + gN({4})/rotateSpeedInv
+camRot[2]=clmp({camRot[2] + gN({4})/rotateSpeedInv,0-verticalLookLimiter,verticalLookLimiter})
 --camRot[3]=camRot[3] + gN({1})/rotateSpeedInv
 
 maxRollCorrectionCur = maxRollCorrection*deltaTime
@@ -194,6 +199,58 @@ portalOrangeToBlueMatrix = quaternionToMatrix({portalOrangeToBlueQuaternion})
 portalBlueToOrangeMatrix = quaternionToMatrix({portalBlueToOrangeQuaternion})
 
 
+player[17] = nilVar
+i = 0
+portalCollisionLoop:
+	i = i+1
+	
+	i > 1 ~ chooseBluePortalCollision
+		portalPrimary = {portalOrange}[1]
+		portalSecondary = {portalBlue}[1]
+		portalPrimarytoSecondaryQuaternion = {portalOrangeToBlueQuaternion}[1]
+		portalPrimarytoSecondaryMatrix = {portalOrangeToBlueMatrix}[1]
+	1 ~ endPortalChoosingCollision
+	chooseBluePortalCollision:
+		portalPrimary = {portalBlue}[1]
+		portalSecondary = {portalOrange}[1]
+		portalPrimarytoSecondaryQuaternion = {portalBlueToOrangeQuaternion}[1]
+		portalPrimarytoSecondaryMatrix = {portalBlueToOrangeMatrix}[1]
+	endPortalChoosingCollision:
+	
+	portalPrimaryPhysMesh1 = portalPrimary[9][1]
+	portalPrimaryPhysMesh2 = portalPrimary[9][2]
+	isColliding = gjkCollisionDetection({{portalPrimaryPhysMesh1[1],portalPrimaryPhysMesh1[2],portalPrimaryPhysMesh1[3],portalPrimaryPhysMesh1[4],portalPrimaryPhysMesh2[1],portalPrimaryPhysMesh2[2],portalPrimaryPhysMesh2[3],portalPrimaryPhysMesh2[4]},player[9][1]})
+	isColliding ~ dontSkipPortalCollision
+	1 ~ skipPortalCollision
+	dontSkipPortalCollision:
+		player[17] = portalPrimary[17]
+		sideVal = dot3({sub3({player[1],portalPrimary[1]}), portalPrimary[8][1][8]})
+		0 > sideVal ~ skipPortalTeleport
+			player[1] = add3({sub3({player[1],portalPrimary[1]}), portalSecondary[1]})
+			--camRot[1] = camRot[1] - (pi/2)
+			player[2] = multVectorByMatrix({player[2],portalPrimarytoSecondaryMatrix})
+			playerSpeed = dist3({player[2],{0,0,0}})
+			
+			maxThroughPortalSpeed > playerSpeed ~ skipPlayerSlowing
+				player[2] = mul3({player[2], maxThroughPortalSpeed/playerSpeed})
+			skipPlayerSlowing:
+			
+			cameraRotation = {camRot}[1]
+			junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
+			cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+			cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalPrimarytoSecondaryQuaternion})
+			cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+			junk = executeScript({quaternionToCameraRotation})
+			
+			--junk = print(portalOrangeToBlueCamQuaternion)
+			--junk = print(portalOrangeToBluePosQuaternion)
+			
+			--junk = print({"OK"})
+
+			
+		skipPortalTeleport:
+	skipPortalCollision:
+2>i ~ portalCollisionLoop
 
 
 
@@ -305,53 +362,6 @@ exit
 
 
 renderFunc:
-
--- temporarily put this here
-
-i = 0
-portalCollisionLoop:
-	i = i+1
-	
-	i > 1 ~ chooseBluePortalCollision
-		portalPrimary = {portalOrange}[1]
-		portalSecondary = {portalBlue}[1]
-		portalPrimarytoSecondaryQuaternion = {portalOrangeToBlueQuaternion}[1]
-		portalPrimarytoSecondaryMatrix = {portalOrangeToBlueMatrix}[1]
-	1 ~ endPortalChoosingCollision
-	chooseBluePortalCollision:
-		portalPrimary = {portalBlue}[1]
-		portalSecondary = {portalOrange}[1]
-		portalPrimarytoSecondaryQuaternion = {portalBlueToOrangeQuaternion}[1]
-		portalPrimarytoSecondaryMatrix = {portalBlueToOrangeMatrix}[1]
-	endPortalChoosingCollision:
-	
-	isColliding = gjkCollisionDetection({portalPrimary[7],player[9][1]})
-	isColliding ~ dontSkipPortalCollision
-	1 ~ skipPortalCollision
-	dontSkipPortalCollision:
-		sideVal = dot3({sub3({player[1],portalPrimary[1]}), portalPrimary[8][1][8]})
-		0 > sideVal ~ skipPortalTeleport
-			player[1] = add3({sub3({player[1],portalPrimary[1]}), portalSecondary[1]})
-			--camRot[1] = camRot[1] - (pi/2)
-			player[2] = multVectorByMatrix({player[2],portalPrimarytoSecondaryMatrix})
-			
-			cameraRotation = {camRot}[1]
-			junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
-			cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-			cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalPrimarytoSecondaryQuaternion})
-			cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-			junk = executeScript({quaternionToCameraRotation})
-			
-			--junk = print(portalOrangeToBlueCamQuaternion)
-			--junk = print(portalOrangeToBluePosQuaternion)
-			
-			--junk = print({"OK"})
-
-			
-		skipPortalTeleport:
-	skipPortalCollision:
-2>i ~ portalCollisionLoop
-
 
 
 
@@ -706,6 +716,7 @@ newObject={$-- position, velocity, acceleration, orientation, rotation velocity,
 	index,$ -- 14
 	{},$ -- 15 previous collision points, not used
 	{},$ -- 16 rotation matrix
+	nilVar,$ -- 17 don't collide with
 }
 objects[#objects+1]=newObject
 
