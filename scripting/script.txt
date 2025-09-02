@@ -26,28 +26,35 @@ itterMax = 7
 
 coefficientOfFriction = 1
 
---junk = summonObject({"track1", {{0,-1,0},[7]=0,[8]=0}})
---junk = summonObject({"track2", {{0,-3,40},[7]=0,[8]=0}})
---junk = summonObject({"track3", {{5.5,-3,40},[7]=0,[8]=0}})
-junk = summonObject({"platform", {{0,-8,0},[7]=0,[8]=0}})
-junk = summonObject({"skybox", {[7]=0,[8]=0}})
---junk = summonObject({"blender_cube", {{0,1,11},[7]=0,[8]=0}})
---junk = summonObject({"cube", {{-4,1,7},[7]=0,[8]=0}})
+index = "platform"
+conditions = {{0,-8,0},[7]=0,[8]=0}
+junk = executeScript({summonObjectFunc})
+index = "skybox"
+conditions = {[7]=0,[8]=0}
+junk = executeScript({summonObjectFunc})
 
-junk = summonObject({"portal_orange", {{-64,56,320},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
---junk = summonObject({"portal_orange", {{-0.6,1,10},[4]={0.5,0,0.5,0},[7]=0,[8]=0}})
+index = "portal_orange"
+conditions = {{-64,56,320},[4]={0.5,0,0.5,0},[7]=0,[8]=0}
+junk = executeScript({summonObjectFunc})
 portalOrange = objects[#objects]
-junk = summonObject({"portal_blue", {{64,56,320},[4]={0.53,0,-0.5,0},[7]=0,[8]=0}})
---junk = summonObject({"portal_blue", {{0,1,10.6},[4]={1,0,0,0},[7]=0,[8]=0}})
+
+index = "portal_blue"
+conditions = {{64,56,320},[4]={0.53,0,-0.5,0},[7]=0,[8]=0}
+junk = executeScript({summonObjectFunc})
 portalBlue = objects[#objects]
-junk = summonObject({"player_bounding", {{0,64,0},[7]=0.02,[8]=0,[9]=grav}})
+
+index = "player_bounding"
+conditions = {{0,64,0},[7]=0.02,[8]=0,[9]=grav}
+junk = executeScript({summonObjectFunc})
 player = objects[#objects]
 
-i = -3
+index1 = -3
+index = "cube"
 summonBoxes:
-	junk = summonObject({"cube",{{160,20,i*64},[7]=0.1,[8]=0.0001,[9]=grav}})
-	i = i+1
-4>i ~ summonBoxes
+	conditions = {{160,20,index1*64},[7]=0.1,[8]=0.0001,[9]=grav}
+	junk = executeScript({summonObjectFunc})
+	index1 = index1+1
+4>index1 ~ summonBoxes
 
 --junk = summonObject({"hump",{{-10,0,0},[7]=0,[8]=0}})
 
@@ -586,5 +593,103 @@ yaw = 0-(atan({2 * (qw * qz + qx * qy), 1 - (2 * (qy*qy + qz*qz))}))
 --junk = print({yaw,pitch,roll})
 --junk = print(cameraRotation)
 camRot = {yaw,pitch,roll}
+
+exit
+
+
+
+
+
+summonObjectFunc:
+
+conditions ~ skipConditionWrite0
+conditions = {}
+skipConditionWrite0:
+
+conditions[1] ~ skipConditionWrite1
+conditions[1] = {0,0,0}
+skipConditionWrite1:
+conditions[2] ~ skipConditionWrite2
+conditions[2] = {0,0,0}
+skipConditionWrite2:
+conditions[3] ~ skipConditionWrite3
+conditions[3] = {0,0,0}
+skipConditionWrite3:
+conditions[4] ~ skipConditionWrite4
+conditions[4] = {1,0,0,0}
+skipConditionWrite4:
+conditions[5] ~ skipConditionWrite5
+conditions[5] = {0,0,0}
+skipConditionWrite5:
+conditions[6] ~ skipConditionWrite6
+conditions[6] = {0,0,0}
+skipConditionWrite6:
+conditions[7] ~ skipConditionWrite7
+conditions[7] = 1
+skipConditionWrite7:
+conditions[8] ~ skipConditionWrite8
+conditions[8] = 1
+skipConditionWrite8:
+conditions[9] ~ skipConditionWrite9
+conditions[9] = {0,0,0}
+skipConditionWrite9:
+
+
+sourceObjectInfo = M[1][index]
+newPoints={}
+j=1
+i = sourceObjectInfo[1]-1
+newObjectCopyRenderPoints:
+	i=i+1
+	cr=M[2][i]
+	newPoints[j]={{cr[1],cr[2],cr[3]}}
+	j=j+1
+sourceObjectInfo[2] > i ~ newObjectCopyRenderPoints
+
+newTris={}
+j=1
+i = sourceObjectInfo[3]-1
+newObjectCopyRenderTris:
+	i=i+1
+	cr=M[3][i]
+	newTris[j]={cr[1],cr[2],cr[3],cr[4],cr[5],cr[6]}
+	j=j+1
+sourceObjectInfo[4] > i ~ newObjectCopyRenderTris
+
+newPhyses = {}
+n = 6
+newObjectCopyPhysPoints:
+	newPhys={}
+	j=1
+	i = sourceObjectInfo[n-1]-1
+	newObjectCopyPhysPoints2:
+		i=i+1
+		cr=M[2][i]
+		newPhys[j]={{cr[1],cr[2],cr[3]}}
+		j=j+1
+	sourceObjectInfo[n] > i ~ newObjectCopyPhysPoints2
+	newPhyses[#newPhyses+1] = newPhys
+	n=n+2
+#sourceObjectInfo > n ~ newObjectCopyPhysPoints
+
+newObject={$-- position, velocity, acceleration, orientation, rotation velocity, rotation acceleration, points, tris
+	conditions[1],$ -- 1
+	conditions[2],$ -- 2
+	conditions[3],$ -- 3
+	conditions[4],$ -- 4
+	conditions[5],$ -- 5
+	conditions[6],$ -- 6
+	newPoints,$ -- 7
+	newTris,$ -- 8
+	newPhyses,$ -- 9 collision mesh
+	conditions[7],$ -- 10 ability to be moved, higher is easier to be moved
+	conditions[8],$ -- 11 ability to be rotated, should really be a vec3
+	conditions[9],$ -- 12 gravity
+	M[1][index][7],$ -- 13 max point dist from object's origin
+	index,$ -- 14
+	{},$ -- 15 previous collision points, not used
+	{},$ -- 16 rotation matrix
+}
+objects[#objects+1]=newObject
 
 exit

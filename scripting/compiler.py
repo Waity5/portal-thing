@@ -64,6 +64,11 @@ class compiler:
             if self.text[i] == "":
                 self.text.pop(i)
 
+        for i in range(len(self.text)-1,-1,-1):
+            if self.text[i][-1] == "$":
+                self.text[i] = self.text[i][:-1] + self.text[i+1]
+                self.text.pop(i+1)
+
         tags = 0
         for i in self.text:
             if ":" in i:

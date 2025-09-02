@@ -269,56 +269,6 @@ function gjkCollisionDetection(points1,points2)
 	-- only reaches here when a timeout happens
 end
 
-function summonObject(index,conditions)
-	conditions=conditions or{}
-	sourceObjectInfo = M[1][index]
-	newPoints={}
-	j=1
-	for i=sourceObjectInfo[1],sourceObjectInfo[2] do
-		cr=M[2][i]
-		newPoints[j]={{cr[1],cr[2],cr[3]},{}}
-		j=j+1
-	end
-	newTris={}
-	j=1
-	for i=sourceObjectInfo[3],sourceObjectInfo[4] do
-		cr=M[3][i]
-		newTris[j]={unpack(cr)}
-		j=j+1
-	end
-	newPhyses = {}
-	for n=6,#sourceObjectInfo,2 do
-		newPhys={}
-		j=1
-		for i=sourceObjectInfo[n-1],sourceObjectInfo[n] do
-			cr=M[2][i]
-			newPhys[j]={{cr[1],cr[2],cr[3]},{}}
-			j=j+1
-		end
-		newPhyses[#newPhyses+1] = newPhys
-	end
-	
-	newObject={-- position, velocity, acceleration, orientation, rotation velocity, rotation acceleration, points, tris
-		conditions[1]or{0,0,0}, -- 1
-		conditions[2]or{0,0,0}, -- 2
-		conditions[3]or{0,0,0}, -- 3
-		conditions[4]or{1,0,0,0}, -- 4
-		conditions[5]or{0,0,0}, -- 5
-		conditions[6]or{0,0,0}, -- 6
-		newPoints, -- 7
-		newTris, -- 8
-		newPhyses, -- 9 collision mesh
-		conditions[7]or 1, -- 10 ability to be moved, higher is easier to be moved
-		conditions[8]or 1, -- 11 ability to be rotated, should really be a vec3
-		conditions[9]or{0,0,0}, -- 12 gravity
-		M[1][index][7], -- 13 max point dist from object's origin
-		index, -- 14
-		{}, -- 15 previous collision points, not used
-		{}, -- 16 rotation matrix
-	}
-	objects[#objects+1]=newObject
-end
-
 function cross(a,b)
 	return {a[2]*b[3] - a[3]*b[2], a[3]*b[1] - a[1]*b[3], a[1]*b[2] - a[2]*b[1]}
 end
