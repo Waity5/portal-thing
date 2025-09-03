@@ -11,6 +11,7 @@
 
 initFunc:
 
+
 objects = {}
 
 nilTable = {}
@@ -21,7 +22,12 @@ grav = {0,-600,0}
 walkingSpeed = 150
 walkingAccelerate = 10
 
+camRot={0,0,0}
+
 verticalLookLimiter = pi/2-0.001
+rotateSpeed = 90
+angleConvert=pi/180
+fov=90*angleConvert
 
 maxRollCorrection = 3
 maxThroughPortalSpeed = 1000
@@ -75,6 +81,12 @@ exit
 
 tickFunc:
 
+screenScale = tan({fov/2})*screenWidth2
+
+tickRate=62.5
+deltaTime=1/tickRate
+
+
 junk = executeScript({playerMovementFunc})
 
 pushForce = 0
@@ -127,8 +139,8 @@ exit
 
 playerMovementFunc:
 
-moveSpeedInv = 1/moveSpeed
-rotateSpeedInv = 1/rotateSpeed
+rotateSpeedCr=rotateSpeed*angleConvert/tickRate
+rotateSpeedInv = 1/rotateSpeedCr
 
 --gB31 = gB({31})
 --gB31 ~ holdingSpace
@@ -379,10 +391,10 @@ renderFunc:
 
 portalsBoth = {portalOrange,portalBlue}
 
-w_2 = 0-w2
-h_2 = 0-h2
-viewBounding = {{w_2,h_2},{w2,h_2},{w2,h2},{w_2,h2}}
-innerBounding = {w_2,w2,h_2,h2}
+w_2 = 0-screenWidth2
+h_2 = 0-screenHeight2
+viewBounding = {{w_2,h_2},{screenWidth2,h_2},{screenWidth2,screenHeight2},{w_2,screenHeight2}}
+innerBounding = {w_2,screenWidth2,h_2,screenHeight2}
 cameraRotation = {camRot}[1]
 junk = executeScript({cameraRotationToQuaternion})
 remainingRenderingPasses = {{camPos,cameraRotationQuaternion,viewBounding,innerBounding,innerBounding,{1,1,0,0}}}

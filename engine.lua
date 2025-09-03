@@ -45,18 +45,8 @@ levelCr=3
 stg=1
 --loaded=falseVar
 init=trueVar
-httpTk=0
+--httpTk=0
 tick=0
-camPos={0,5,-10}
-camRot={0,0,0}
-tickRate=62.5
-turn=0
-angleConvert=pi/180
-moveSpeed=5/tickRate
-rotateSpeed=90*angleConvert/tickRate
-fov=90*angleConvert
-screenScale=1
-deltaTime=1/tickRate
 
 function executeScript(line,opcode) -- do not input anything for opcode
 	_ENVvar = _ENV
@@ -351,7 +341,7 @@ end
 --end
 
 function onTick()
-	for j=1,1 do
+	for j=1,32 do
 		if gB(32) and not loaded then
 			rom=property.getText(romCr)
 			i=1
@@ -396,7 +386,7 @@ function onTick()
 		end
 	end
 
-	if loaded then
+	if loaded and screenWidth then
 		tick = tick+1
 		if init then
 			executeScript(1)
@@ -730,11 +720,10 @@ end
 function onDraw()
 	screenVar=screen
 	local triF,tri,rec,stCl=screenVar.drawTriangleF,screenVar.drawTriangle,screenVar.drawRectF,screenVar.setColor --locals are faster because lua
-	w = screenVar.getWidth()
-	h = screenVar.getHeight()
-	w2=w/2
-	h2=h/2
-	screenScale = tan(fov/2)*w2
+	screenWidth = screenVar.getWidth()
+	screenHeight = screenVar.getHeight()
+	screenWidth2=screenWidth/2
+	screenHeight2=screenHeight/2
 	
 	
 	--stCl(255,255,255)
@@ -762,6 +751,7 @@ function onDraw()
 	
 	
 	if loaded then
+		--screenScale = tan(fov/2)*screenWidth2
 		
 		for i=1,#renderShapesAll do
 			curShape = renderShapesAll[i]
@@ -772,16 +762,16 @@ function onDraw()
 				p2 = shape[j-1]
 				p3 = shape[j]
 				stCl(curShape[2],curShape[3],curShape[4])
-				triF(p1[1]+w2,p1[2]+h2,p2[1]+w2,p2[2]+h2,p3[1]+w2,p3[2]+h2)
+				triF(p1[1]+screenWidth2,p1[2]+screenHeight2,p2[1]+screenWidth2,p2[2]+screenHeight2,p3[1]+screenWidth2,p3[2]+screenHeight2)
 				--stCl(curShape[2]*0.5,curShape[3]*0.5,curShape[4]*0.5)
-				--tri(p1[1]+w2,p1[2]+h2-0.5,p2[1]+w2,p2[2]+h2-0.5,p3[1]+w2,p3[2]+h2-0.5)
+				--tri(p1[1]+screenWidth2,p1[2]+screenHeight2-0.5,p2[1]+screenWidth2,p2[2]+screenHeight2-0.5,p3[1]+screenWidth2,p3[2]+screenHeight2-0.5)
 			end
 		end
 		
 		for i,debugTri in ipairsVar(debugTris) do
 			p1,p2,p3 = unpack(debugTri)
 			junk =stCl(unpack(debugTri[4]))
-			triF(p1[1]+w2,p1[2]+h2,p2[1]+w2,p2[2]+h2,p3[1]+w2,p3[2]+h2)
+			triF(p1[1]+screenWidth2,p1[2]+screenHeight2,p2[1]+screenWidth2,p2[2]+screenHeight2,p3[1]+screenWidth2,p3[2]+screenHeight2)
 		end
 		--print(processed,accepted,culled)
 		
@@ -790,19 +780,19 @@ function onDraw()
 		--	for i=1,#collPoints1 do
 		--		crPoint=multVectorByMatrix(sub3(collPoints1[i],camPos),cameraRotationMatrix)
 		--		crPoint=mul(mul(crPoint,1/crPoint[3]),screenScale)
-		--		rec(w2+crPoint[1]-2,h2-crPoint[2]-2,5,5)
+		--		rec(screenWidth2+crPoint[1]-2,screenHeight2-crPoint[2]-2,5,5)
 		--	end
 		--		stCl(0,255,255)
 		--	for i=1,#collPoints2 do
 		--		crPoint=multVectorByMatrix(sub3(collPoints2[i],camPos),cameraRotationMatrix)
 		--		crPoint=mul(mul(crPoint,1/crPoint[3]),screenScale)
-		--		rec(w2+crPoint[1]-2,h2-crPoint[2]-2,5,5)
+		--		rec(screenWidth2+crPoint[1]-2,screenHeight2-crPoint[2]-2,5,5)
 		--	end
 		--	if trueContactPoint then
 		--		stCl(255,0,255)
 		--		crPoint=multVectorByMatrix(sub3(trueContactPoint,camPos),cameraRotationMatrix)
 		--		crPoint=mul(mul(crPoint,1/crPoint[3]),screenScale)
-		--		rec(w2+crPoint[1]-2,h2-crPoint[2]-2,5,5)
+		--		rec(screenWidth2+crPoint[1]-2,screenHeight2-crPoint[2]-2,5,5)
 		--	end
 		--end
 		
@@ -842,7 +832,7 @@ function onDraw()
 		
 		--if overalRayHit then
 		--	recSize=30/collPointCamRelative[3]
-		--	rec(collPointScreenPos[1]+w2-(recSize//2),collPointScreenPos[2]+h2-(recSize//2),recSize,recSize)
+		--	rec(collPointScreenPos[1]+screenWidth2-(recSize//2),collPointScreenPos[2]+screenHeight2-(recSize//2),recSize,recSize)
 		--end
 	end
 end
