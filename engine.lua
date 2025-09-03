@@ -35,7 +35,7 @@ function add3(a,b)return{a[1]+b[1],a[2]+b[2],a[3]+b[3]}end
 function sub3(a,b)return{a[1]-b[1],a[2]-b[2],a[3]-b[3]}end
 function mul3(a,b)return{a[1]*b,a[2]*b,a[3]*b}end
 --function stringRound3(a)return string.format("%.3f", a or 0)end
-function crossPoints(a,b,c)return cross(sub3(b,a),sub3(c,a))end
+function crossPoints(a,b,c)return cross3(sub3(b,a),sub3(c,a))end
 function norm3(a)return mul3(a,1/sqrt(a[1]^2+a[2]^2+a[3]^2))end
 function dist3(a,b)return sqrt((a[1]-b[1])^2 + (a[2]-b[2])^2 + (a[3]-b[3])^2)end
 
@@ -83,21 +83,51 @@ function executeScript(line,opcode) -- do not input anything for opcode
 	end
 end
 
+function intersectTriangle(rayPos,rayDir,a,b,c) -- https://stackoverflow.com/questions/42740765/intersection-between-line-and-triangle-in-3d
+	E1 = sub3(b, a)
+	E2 = sub3(c, a)
+	N = cross3(E1,E2)
+	det = -dot3(rayDir, N)
+	invdet = 1.0/det
+	AO  = sub3(rayPos, a)
+	DAO = cross3(AO, rayDir)
+	u =  dot3(E2,DAO) * invdet
+	v = -dot3(E1,DAO) * invdet
+	t =  dot3(AO,N)  * invdet
+	return (-det >= 0.0001 and t >= 0 and u >= 0 and v >= 0 and u+v <= 1)
+end
+
+function doRaycast(source,direction,maxLen)
+	bestT = maxLen
+	rayHit = falseVar
+	for i,object in ipairsVar(objects) do
+		for j=1,#object[8] do
+			curTri = object[8][j]
+			curHit = intersectTriangle(source,direction,object[7][curTri[1]][2],object[7][curTri[2]][2],object[7][curTri[3]][2])
+			if curHit and t<bestT then
+				rayHit = trueVar
+				bestT=t
+				bestObject=object
+			end
+		end
+	end
+end
+
 function getMovementPerUnitForce(object,position,direction)
 	trueContactPoint1 = sub3(position,object[1])
-	return dot3(cross(mul3(cross(trueContactPoint1,direction),object[11]),trueContactPoint1),direction) + object[10]
+	return dot3(cross3(mul3(cross3(trueContactPoint1,direction),object[11]),trueContactPoint1),direction) + object[10]
 end
 
 function applyInstantMovement(object,position,force)
 	collPointObjectRelative=sub3(position,object[1])
-	object[4]=updateQuaternionByVector(object[4],mul3(cross(collPointObjectRelative,force),-object[11]))
+	object[4]=updateQuaternionByVector(object[4],mul3(cross3(collPointObjectRelative,force),-object[11]))
 	object[1]=add3(object[1],mul3(force,object[10]))
 end
 
 function applyForce(object,position,force)
 	collPointObjectRelative=sub3(position,object[1])
 	--collDirObjectRelative=divVectorByRotationMatrix(cameraRotationVector,curRotationMatrix)
-	object[5]=add3(object[5],mul3(cross(collPointObjectRelative,force),object[11]))
+	object[5]=add3(object[5],mul3(cross3(collPointObjectRelative,force),object[11]))
 	object[2]=add3(object[2],mul3(force,object[10]))
 end
 
@@ -136,9 +166,9 @@ function gjkCollisionDetection(points1,points2)
 			ad = sub3(d,a)
 			ao = mul3(a,-1)
 			
-			abc = cross(ab,ac)
-			acd = cross(ac,ad)
-			adb = cross(ad,ab)
+			abc = cross3(ab,ac)
+			acd = cross3(ac,ad)
+			adb = cross3(ad,ab)
 			
 			if dot3(abc, ao)>0 then
 				collPoints = {a,b,c}
@@ -224,14 +254,14 @@ function gjkCollisionDetection(points1,points2)
 			ac = sub3(c,a)
 			ao = mul3(a,-1)
 			
-			abc = cross(ab,ac)
+			abc = cross3(ab,ac)
 			
-			if dot3(cross(abc, ac), ao)>0 then -- closest to edge AC
+			if dot3(cross3(abc, ac), ao)>0 then -- closest to edge AC
 				collPoints = {a,c}
-				searchDirection = cross(cross(ac, ao), ac)
-			elseif dot3(cross(ab, abc), ao)>0 then --closest to edge AB
+				searchDirection = cross3(cross3(ac, ao), ac)
+			elseif dot3(cross3(ab, abc), ao)>0 then --closest to edge AB
 				collPoints = {a,b}
-				searchDirection = cross(cross(ab, ao), ab)
+				searchDirection = cross3(cross3(ab, ao), ab)
 			else
 				if dot3(abc, ao)>0 then
 					--collPoints = {a,b,c} --above triangle
@@ -246,7 +276,7 @@ function gjkCollisionDetection(points1,points2)
 			ao = mul3(a,-1)
 			
 			if dot3(ab, ao)>0 then
-				searchDirection = cross(cross(ab, ao), ab)
+				searchDirection = cross3(cross3(ab, ao), ab)
 			else
 				collPoints = {a}
 				searchDirection = ao
@@ -259,7 +289,7 @@ function gjkCollisionDetection(points1,points2)
 	-- only reaches here when a timeout happens
 end
 
-function cross(a,b)
+function cross3(a,b)
 	return {a[2]*b[3] - a[3]*b[2], a[3]*b[1] - a[1]*b[3], a[1]*b[2] - a[2]*b[1]}
 end
 
@@ -467,7 +497,7 @@ function onTick()
 										elseif #collPoints1==2 and #collPoints2==2 then -- https://en.wikipedia.org/wiki/Skew_lines#Distance
 											direction1=sub3(collMesh1[collPoints1[2]][2],collMesh1[collPoints1[1]][2])
 											direction2=sub3(collMesh2[collPoints2[2]][2],collMesh2[collPoints2[1]][2])
-											normal2 = cross(direction2,cross(direction1,direction2))
+											normal2 = cross3(direction2,cross3(direction1,direction2))
 											trueContactPoint = add3(collMesh1[collPoints1[1]][2],
 											mul3(direction1,
 											dot3(sub3(collMesh2[collPoints2[1]][2],collMesh1[collPoints1[1]][2]),normal2) / dot3(direction1,normal2)))
@@ -476,8 +506,8 @@ function onTick()
 										end
 										--velocity1 = object1[2]
 										--velocity2 = object2[2]
-										velocity1 = add3(cross(object1[5],sub3(trueContactPoint,object1[1])),object1[2])
-										velocity2 = add3(cross(object2[5],sub3(trueContactPoint,object2[1])),object2[2])
+										velocity1 = add3(cross3(object1[5],sub3(trueContactPoint,object1[1])),object1[2])
+										velocity2 = add3(cross3(object2[5],sub3(trueContactPoint,object2[1])),object2[2])
 										totalVelocity = sub3(velocity1,velocity2)
 										
 										totalVelocityNormal = dot3(isColliding[1],totalVelocity)
@@ -505,8 +535,8 @@ function onTick()
 											-- re-calculating velocites since they will have changed
 											-- this step bugs me but it produces inaccurate & visibly wrong results otherwise
 											
-											velocity1 = add3(cross(object1[5],sub3(trueContactPoint,object1[1])),object1[2])
-											velocity2 = add3(cross(object2[5],sub3(trueContactPoint,object2[1])),object2[2])
+											velocity1 = add3(cross3(object1[5],sub3(trueContactPoint,object1[1])),object1[2])
+											velocity2 = add3(cross3(object2[5],sub3(trueContactPoint,object2[1])),object2[2])
 											totalVelocity = sub3(velocity1,velocity2)
 											
 											totalVelocityNormal = dot3(isColliding[1],totalVelocity)

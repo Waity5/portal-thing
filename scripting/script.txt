@@ -33,6 +33,10 @@ maxRollCorrection = 3
 maxThroughPortalSpeed = 1000
 itterMax = 3
 
+holdMaxMass = 1/75
+holdDistance = 72
+holdRange = 100
+
 playerYVelocityOld = 0
 
 coefficientOfFriction = 1
@@ -113,9 +117,6 @@ isGB4:
 endOfPush:
 
 
-
-
-
 a=camRot[1]
 b=camRot[2]
 c_a = cos({a})
@@ -130,6 +131,9 @@ s_b = sin({b})
 
 
 cameraRotationVector = {0-s_a*c_b,s_b,c_a*c_b}
+
+junk = executeScript({playerHoldFunc})
+
 
 exit
 
@@ -205,6 +209,46 @@ camRot[3] = clmp({0, camRot[3]-maxRollCorrectionCur, camRot[3]+maxRollCorrection
 
 exit
 
+
+
+
+
+playerHoldFunc:
+
+gB2 = gB({2})
+gB2 ~ dontSkipgB2
+1 ~ skipgB2
+dontSkipgB2:
+gB2Old ~ skipgB2
+	holdObject ~ dropObject
+		junk = doRaycast({player[1],cameraRotationVector,holdRange})
+		
+		holdMaxMass > bestObject[10] ~ skipgB2
+			holdObject = {bestObject}[1]
+	1 ~ skipgB2
+	dropObject:
+		holdObject = nilTable[1]
+		holdVectorOld = nilTable[1]
+skipgB2:
+gB2Old = {gB2}[1]
+
+
+holdObject ~ doCalcHoldObject
+1 ~ skipCalcHoldObject
+doCalcHoldObject:
+	holdVector = add3({mul3({cameraRotationVector,holdDistance}),camPos})
+	
+	holdVectorOld ~ skipHoldVectorOldInit
+		holdVectorOld = {holdVector}[1]
+	skipHoldVectorOldInit:
+	
+	holdObject[1] = holdVectorOld
+	holdObject[2] = mul3({sub3({holdVector,holdVectorOld}),1/deltaTime})
+	holdVectorOld = {holdVector}[1]
+	
+skipCalcHoldObject:
+
+exit
 
 
 
@@ -326,8 +370,8 @@ pegPointLoop:
 	crPoint1 = add3({multVectorByMatrix({crPointLocal1,object1[16]}),object1[1]})
 	crPoint2 = add3({multVectorByMatrix({crPointLocal2,object2[16]}),object3[1]})
 	
-	velocity1 = add3({cross({object1[5],sub3({crPoint1,object1[1]})}),object1[2]})
-	velocity2 = add3({cross({object2[5],sub3({crPoint2,object2[1]})}),object2[2]})
+	velocity1 = add3({cross3({object1[5],sub3({crPoint1,object1[1]})}),object1[2]})
+	velocity2 = add3({cross3({object2[5],sub3({crPoint2,object2[1]})}),object2[2]})
 	totalVelocity = sub3({velocity1,velocity2})
 	correctionDirectionInverse ~ correctionDirectionSkip4
 		totalVelocity = sub3({totalVelocity,mul3({correctionDirection,dot3({totalVelocity,correctionDirection})})})
