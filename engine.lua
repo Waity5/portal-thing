@@ -77,6 +77,8 @@ function executeScript(line,opcode) -- do not input anything for opcode
 			end
 		elseif opcode == 10 then -- greater than
 			_ENVvar[arg1] = arg2var>arg3var
+		elseif opcode == 11 then -- equal to
+			_ENVvar[arg1] = arg2var==arg3var
 		end
 		
 		line = line + 1

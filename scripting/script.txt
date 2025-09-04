@@ -228,9 +228,7 @@ exit
 playerHoldFunc:
 
 gB2 = gB({2})
-gB2 ~ dontSkipgB2
-1 ~ skipgB2
-dontSkipgB2:
+gB2==falseVar ~ skipgB2
 gB2Old ~ skipgB2
 	holdObject ~ dropObject
 		junk = doRaycast({player[1],cameraRotationVector,holdRange})

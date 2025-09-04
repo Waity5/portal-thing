@@ -48,12 +48,13 @@ class compiler:
         self.code = []
         self.precision_limit = precision_limit
         script_markers = {}
-        instruction_dividers = ",#()[]-/+*=>{}~"
-        instruction_tokens = ",#()[]-/+*=>{}~"
+        instruction_dividers = ",#()[]-/+*=>{}~≡"
+        instruction_tokens = ",#()[]-/+*=>{}~≡"
 
         
         
         self.text = self.text.replace(" ","").replace("\t","")
+        self.text = self.text.replace("==","≡") # tokens must be 1 value long, using ≡ prevents confusion with ==
 
         self.text = self.text.split("\n")
 
@@ -188,6 +189,10 @@ class compiler:
                         elif token_string == "v=v>v":
                             processing = False
                             self.code.append([10,multi_command[0][1],multi_command[2][1],multi_command[4][1]])
+
+                        elif token_string == "v=v≡v":
+                            processing = False
+                            self.code.append([11,multi_command[0][1],multi_command[2][1],multi_command[4][1]])
 
                         elif token_string == "v=v+v":
                             processing = False
@@ -378,7 +383,17 @@ class compiler:
                                 
                                 multi_command.pop(index+2)
                                 multi_command.pop(index+1)
-                                multi_command[index][1] = temp_var_name 
+                                multi_command[index][1] = temp_var_name
+
+                            elif "v≡v" in cur_side:
+                                index = cur_side.find("v≡v")+cur_offset
+                                temp_var_name = self.get_temp_var()
+
+                                self.code.append([11,temp_var_name,multi_command[index][1],multi_command[index+2][1]])
+                                
+                                multi_command.pop(index+2)
+                                multi_command.pop(index+1)
+                                multi_command[index][1] = temp_var_name
                             
                             else:
                                 assert multi_command==None, "Invalid command "+cur_text+"\n"+"Got processed to "+token_string
