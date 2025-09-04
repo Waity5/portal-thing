@@ -4,6 +4,7 @@
 
 local gl = require("moongl")
 local glfw = require("moonglfw")
+local mi = require("moonimage")
 
 local SCR_WIDTH, SCR_HEIGHT = 288*4, 160*4
 local SCR_SCALE = 4
@@ -36,6 +37,24 @@ glfw.set_framebuffer_size_callback(window, function (window, width, height)
 	SCR_HEIGHT = height
 end)
 
+-- Creating the texture:
+tex_id = gl.new_texture('2d')
+-- configure it:
+gl.texture_parameter('2d', 'wrap s', 'repeat')
+gl.texture_parameter('2d', 'wrap t', 'repeat')
+gl.texture_parameter('2d', 'min filter', 'linear')
+gl.texture_parameter('2d', 'mag filter', 'linear')
+-- load the texture image using MoonImage:
+image, w, h = mi.load('swtext.png', 'rgb')
+gl.texture_image('2d', 0, 'rgb', 'rgb', 'ubyte', image, w, h)
+image, w, h = nil, nil, nil -- let the GC collect them
+-- generate the mipmap:
+gl.generate_mipmap('2d')
+gl.unbind_texture('2d')
+
+
+
+
 -- build and compile our shader program ----------------------------------------
 -- vertex shader
 local vsh = gl.create_shader('vertex')
@@ -60,6 +79,14 @@ gl.link_program(prog)
 if not gl.get_program(prog, 'link status') then
    error(gl.get_program_info_log(prog))
 end
+
+-- Using the texture in the game loop:
+gl.use_program(prog)
+gl.active_texture(0) -- activate texture unit 0
+gl.bind_texture('2d', tex_id)
+-- Assuming our program has a sampler2D uniform named mytexture:
+--gl.uniform(gl.get_uniform_location(prog, 'mytexture'), 'int', 0)
+
 gl.delete_shader(vsh)
 gl.delete_shader(fsh)
 
@@ -171,7 +198,21 @@ function SWscreen.drawLine(x1,y1,x2,y2)
 	--SWscreen.drawTriangleF(x1,y1,x1,y1,x2,y2)
 end
 
-SWscreen.drawText = nilFunction
+function SWscreen.drawText(x,y,text)
+	local textBytes = {string.byte(text,1,-1)}
+	
+	local y1 = y
+	local y2 = y+5
+	
+	for i = 1, #textBytes do
+		local curByte = textBytes[i]
+		local x1 = (i-1)*5
+		local x2 = x1+4
+		
+		SWscreen.drawTriangleF(x1,y1,x2,y1,x2,y2)
+		SWscreen.drawTriangleF(x1,y1,x2,y2,x1,y2)
+	end
+end
 
 
 SWproperty = {}

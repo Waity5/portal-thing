@@ -871,4 +871,7 @@ function onDraw()
 		--	rec(collPointScreenPos[1]+screenWidth2-(recSize//2),collPointScreenPos[2]+screenHeight2-(recSize//2),recSize,recSize)
 		--end
 	end
+	
+	stCl(255,255,255)
+	screenVar.drawText(0,0,"hello")
 end
