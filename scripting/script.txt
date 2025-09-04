@@ -223,8 +223,11 @@ gB2Old ~ skipgB2
 	holdObject ~ dropObject
 		junk = doRaycast({player[1],cameraRotationVector,holdRange})
 		
-		holdMaxMass > bestObject[10] ~ skipgB2
-			holdObject = {bestObject}[1]
+		rayHit ~ doHoldObject
+		1 ~ skipgB2
+		doHoldObject:			
+			holdMaxMass > bestObject[10] ~ skipgB2
+				holdObject = {bestObject}[1]
 	1 ~ skipgB2
 	dropObject:
 		holdObject = nilTable[1]
