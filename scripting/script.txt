@@ -49,13 +49,15 @@ conditions = {[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 
 index = "portal_orange"
-conditions = {{0,0,200},[4]={0.5,-0.5,0,0},[7]=0,[8]=0}
+conditions = {{-64,56,256},[4]={0.5,0,0.5,0},[7]=0,[8]=0}
+--conditions = {{0,0,200},[4]={0.5,-0.5,0,0},[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 portalOrange = objects[#objects]
-portalOrange[17] = objects[1]
+--portalOrange[17] = objects[1]
 
 index = "portal_blue"
-conditions = {{0,300,200},[4]=multQuaternionByQuaternion({norm4({{0.5,0.5,0,0}}),{0,0,1,0}}),[7]=0,[8]=0}
+conditions = {{64,56,256},[4]={0.5,0,-0.5,0},[7]=0,[8]=0}
+--conditions = {{0,300,200},[4]=multQuaternionByQuaternion({norm4({{0.5,0.5,0,0}}),{0,0,1,0}}),[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 portalBlue = objects[#objects]
 --portalBlue[17] = objects[1]
@@ -89,6 +91,16 @@ screenScale = tan({fov/2})*screenWidth2
 
 tickRate=62.5
 deltaTime=1/tickRate
+
+
+i = #objects
+deleteObjectsLoop:
+	objects[i][18][1] ~ skipDeleteObject
+		junk = remove({objects,i})
+	skipDeleteObject:
+	i = i-1
+i > 0 ~ deleteObjectsLoop
+
 
 
 junk = executeScript({playerMovementFunc})
@@ -269,58 +281,91 @@ portalOrangeToBlueMatrix = quaternionToMatrix({portalOrangeToBlueQuaternion})
 portalBlueToOrangeMatrix = quaternionToMatrix({portalBlueToOrangeQuaternion})
 
 
-player[17] = nilVar
-i = 0
-portalCollisionLoop:
-	i = i+1
+objectIndex = #objects
+portalTeleportLoop:
+	object = objects[objectIndex]
+	object[17] = nilVar
+	i = 0
 	
-	i > 1 ~ chooseBluePortalCollision
-		portalPrimary = {portalOrange}[1]
-		portalSecondary = {portalBlue}[1]
-		portalPrimarytoSecondaryQuaternion = {portalOrangeToBlueQuaternion}[1]
-		portalPrimarytoSecondaryMatrix = {portalOrangeToBlueMatrix}[1]
-	1 ~ endPortalChoosingCollision
-	chooseBluePortalCollision:
-		portalPrimary = {portalBlue}[1]
-		portalSecondary = {portalOrange}[1]
-		portalPrimarytoSecondaryQuaternion = {portalBlueToOrangeQuaternion}[1]
-		portalPrimarytoSecondaryMatrix = {portalBlueToOrangeMatrix}[1]
-	endPortalChoosingCollision:
-	
-	portalPrimaryPhysMesh1 = portalPrimary[9][1]
-	portalPrimaryPhysMesh2 = portalPrimary[9][2]
-	isColliding = gjkCollisionDetection({{portalPrimaryPhysMesh1[1],portalPrimaryPhysMesh1[2],portalPrimaryPhysMesh1[3],portalPrimaryPhysMesh1[4],portalPrimaryPhysMesh2[1],portalPrimaryPhysMesh2[2],portalPrimaryPhysMesh2[3],portalPrimaryPhysMesh2[4]},player[9][1]})
-	isColliding ~ dontSkipPortalCollision
-	1 ~ skipPortalCollision
-	dontSkipPortalCollision:
-		player[17] = portalPrimary[17]
-		sideVal = dot3({sub3({player[1],portalPrimary[1]}), portalPrimary[8][1][8]})
-		0 > sideVal ~ skipPortalTeleport
-			player[1] = add3({sub3({player[1],portalPrimary[1]}), portalSecondary[1]})
-			--camRot[1] = camRot[1] - (pi/2)
-			player[2] = multVectorByMatrix({player[2],portalPrimarytoSecondaryMatrix})
-			playerSpeed = dist3({player[2],{0,0,0}})
+	object[10] > 0 ~ doPortalCollisionLoop
+		1 ~ skipPortalCollisionLoop
+	doPortalCollisionLoop:
+		portalCollisionLoop:
+			i = i+1
 			
-			maxThroughPortalSpeed > playerSpeed ~ skipPlayerSlowing
-				player[2] = mul3({player[2], maxThroughPortalSpeed/playerSpeed})
-			skipPlayerSlowing:
+			i > 1 ~ chooseBluePortalCollision
+				portalPrimary = {portalOrange}[1]
+				portalSecondary = {portalBlue}[1]
+				portalPrimarytoSecondaryQuaternion = {portalOrangeToBlueQuaternion}[1]
+				portalPrimarytoSecondaryMatrix = {portalOrangeToBlueMatrix}[1]
+			1 ~ endPortalChoosingCollision
+			chooseBluePortalCollision:
+				portalPrimary = {portalBlue}[1]
+				portalSecondary = {portalOrange}[1]
+				portalPrimarytoSecondaryQuaternion = {portalBlueToOrangeQuaternion}[1]
+				portalPrimarytoSecondaryMatrix = {portalBlueToOrangeMatrix}[1]
+			endPortalChoosingCollision:
 			
-			cameraRotation = {camRot}[1]
-			junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
-			cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-			cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalPrimarytoSecondaryQuaternion})
-			cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-			junk = executeScript({quaternionToCameraRotation})
-			
-			--junk = print(portalOrangeToBlueCamQuaternion)
-			--junk = print(portalOrangeToBluePosQuaternion)
-			
-			--junk = print({"OK"})
+			dist3({object[1],portalPrimary[1]}) > object[13]+portalPrimary[13] ~ skipPortalCollision
+				portalPrimaryPhysMesh1 = portalPrimary[9][1]
+				portalPrimaryPhysMesh2 = portalPrimary[9][2]
+				isColliding = gjkCollisionDetection({{portalPrimaryPhysMesh1[1],portalPrimaryPhysMesh1[2],portalPrimaryPhysMesh1[3],portalPrimaryPhysMesh1[4],portalPrimaryPhysMesh2[1],portalPrimaryPhysMesh2[2],portalPrimaryPhysMesh2[3],portalPrimaryPhysMesh2[4]},object[9][1]})
+				isColliding ~ dontSkipPortalCollision
+				1 ~ skipPortalCollision
+				dontSkipPortalCollision:
+					object[17] = portalPrimary[17]
+					sideVal = dot3({sub3({object[1],portalPrimary[1]}), portalPrimary[8][1][8]})
+					
+					newPos = add3({sub3({object[1],portalPrimary[1]}), portalSecondary[1]})
+					newVel = multVectorByMatrix({object[2],portalPrimarytoSecondaryMatrix})
+					newSpeed = dist3({object[2],{0,0,0}})
+					object[11] > 0 ~ doTeleportRotate
+						newQuat = object[4]
+					1 ~ endTeleportRotate
+					doTeleportRotate:
+						newQuat = multQuaternionByQuaternion({object[4],portalPrimarytoSecondaryQuaternion})
+					endTeleportRotate:
+					
+					maxThroughPortalSpeed > newSpeed ~ skipObjectSlowing
+						newVel = mul3({newVel, maxThroughPortalSpeed/newSpeed})
+					skipObjectSlowing:
+						
+					0 > sideVal ~ skipPortalTeleport
+						object[1] = newPos
+						object[2] = newVel
+						
+						
+						cameraRotation = {camRot}[1]
+						junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
+						cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+						cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalPrimarytoSecondaryQuaternion})
+						cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+						junk = executeScript({quaternionToCameraRotation})
+						
+						--junk = print(portalOrangeToBlueCamQuaternion)
+						--junk = print(portalOrangeToBluePosQuaternion)
+						
+						--junk = print({"OK"})
 
-			
-		skipPortalTeleport:
-	skipPortalCollision:
-2>i ~ portalCollisionLoop
+					1 ~ skipPortalCollision:
+					skipPortalTeleport:
+						
+						index = object[14]
+						conditions = {newPos,newVel,[4]=newQuat,[7]=object[10],[8]=object[11]}
+						junk = executeScript({summonObjectFunc})
+						newObject = objects[#objects]
+						junk = transformPhysPoints({newObject})
+						newObject[18][1] = nilVar
+						
+						
+			skipPortalCollision:
+		2>i ~ portalCollisionLoop
+	skipPortalCollisionLoop:
+	
+	objectIndex = objectIndex - 1
+objectIndex > 0 ~ portalTeleportLoop
+
+
 
 
 
@@ -735,36 +780,36 @@ skipConditionWrite9:
 sourceObjectInfo = M[1][index]
 newPoints={}
 j=1
-i = sourceObjectInfo[1]-1
+ilocal = sourceObjectInfo[1]-1
 newObjectCopyRenderPoints:
-	i=i+1
-	cr=M[2][i]
+	ilocal=ilocal+1
+	cr=M[2][ilocal]
 	newPoints[j]={{cr[1],cr[2],cr[3]}}
 	j=j+1
-sourceObjectInfo[2] > i ~ newObjectCopyRenderPoints
+sourceObjectInfo[2] > ilocal ~ newObjectCopyRenderPoints
 
 newTris={}
 j=1
-i = sourceObjectInfo[3]-1
+ilocal = sourceObjectInfo[3]-1
 newObjectCopyRenderTris:
-	i=i+1
-	cr=M[3][i]
+	ilocal=ilocal+1
+	cr=M[3][ilocal]
 	newTris[j]={cr[1],cr[2],cr[3],cr[4],cr[5],cr[6]}
 	j=j+1
-sourceObjectInfo[4] > i ~ newObjectCopyRenderTris
+sourceObjectInfo[4] > ilocal ~ newObjectCopyRenderTris
 
 newPhyses = {}
 n = 6
 newObjectCopyPhysPoints:
 	newPhys={}
 	j=1
-	i = sourceObjectInfo[n-1]-1
+	ilocal = sourceObjectInfo[n-1]-1
 	newObjectCopyPhysPoints2:
-		i=i+1
-		cr=M[2][i]
+		ilocal=ilocal+1
+		cr=M[2][ilocal]
 		newPhys[j]={{cr[1],cr[2],cr[3]}}
 		j=j+1
-	sourceObjectInfo[n] > i ~ newObjectCopyPhysPoints2
+	sourceObjectInfo[n] > ilocal ~ newObjectCopyPhysPoints2
 	newPhyses[#newPhyses+1] = newPhys
 	n=n+2
 #sourceObjectInfo > n ~ newObjectCopyPhysPoints
@@ -787,6 +832,7 @@ newObject={$-- position, velocity, acceleration, orientation, rotation velocity,
 	{},$ -- 15 previous collision points, not used
 	{},$ -- 16 rotation matrix
 	nilVar,$ -- 17 don't collide with
+	{1},$ -- 18 keep object
 }
 objects[#objects+1]=newObject
 

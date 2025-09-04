@@ -83,6 +83,17 @@ function executeScript(line,opcode) -- do not input anything for opcode
 	end
 end
 
+function transformPhysPoints(object)
+	object[16] = quaternionToMatrix(object[4])
+			
+	for j,collMesh1 in ipairsVar(object[9]) do
+		for k,crPoint in ipairsVar(collMesh1) do
+			crPoint[2] = multVectorByMatrix(crPoint[1],object[16])
+			crPoint[2]=add3(crPoint[2],object[1])
+		end
+	end
+end
+
 function intersectTriangle(rayPos,rayDir,a,b,c) -- https://stackoverflow.com/questions/42740765/intersection-between-line-and-triangle-in-3d
 	E1 = sub3(b, a)
 	E2 = sub3(c, a)
@@ -441,14 +452,7 @@ function onTick()
 			--object[2] = mul3(object[2],0.9995) -- slow down velocity, optional
 			--object[5] = mul3(object[5],0.9995) -- slow down rotation, optional
 			
-			object[16] = quaternionToMatrix(object[4])
-			
-			for j,collMesh1 in ipairsVar(object[9]) do
-				for k,crPoint in ipairsVar(collMesh1) do
-					crPoint[2] = multVectorByMatrix(crPoint[1],object[16])
-					crPoint[2]=add3(crPoint[2],object[1])
-				end
-			end
+			transformPhysPoints(object)
 		end
 		
 		--camPos = multVectorByMatrix({0,1,-5},cameraRotationMatrix)
