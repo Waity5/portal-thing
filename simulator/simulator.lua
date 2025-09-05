@@ -12,19 +12,36 @@ local SCR_SCALE = 4
 local vertex_shader_source = [[
 #version 330 core
 layout (location = 0) in vec3 aPos;
-void main() {
-   gl_Position = vec4(aPos, 1.0);
+layout (location = 1) in vec3 aColor;
+layout (location = 2) in vec2 aTexCoord;
+
+out vec4 ourColor;
+out vec2 TexCoord;
+
+void main()
+{
+	gl_Position = vec4(aPos, 1.0);
+	ourColor = vec4(aColor, 1.0);
+	TexCoord = vec2(aTexCoord.x, aTexCoord.y);
 }
 ]]
 
 local fragment_shader_source = [[
 #version 330 core
-uniform vec4 ourColor;
 out vec4 FragColor;
-void main() {
-   FragColor = ourColor;
-}
-]]
+
+in vec4 ourColor;
+in vec2 TexCoord;
+
+// texture sampler
+uniform sampler2D texture1;
+
+void main()
+{
+	FragColor = texture(texture1, TexCoord) * ourColor;
+	if(FragColor.a < 0.1)
+        discard;
+}]]
 
 -- glfw inits and window creation ---------------------------------------------
 glfw.version_hint(3, 3, 'core')
@@ -42,16 +59,17 @@ tex_id = gl.new_texture('2d')
 -- configure it:
 gl.texture_parameter('2d', 'wrap s', 'repeat')
 gl.texture_parameter('2d', 'wrap t', 'repeat')
-gl.texture_parameter('2d', 'min filter', 'linear')
-gl.texture_parameter('2d', 'mag filter', 'linear')
+gl.texture_parameter('2d', 'min filter', 'nearest')
+gl.texture_parameter('2d', 'mag filter', 'nearest')
 -- load the texture image using MoonImage:
-image, w, h = mi.load('swtext.png', 'rgb')
-gl.texture_image('2d', 0, 'rgb', 'rgb', 'ubyte', image, w, h)
+image, w, h = mi.load('swtext.png', 'rgba')
+gl.texture_image('2d', 0, 'rgba', 'rgba', 'ubyte', image, w, h)
+fontImageWidth = w
+fontImageHeight = h
 image, w, h = nil, nil, nil -- let the GC collect them
 -- generate the mipmap:
 gl.generate_mipmap('2d')
 gl.unbind_texture('2d')
-
 
 
 
@@ -90,11 +108,11 @@ gl.bind_texture('2d', tex_id)
 gl.delete_shader(vsh)
 gl.delete_shader(fsh)
 
--- set up vertex data (and buffer(s)) and configure vertex attributes ---------
 local vertices = {
-   0.1, -0.1, 0.0,  -- bottom right
-  -0.1, -0.1, 0.0,  -- bottom left
-   0.0,  0.1, 0.0   -- top 
+        -- positions           colors            texture coords
+         0.5,  0.5, 0.0,   1.0, 1.0, 1.0,   0.9, 0.8, -- top right
+         0.5, -0.5, 0.0,   1.0, 1.0, 1.0,   0.9, 0.9, -- bottom right
+        -0.5, 0.5, 0.0,   1.0, 1.0, 1.0,   0.8, 0.9, -- bottom left
 }
 
 local vao = gl.gen_vertex_arrays()
@@ -104,8 +122,12 @@ local vbo = gl.gen_buffers()
 gl.bind_vertex_array(vao)
 gl.bind_buffer('array', vbo)
 gl.buffer_data('array', gl.pack('float', vertices), 'static draw')
-gl.vertex_attrib_pointer(0, 3, 'float', false, 3*gl.sizeof('float'), 0)
+gl.vertex_attrib_pointer(0, 3, 'float', false, 8*gl.sizeof('float'), 0)
 gl.enable_vertex_attrib_array(0)
+gl.vertex_attrib_pointer(1, 3, 'float', false, 8*gl.sizeof('float'), 3*gl.sizeof('float'))
+gl.enable_vertex_attrib_array(1)
+gl.vertex_attrib_pointer(2, 2, 'float', false, 8*gl.sizeof('float'), 6*gl.sizeof('float'))
+gl.enable_vertex_attrib_array(2)
 gl.unbind_buffer('array')
 gl.unbind_vertex_array() 
 
@@ -156,8 +178,15 @@ function SWscreen.setColor(r,g,b,a)
 	local g = (g/255.0)^colorCorrection
 	local b = (b/255.0)^colorCorrection
 	local a = ((a or 255)/255.0)^colorCorrection
-	local loc = gl.get_uniform_location(prog, "ourColor")
-	gl.uniform(loc, 'float', r, g, b, a)
+	vertices[4] = r
+	vertices[5] = g
+	vertices[6] = b
+	vertices[12] = r
+	vertices[13] = g
+	vertices[14] = b
+	vertices[20] = r
+	vertices[21] = g
+	vertices[22] = b
 end
 function SWscreen.drawTriangleF(x1,y1,x2,y2,x3,y3)
 	local widthConvert = 2/SCR_WIDTH*SCR_SCALE
@@ -165,10 +194,11 @@ function SWscreen.drawTriangleF(x1,y1,x2,y2,x3,y3)
 	if lastCol[4]>100 then
 		vertices[1]=x1 * widthConvert - 1
 		vertices[2]=y1 * heightConvert + 1
-		vertices[4]=x2 * widthConvert - 1
-		vertices[5]=y2 * heightConvert + 1
-		vertices[7]=x3 * widthConvert - 1
-		vertices[8]=y3 * heightConvert + 1
+		vertices[9]=x2 * widthConvert - 1
+		vertices[10]=y2 * heightConvert + 1
+		vertices[17]=x3 * widthConvert - 1
+		vertices[18]=y3 * heightConvert + 1
+		
 		gl.bind_vertex_array(vao)
 		gl.bind_buffer('array', vbo)
 		gl.buffer_sub_data('array',0 , gl.pack('float', vertices), 'static draw')
@@ -201,17 +231,51 @@ end
 function SWscreen.drawText(x,y,text)
 	local textBytes = {string.byte(text,1,-1)}
 	
-	local y1 = y
-	local y2 = y+5
+	local cx1 = x
+	local cy1 = y
+	local x1,x2,y1,y2
+	local tx1,tx2,ty1,ty2
 	
 	for i = 1, #textBytes do
 		local curByte = textBytes[i]
-		local x1 = (i-1)*5
-		local x2 = x1+4
-		
-		SWscreen.drawTriangleF(x1,y1,x2,y1,x2,y2)
-		SWscreen.drawTriangleF(x1,y1,x2,y2,x1,y2)
+		local characterInfo = fontInfo[curByte]
+		if characterInfo then
+			x1 = cx1 + characterInfo.xoffset
+			y1 = y + characterInfo.yoffset
+			y2 = y1 + characterInfo.height
+			x2 = x1 + characterInfo.width
+			
+			tx1 = characterInfo.x
+			tx2 = tx1 + characterInfo.width
+			ty1 = characterInfo.y
+			ty2 = ty1 + characterInfo.height
+			
+			tx1 = tx1 / fontImageWidth
+			tx2 = tx2 / fontImageWidth
+			ty1 = ty1 / fontImageHeight
+			ty2 = ty2 / fontImageHeight
+			
+			
+			vertices[7] = tx1
+			vertices[8] = ty1
+			vertices[15] = tx2
+			vertices[16] = ty1
+			vertices[23] = tx2
+			vertices[24] = ty2
+			SWscreen.drawTriangleF(x1,y1,x2,y1,x2,y2)
+			vertices[15] = tx1
+			vertices[16] = ty2
+			SWscreen.drawTriangleF(x1,y1,x1,y2,x2,y2)
+			cx1 = cx1 + characterInfo.xadvance
+		end
 	end
+	
+	vertices[7] = 0.9
+	vertices[8] = 0.8
+	vertices[15] = 0.9
+	vertices[16] = 0.9
+	vertices[23] = 0.8
+	vertices[24] = 0.9
 end
 
 
@@ -272,7 +336,102 @@ function updateCompositeLinks()
 	end
 end
 
-
+fontInfo = {}
+fontInfo[32] = {x="26", y="36", width="3", height="1", xoffset="-1", yoffset="4", xadvance="5", page="0", chnl="15"}
+fontInfo[33] = {x="43", y="30", width="1", height="5", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[34] = {x="9", y="36", width="3", height="2", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[35] = {x="15", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[36] = {x="20", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[37] = {x="25", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[38] = {x="30", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[39] = {x="19", y="36", width="1", height="2", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[40] = {x="28", y="30", width="2", height="5", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[41] = {x="31", y="30", width="2", height="5", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[42] = {x="50", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[43] = {x="53", y="30", width="3", height="3", xoffset="0", yoffset="1", xadvance="5", page="0", chnl="15"}
+fontInfo[44] = {x="16", y="36", width="2", height="2", xoffset="0", yoffset="3", xadvance="5", page="0", chnl="15"}
+fontInfo[45] = {x="30", y="36", width="3", height="1", xoffset="0", yoffset="2", xadvance="5", page="0", chnl="15"}
+fontInfo[46] = {x="34", y="36", width="1", height="1", xoffset="1", yoffset="4", xadvance="5", page="0", chnl="15"}
+fontInfo[47] = {x="0", y="30", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[48] = {x="20", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[49] = {x="34", y="30", width="2", height="5", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[50] = {x="30", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[51] = {x="35", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[52] = {x="40", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[53] = {x="45", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[54] = {x="0", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[55] = {x="55", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[56] = {x="0", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[57] = {x="5", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[58] = {x="61", y="30", width="1", height="3", xoffset="1", yoffset="1", xadvance="5", page="0", chnl="15"}
+fontInfo[59] = {x="51", y="30", width="1", height="4", xoffset="1", yoffset="1", xadvance="5", page="0", chnl="15"}
+fontInfo[60] = {x="12", y="30", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[61] = {x="57", y="30", width="3", height="3", xoffset="0", yoffset="1", xadvance="5", page="0", chnl="15"}
+fontInfo[62] = {x="16", y="30", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[63] = {x="20", y="30", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[64] = {x="40", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[65] = {x="45", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[66] = {x="50", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[67] = {x="55", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[68] = {x="0", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[69] = {x="5", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[70] = {x="10", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[71] = {x="15", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[72] = {x="20", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[73] = {x="49", y="30", width="1", height="5", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[74] = {x="30", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[75] = {x="35", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[76] = {x="40", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[77] = {x="45", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[78] = {x="50", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[79] = {x="55", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[80] = {x="0", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[81] = {x="5", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[82] = {x="10", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[83] = {x="15", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[84] = {x="60", y="0", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[85] = {x="20", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[86] = {x="55", y="24", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[87] = {x="25", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[88] = {x="30", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[89] = {x="60", y="12", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[90] = {x="35", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[91] = {x="40", y="30", width="2", height="5", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[92] = {x="8", y="30", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[93] = {x="37", y="30", width="2", height="5", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[94] = {x="5", y="36", width="3", height="2", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[95] = {x="21", y="36", width="4", height="1", xoffset="0", yoffset="4", xadvance="5", page="0", chnl="15"}
+fontInfo[96] = {x="13", y="36", width="2", height="2", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[97] = {x="40", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[98] = {x="45", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[99] = {x="50", y="24", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[100] = {x="5", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[101] = {x="10", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[102] = {x="35", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[103] = {x="40", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[104] = {x="45", y="0", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[105] = {x="45", y="30", width="1", height="5", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[106] = {x="0", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[107] = {x="5", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[108] = {x="10", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[109] = {x="15", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[110] = {x="25", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[111] = {x="50", y="6", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[112] = {x="10", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[113] = {x="15", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[114] = {x="20", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[115] = {x="55", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[116] = {x="4", y="30", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[117] = {x="25", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[118] = {x="59", y="24", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[119] = {x="30", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[120] = {x="35", y="12", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[121] = {x="60", y="18", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[122] = {x="25", y="18", width="4", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[123] = {x="60", y="6", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[124] = {x="47", y="30", width="1", height="5", xoffset="1", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[125] = {x="24", y="30", width="3", height="5", xoffset="0", yoffset="0", xadvance="5", page="0", chnl="15"}
+fontInfo[126] = {x="0", y="36", width="4", height="2", xoffset="0", yoffset="1", xadvance="5", page="0", chnl="15"}
 
 
 files = {"engine.lua"}

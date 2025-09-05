@@ -872,6 +872,6 @@ function onDraw()
 		--end
 	end
 	
-	stCl(255,255,255)
-	screenVar.drawText(0,0,"hello")
+	stCl(100,255,255)
+	screenVar.drawText(1,1,"hello!!a#")
 end
