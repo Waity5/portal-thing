@@ -49,8 +49,9 @@ conditions = {[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 
 index = "portal_orange"
-conditions = {{-64,56,256},[4]={0.5,0,0.5,0},[7]=0,[8]=0}
+--conditions = {{-64,56,256},[4]={0.5,0,0.5,0},[7]=0,[8]=0}
 --conditions = {{0,0,200},[4]={0.5,-0.5,0,0},[7]=0,[8]=0}
+conditions = {{-128,56,192},[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 portalOrange = objects[#objects]
 --portalOrange[17][1] = objects[1]
@@ -105,9 +106,13 @@ deltaTime=1/tickRate
 
 i = #objects
 deleteObjectsLoop:
+	
 	objects[i][18][1] ~ skipDeleteObject
 		junk = remove({objects,i})
+	1 ~ endDeleteObject
 	skipDeleteObject:
+		objects[i][18] = {1}
+	endDeleteObject:
 	i = i-1
 i > 0 ~ deleteObjectsLoop
 
@@ -308,12 +313,16 @@ portalTeleportLoop:
 				portalSecondary = {portalBlue}[1]
 				portalPrimarytoSecondaryQuaternion = {portalOrangeToBlueQuaternion}[1]
 				portalPrimarytoSecondaryMatrix = {portalOrangeToBlueMatrix}[1]
+				portalSecondarytoPrimaryQuaternion = {portalBlueToOrangeQuaternion}[1]
+				portalSecondarytoPrimaryMatrix = {portalBlueToOrangeMatrix}[1]
 			1 ~ endPortalChoosingCollision
 			chooseBluePortalCollision:
 				portalPrimary = {portalBlue}[1]
 				portalSecondary = {portalOrange}[1]
 				portalPrimarytoSecondaryQuaternion = {portalBlueToOrangeQuaternion}[1]
 				portalPrimarytoSecondaryMatrix = {portalBlueToOrangeMatrix}[1]
+				portalSecondarytoPrimaryQuaternion = {portalOrangeToBlueQuaternion}[1]
+				portalSecondarytoPrimaryMatrix = {portalOrangeToBlueMatrix}[1]
 			endPortalChoosingCollision:
 			
 			dist3({object[1],portalPrimary[1]}) > object[13]+portalPrimary[13] ~ skipPortalCollision
@@ -328,7 +337,7 @@ portalTeleportLoop:
 					
 					sideVal = dot3({sub3({object[1],portalPrimary[1]}), portalPrimary[8][1][8]})
 					
-					newPos = add3({sub3({object[1],portalPrimary[1]}), portalSecondary[1]})
+					newPos = add3({multVectorByMatrix({sub3({object[1],portalPrimary[1]}),portalPrimarytoSecondaryMatrix}), portalSecondary[1]})
 					newVel = multVectorByMatrix({object[2],portalPrimarytoSecondaryMatrix})
 					newSpeed = dist3({object[2],{0,0,0}})
 					object[11] > 0 ~ doTeleportRotate
@@ -346,13 +355,16 @@ portalTeleportLoop:
 						object[1] = newPos
 						object[2] = newVel
 						
-						
+						object==player ~ doTeleportPlayerView
+						1 ~ skipTeleportPlayerView
 						cameraRotation = {camRot}[1]
-						junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
-						cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-						cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalPrimarytoSecondaryQuaternion})
-						cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-						junk = executeScript({quaternionToCameraRotation})
+						doTeleportPlayerView:
+							junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
+							cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+							cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalPrimarytoSecondaryQuaternion})
+							cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+							junk = executeScript({quaternionToCameraRotation})
+						skipTeleportPlayerView:
 						
 						--junk = print(portalOrangeToBlueCamQuaternion)
 						--junk = print(portalOrangeToBluePosQuaternion)
@@ -368,6 +380,10 @@ portalTeleportLoop:
 						newObject = objects[#objects]
 						junk = transformPhysPoints({newObject})
 						newObject[18][1] = nilVar
+						newObject[18][2] = object
+						newObject[18][3] = {portalPrimary,portalSecondary}
+						newObject[18][4] = {portalSecondarytoPrimaryQuaternion,portalSecondarytoPrimaryMatrix}
+						
 						newObject[17][2] = portalSecondary[17][1]
 						
 						
