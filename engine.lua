@@ -468,7 +468,7 @@ function onTick()
 		for i,object1 in ipairsVar(objects) do
 			if object1[10]>0 or object1[11]>0 then
 				for j,object2 in ipairsVar(objects) do
-					if i~=j and dist3(object1[1],object2[1])<=object1[13]+object2[13] and object1[17]~=object2 and object2[17]~=object1 then
+					if i~=j and dist3(object1[1],object2[1])<=object1[13]+object2[13] and object1[17][2]~=object2 and object2[17][2]~=object1 then
 						for k,collMesh1 in ipairsVar(object1[9]) do
 							for n,collMesh2 in ipairsVar(object2[9]) do
 								--collCals=collCals+1
@@ -657,7 +657,7 @@ function renderView()
 					sideVal=p1[6]+p2[6]+p3[6]
 					if sideVal == 3 then
 						--renderShapes[#renderShapes+1] = {p1[5],p2[5],p3[5],curTri[4],curTri[5],curTri[6],curTri[7]}
-						shape = {p1[5],p2[5],p3[5]}
+						shape = {p1[5],p3[5],p2[5]}
 					elseif sideVal >= 1 then
 						if p1[6]==2-sideVal then
 							screenPoint1=p1[5]

@@ -5,6 +5,7 @@ from code_compressor import compress
 import time, json
 from copy import deepcopy as dcopy
 import os
+import json
 import numpy
 from stl import mesh
 from plyfile import PlyData, PlyElement
@@ -41,7 +42,8 @@ if __name__ == '__main__':
     
 
     objects = {
-        "cube": {"colour": (160,160,150), "shading": True},
+        "cube": {"colour": "json", "shading": False},
+        "cube_large": {"colour": (255,0,255), "shading": True},
         "platform": {"colour": (255,255,255), "shading": True},
         "monkey": {"colour": (0,255,0), "shading": True},
         "utah_teapot": {"colour": (0,255,0), "shading": True},
@@ -127,7 +129,31 @@ if __name__ == '__main__':
             #    print(i.name)
             
 
-            
+
+        elif colour == "json":
+            json_mesh = json.load(open(path+object_name+"/mesh.json"))
+            points = json_mesh[0]
+            triangles = json_mesh[1]
+
+            points_mesh_start = total_points+1
+            for i in points:
+                packets.append((2,(i[0],i[1],i[2])))
+                total_points += 1
+                #max_dist = max(max_dist, dist(i,(0,0,0)))
+            points_mesh_end = total_points
+
+            tris_start = total_render_tris+1
+            for i in triangles:
+                packets.append((3,(i[0][0],
+                                i[0][1],
+                                i[0][2],
+                                i[1][0],
+                                i[1][1],
+                                i[1][2],
+                                )))
+                #print(packets[-1])
+                total_render_tris += 1
+            tris_end = total_render_tris
         else:
         
 

@@ -53,19 +53,29 @@ conditions = {{-64,56,256},[4]={0.5,0,0.5,0},[7]=0,[8]=0}
 --conditions = {{0,0,200},[4]={0.5,-0.5,0,0},[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 portalOrange = objects[#objects]
---portalOrange[17] = objects[1]
+--portalOrange[17][1] = objects[1]
 
 index = "portal_blue"
 conditions = {{64,56,256},[4]={0.5,0,-0.5,0},[7]=0,[8]=0}
 --conditions = {{0,300,200},[4]=multQuaternionByQuaternion({norm4({{0.5,0.5,0,0}}),{0,0,1,0}}),[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 portalBlue = objects[#objects]
---portalBlue[17] = objects[1]
+--portalBlue[17][1] = objects[1]
 
 index = "player_bounding"
 conditions = {{0,64,0},[7]=0.02,[8]=0,[9]=grav}
 junk = executeScript({summonObjectFunc})
 player = objects[#objects]
+
+index = "cube_large"
+conditions = {{128,64,256},[7]=0,[8]=0}
+junk = executeScript({summonObjectFunc})
+portalBlue[17][1] = objects[#objects]
+
+conditions = {{-128,64,256},[7]=0,[8]=0}
+junk = executeScript({summonObjectFunc})
+portalOrange[17][1] = objects[#objects]
+
 
 index1 = -3
 index = "cube"
@@ -279,10 +289,12 @@ portalOrangeToBlueMatrix = quaternionToMatrix({portalOrangeToBlueQuaternion})
 portalBlueToOrangeMatrix = quaternionToMatrix({portalBlueToOrangeQuaternion})
 
 
+
+
 objectIndex = #objects
 portalTeleportLoop:
 	object = objects[objectIndex]
-	object[17] = nilVar
+	object[17][2] = nilVar
 	i = 0
 	
 	object[10] > 0 ~ doPortalCollisionLoop
@@ -311,7 +323,9 @@ portalTeleportLoop:
 				isColliding ~ dontSkipPortalCollision
 				1 ~ skipPortalCollision
 				dontSkipPortalCollision:
-					object[17] = portalPrimary[17]
+					object[17][2] = portalPrimary[17][1]
+					
+					
 					sideVal = dot3({sub3({object[1],portalPrimary[1]}), portalPrimary[8][1][8]})
 					
 					newPos = add3({sub3({object[1],portalPrimary[1]}), portalSecondary[1]})
@@ -354,6 +368,7 @@ portalTeleportLoop:
 						newObject = objects[#objects]
 						junk = transformPhysPoints({newObject})
 						newObject[18][1] = nilVar
+						newObject[17][2] = portalSecondary[17][1]
 						
 						
 			skipPortalCollision:
@@ -829,7 +844,7 @@ newObject={$-- position, velocity, acceleration, orientation, rotation velocity,
 	index,$ -- 14
 	{},$ -- 15 previous collision points, not used
 	{},$ -- 16 rotation matrix
-	nilVar,$ -- 17 don't collide with
+	{},$ -- 17 don't collide with
 	{1},$ -- 18 keep object
 }
 objects[#objects+1]=newObject
