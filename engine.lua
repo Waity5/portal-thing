@@ -135,6 +135,10 @@ function applyInstantMovement(object,position,force)
 	collPointObjectRelative=sub3(position,object[1])
 	object[4]=updateQuaternionByVector(object[4],mul3(cross3(collPointObjectRelative,force),-object[11]))
 	object[1]=add3(object[1],mul3(force,object[10]))
+	object2=object[18][2]
+	if object2 then
+		object2[1]=add3(object2[1],multVectorByMatrix(mul3(force,object2[10]),object[18][4][2]))
+	end
 end
 
 function applyForce(object,position,force)
@@ -142,6 +146,10 @@ function applyForce(object,position,force)
 	--collDirObjectRelative=divVectorByRotationMatrix(cameraRotationVector,curRotationMatrix)
 	object[5]=add3(object[5],mul3(cross3(collPointObjectRelative,force),object[11]))
 	object[2]=add3(object[2],mul3(force,object[10]))
+	object2=object[18][2]
+	if object2 then
+		object2[2]=add3(object2[2],multVectorByMatrix(mul3(force,object2[10]),object[18][4][2]))
+	end
 end
 
 function gjkSupport(points,searchDirection)
