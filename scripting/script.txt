@@ -22,7 +22,7 @@ grav = {0,-600,0}
 walkingSpeed = 150
 walkingAccelerate = 10
 
-camRot={0,0,0}
+camRot={0.0001,0,0}
 
 verticalLookLimiter = pi/2-0.001
 rotateSpeed = 90
@@ -519,8 +519,7 @@ portalsBoth = {portalOrange,portalBlue}
 
 w_2 = 0-screenWidth2
 h_2 = 0-screenHeight2
-viewBounding = {{w_2,h_2},{screenWidth2,h_2},{screenWidth2,screenHeight2},{w_2,screenHeight2}}
-innerBounding = {w_2,screenWidth2,h_2,screenHeight2}
+viewBounding = {{w_2,screenHeight2,screenWidth2},{screenWidth2,screenHeight2,screenWidth2},{screenWidth2,h_2,screenWidth2},{w_2,h_2,screenWidth2}}
 cameraRotation = {camRot}[1]
 junk = executeScript({cameraRotationToQuaternion})
 remainingRenderingPasses = {{camPos,cameraRotationQuaternion,viewBounding,innerBounding,innerBounding,{1,1,0,0}}}
@@ -540,17 +539,7 @@ renderingLoop:
 
 	viewBoundingLen = #viewBounding
 	
-	viewBoundingInnerBox = renderingPass[4]
-	viewBoundingInnerBoxL = viewBoundingInnerBox[1]
-	viewBoundingInnerBoxR = viewBoundingInnerBox[2]
-	viewBoundingInnerBoxT = viewBoundingInnerBox[3]
-	viewBoundingInnerBoxB = viewBoundingInnerBox[4]
 	
-	viewBoundingOuterBox = renderingPass[5]
-	viewBoundingOuterBoxL = viewBoundingOuterBox[1]
-	viewBoundingOuterBoxR = viewBoundingOuterBox[2]
-	viewBoundingOuterBoxT = viewBoundingOuterBox[3]
-	viewBoundingOuterBoxB = viewBoundingOuterBox[4]
 	
 	depthMods = renderingPass[6]
 	itterLevel = depthMods[1]
@@ -559,11 +548,25 @@ renderingLoop:
 	depthOffset = depthMods[4]
 	
 	
+	viewBoundingPlanes = {}
+	i = 0
+	viewBounding[viewBoundingLen+1] = viewBounding[1]
+	viewBoundingConversionLoop:
+		i = i+1
+		point1 = viewBounding[i]
+		point2 = viewBounding[i+1]
+		viewBoundingPlanes[#viewBoundingPlanes+1] = {norm3({crossPoints({point1,{0,0,0},point2})}),point1}
+	viewBoundingLen > i ~ viewBoundingConversionLoop
+	viewBounding[viewBoundingLen+1] = nil
+	
 	
 	
 	cameraRotationMatrix = quaternionToMatrix({cameraRotationQuaternion})
 	
+	
 	junk = renderView({1})
+	
+	
 	
 	
 	curView = {renderShapes,{}}
@@ -579,6 +582,7 @@ renderingLoop:
 	
 	
 	itterLevel > itterMax ~ skipAllPortalRendering
+	
 		cameraPositionOld = {cameraPosition}[1]
 		cameraRotationQuaternionOld = {cameraRotationQuaternion}[1]
 		viewBoundingOld = {viewBounding}[1]
@@ -610,44 +614,23 @@ renderingLoop:
 			curTri = portalTris[1]
 			
 			0 > dot3({curTri[8],portalMesh[curTri[1]][3]}) ~ skipCurrentPortal -- skip portal if portal is facing away from player
+			
+				
 				
 				portalMeshLen = 8 --#portalMesh -- no longer uses entire mesh
 				index1 = 0
-				index2 = 0
 				viewBounding = {}
 				portalLoop:
 					index1 = index1 + 1
-					
-					1 > portalMesh[index1][6] ~ skipCurrentPortalPoint
-						index2 = index2 + 1
-						viewBounding[index2] = portalMesh[index1][5]
-					skipCurrentPortalPoint:
-					
+					viewBounding[index1] = portalMesh[index1][4]
 				portalMeshLen > index1 ~ portalLoop
 				
-				viewBounding = intersectShapeWithShape({viewBounding,viewBoundingOld})
+				viewBounding = intersectShapeWithPlanes({viewBounding,viewBoundingPlanes})
 				
 				viewBoundingLen = #viewBounding
 				
-				3 > viewBoundingLen ~ skipCurrentPortal -- need at least 3 points to form a shape with area
-					viewBoundingInnerBoxL = 0
-					viewBoundingInnerBoxR = 0
-					viewBoundingInnerBoxT = 0
-					viewBoundingInnerBoxB = 0
-					innerBounding = {viewBoundingInnerBoxL,viewBoundingInnerBoxR,viewBoundingInnerBoxT,viewBoundingInnerBoxB}
-					
-					j = 0
-					outerBoundingBoxLoop:
-						j = j+1
-						cr = viewBounding[j]
-						crX = cr[1]
-						crY = cr[2]
-						viewBoundingOuterBoxL = mn({crX,viewBoundingOuterBoxL})
-						viewBoundingOuterBoxR = mx({crX,viewBoundingOuterBoxR})
-						viewBoundingOuterBoxT = mn({crY,viewBoundingOuterBoxT})
-						viewBoundingOuterBoxB = mx({crY,viewBoundingOuterBoxB})
-					viewBoundingLen>j ~ outerBoundingBoxLoop
-					outerBounding = {viewBoundingOuterBoxL,viewBoundingOuterBoxR,viewBoundingOuterBoxT,viewBoundingOuterBoxB}
+				3 > viewBoundingLen ~ skipCurrentPortal -- need at least 3 points to form a shape with area#
+				
 					
 					
 					cameraRotationQuaternion = multQuaternionByQuaternion({portalSecondaryToPrimaryQuaternion, cameraRotationQuaternionOld})
