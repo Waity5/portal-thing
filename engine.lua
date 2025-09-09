@@ -135,20 +135,22 @@ function applyInstantMovement(object,position,force)
 	collPointObjectRelative=sub3(position,object[1])
 	object[4]=updateQuaternionByVector(object[4],mul3(cross3(collPointObjectRelative,force),-object[11]))
 	object[1]=add3(object[1],mul3(force,object[10]))
-	object2=object[18][2]
+	pairInfo = object[18]
+	object2=pairInfo[2]
 	if object2 then
-		object2[1]=add3(object2[1],multVectorByMatrix(mul3(force,object2[10]),object[18][4][2]))
+		object2[1]=add3(object2[1],multVectorByMatrix(mul3(force,object2[10]),pairInfo[4][2]))
 	end
 end
 
 function applyForce(object,position,force)
 	collPointObjectRelative=sub3(position,object[1])
-	--collDirObjectRelative=divVectorByRotationMatrix(cameraRotationVector,curRotationMatrix)
 	object[5]=add3(object[5],mul3(cross3(collPointObjectRelative,force),object[11]))
 	object[2]=add3(object[2],mul3(force,object[10]))
-	object2=object[18][2]
+	pairInfo = object[18]
+	object2=pairInfo[2]
 	if object2 then
-		object2[2]=add3(object2[2],multVectorByMatrix(mul3(force,object2[10]),object[18][4][2]))
+		applyForce(object2, add3(multVectorByMatrix(sub3(position,pairInfo[3][2]),pairInfo[4][2]),pairInfo[3][1]), multVectorByMatrix(force,pairInfo[4][2]))
+		--object2[2]=add3(object2[2],multVectorByMatrix(mul3(force,object2[10]),pairInfo[4][2]))
 	end
 end
 
@@ -456,6 +458,7 @@ function onTick()
 		for index = 1,#objects do
 			object = objects[index]
 			object[4] = updateQuaternionByVector(object[4],mul3(object[5],-deltaTime)) -- apply rotational velocity to orientation, not sure why the minus is needed
+			--object[2] = add3(object[2],mul3(object[12],deltaTime)) -- apply acceleration to velocity
 			object[2] = add3(object[2],mul3(object[12],deltaTime)) -- apply acceleration to velocity
 			object[1] = add3(object[1],mul3(object[2],deltaTime)) -- apply velocity to position			
 			--object[3] = mul3(object[12],1) -- reset acceleration to gravity
@@ -486,11 +489,11 @@ function onTick()
 									isColliding = gjkCollisionDetection(collMesh1,collMesh2)
 									--monkeyCollision = gjkCollisionDetection(objects[1][7],objects[2][7])
 									if isColliding then
-										--if object1 == player or object2 == player then
-										--	coefficientOfFriction = 1
-										--else
-										--	coefficientOfFriction = 1
-										--end
+										if object1 == player or object2 == player then
+											coefficientOfFriction = 1
+										else
+											coefficientOfFriction = 1
+										end
 										newAndOldCollPoints = object1[15][j] or {}
 										
 										--collideAtAll = trueVar
