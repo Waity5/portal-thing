@@ -663,7 +663,7 @@ function renderView()
 				p3 = object[7][curTri[3]]
 				curTri[7]=mx(p1[7],p2[7],p3[7])
 				b=p1[3]
-				if dot3(curTri[8],b)>0 and curTri[7]>depthMinimum then
+				if dot3(curTri[8],b)>0 then --  and curTri[7]>depthMinimum
 					sideVal=p1[6]+p2[6]+p3[6]
 					
 					shape = {p1[4],p3[4],p2[4]}
@@ -674,7 +674,7 @@ function renderView()
 						shape[j]={crPoint[1]*screenScale/crPoint[3],-crPoint[2]*screenScale/crPoint[3]}
 					end
 					
-					renderShapes[#renderShapes+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7]*depthScale+depthOffset}
+					renderShapes[#renderShapes+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7]}
 					
 				end
 			end
