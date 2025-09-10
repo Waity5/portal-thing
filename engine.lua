@@ -479,7 +479,7 @@ function onTick()
 		for i,object1 in ipairsVar(objects) do
 			if object1[10]>0 or object1[11]>0 then
 				for j,object2 in ipairsVar(objects) do
-					if i~=j and dist3(object1[1],object2[1])<=object1[13]+object2[13] and object1[17][2]~=object2 and object2[17][2]~=object1 then
+					if i~=j and dist3(object1[1],object2[1])<=object1[13][1]+object2[13][1] and object1[17][2]~=object2 and object2[17][2]~=object1 then
 						for k,collMesh1 in ipairsVar(object1[9]) do
 							for n,collMesh2 in ipairsVar(object2[9]) do
 								--collCals=collCals+1
@@ -519,7 +519,7 @@ function onTick()
 											mul3(direction1,
 											dot3(sub3(collMesh2[collPoints2[1]][2],collMesh1[collPoints1[1]][2]),normal2) / dot3(direction1,normal2)))
 										else
-											trueContactPoint = object1[13]>object2[13] and collMesh2[collPoints2[1]][2] or collMesh1[collPoints1[1]][2]
+											trueContactPoint = object1[13][1]>object2[13][1] and collMesh2[collPoints2[1]][2] or collMesh1[collPoints1[1]][2]
 										end
 										--velocity1 = object1[2]
 										--velocity2 = object2[2]
@@ -636,8 +636,20 @@ function renderView()
 	
 	for index = 1,#objects do -- triangle position calculation a.k.a. the 3D rendering
 		object = objects[index]
-		if object~=player or itterLevel>1 then
+		
+		objectPosLocal = multVectorByMatrix(sub3(object[1],cameraPosition),cameraRotationMatrix)
+		planeStart = object[17][2] and itterLevel>1 and 2 or 1 -- skips the portal's near plane if the object is inside a portal
+		sideVal = bigNum
+		for j=planeStart,#viewBoundingPlanes do
+			planeNormal, planePoint = unpack(viewBoundingPlanes[j])
+			AO  = sub3(objectPosLocal, planePoint)
+			sideVal = mn(dot3(AO,planeNormal),sideVal)
+		end			
+		
+		
+		if sideVal>-object[13][2]*2 and (object~=player or itterLevel>1) then
 			--object[16] = quaternionToMatrix(object[4])
+			object[19] = overallViewNumber
 			
 			for i=1,#object[7] do
 				crPoint=object[7][i]
@@ -652,7 +664,8 @@ function renderView()
 				
 			end
 			
-
+			doViewFrustumCutting = sideVal<object[13][2]
+			
 
 			
 			
@@ -667,7 +680,9 @@ function renderView()
 					sideVal=p1[6]+p2[6]+p3[6]
 					
 					shape = {p1[4],p3[4],p2[4]}
-					shape = intersectShapeWithPlanes(shape,viewBoundingPlanes)
+					if doViewFrustumCutting then
+						shape = intersectShapeWithPlanes(shape,viewBoundingPlanes)
+					end
 					
 					for j = 1,#shape do
 						crPoint = shape[j]
@@ -688,7 +703,7 @@ end
 
 function intersectShapeWithPlanes(shape1,planes)
 	planesLen = #planes
-	for j=1,planesLen do
+	for j=planeStart,planesLen do
 		planeNormal, planePoint = unpack(planes[j])
 		newShape1 = {}
 		shape1Len = #shape1
@@ -702,7 +717,7 @@ function intersectShapeWithPlanes(shape1,planes)
 			rayPos = v3
 			det = -dot3(rayDir, planeNormal)
 			invdet = 1.0/det
-			AO  = sub3(v3, mul3(planePoint,1))
+			AO  = sub3(v3, planePoint)
 			sideVal = dot3(AO,planeNormal)
 			t = sideVal * invdet
 			

@@ -22,7 +22,7 @@ grav = {0,-600,0}
 walkingSpeed = 150
 walkingAccelerate = 10
 
-camRot={0.0001,0,0}
+camRot={0.0001-pi/2,0,0}
 
 verticalLookLimiter = pi/2-0.001
 rotateSpeed = 90
@@ -38,6 +38,7 @@ holdDistance = 72
 holdRange = 100
 
 playerYVelocityOld = 0
+overallViewNumber = 0
 
 coefficientOfFriction = 1
 
@@ -326,7 +327,7 @@ portalTeleportLoop:
 				portalSecondarytoPrimaryMatrix = {portalOrangeToBlueMatrix}[1]
 			endPortalChoosingCollision:
 			
-			dist3({object[1],portalPrimary[1]}) > object[13]+portalPrimary[13] ~ skipPortalCollision
+			dist3({object[1],portalPrimary[1]}) > object[13][1]+portalPrimary[13][1] ~ skipPortalCollision
 				portalPrimaryPhysMesh1 = portalPrimary[9][1]
 				portalPrimaryPhysMesh2 = portalPrimary[9][2]
 				isColliding = gjkCollisionDetection({{portalPrimaryPhysMesh1[1],portalPrimaryPhysMesh1[2],portalPrimaryPhysMesh2[1],portalPrimaryPhysMesh2[2]},object[9][1]})
@@ -529,6 +530,7 @@ allViews = {}
 
 renderingLoop:
 	renderingPass = remainingRenderingPasses[1]
+	overallViewNumber = overallViewNumber + 1
 
 	cameraPosition = renderingPass[1]
 	cameraRotationQuaternion = renderingPass[2]
@@ -606,46 +608,49 @@ renderingLoop:
 				portalPrimarytoSecondaryMatrix = {portalBlueToOrangeMatrix}[1]
 			endPortalChoosingRender:
 			
-			portalMesh = portalPrimary[7]
-			portalTris = portalPrimary[8]
-			curTri = portalTris[1]
-			portalPoint = portalMesh[curTri[1]][3]
-			
-			0 > dot3({curTri[8],portalPoint}) ~ skipCurrentPortal -- skip portal if portal is facing away from player
-			
+			overallViewNumber > portalPrimary[19] ~ skipCurrentPortal
 				
+				portalMesh = portalPrimary[7]
+				portalTris = portalPrimary[8]
+				curTri = portalTris[1]
+				portalPoint = portalMesh[curTri[1]]
 				
-				portalMeshLen = 8 --#portalMesh -- no longer uses entire mesh
-				index1 = 0
-				viewBounding = {}
-				portalLoop:
-					index1 = index1 + 1
-					viewBounding[index1] = portalMesh[index1][4]
-				portalMeshLen > index1 ~ portalLoop
+				0 > dot3({curTri[8],portalPoint[3]}) ~ skipCurrentPortal -- skip portal if portal is facing away from player
 				
-				viewBounding = intersectShapeWithPlanes({viewBounding,viewBoundingPlanes})
-				
-				viewBoundingLen = #viewBounding
-				
-				3 > viewBoundingLen ~ skipCurrentPortal -- need at least 3 points to form a shape with area#
-				
-					portalPlane = {multVectorByMatrix({curTri[8],cameraRotationMatrix}),multVectorByMatrix({portalPoint,cameraRotationMatrix})}
-					
-					cameraRotationQuaternion = multQuaternionByQuaternion({portalSecondaryToPrimaryQuaternion, cameraRotationQuaternionOld})
-					cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({cameraPositionOld,portalPrimary[1]}), portalPrimarytoSecondaryMatrix})})
 					
 					
+					portalMeshLen = 8 --#portalMesh -- no longer uses entire mesh
+					index1 = 0
+					viewBounding = {}
+					portalLoop:
+						index1 = index1 + 1
+						viewBounding[index1] = portalMesh[index1][4]
+					portalMeshLen > index1 ~ portalLoop
 					
-					portalPrimaryMinDepth = curTri[7]
-					j = 1
-					findingMinPortalDepthLoop:
-						j = j + 1
-						portalPrimaryMinDepth = mn({portalPrimaryMinDepth,portalTris[j][7]})
-					#portalTris>j ~ findingMinPortalDepthLoop
+					planeStart = 1
+					viewBounding = intersectShapeWithPlanes({viewBounding,viewBoundingPlanes})
 					
-					curViewInfo[i] = portalPrimaryMinDepth
+					viewBoundingLen = #viewBounding
 					
-					remainingRenderingPasses[#remainingRenderingPasses+1] = {cameraPosition,cameraRotationQuaternion,viewBounding,{portalPlane},itterLevel+1,{curView,i}}
+					3 > viewBoundingLen ~ skipCurrentPortal -- need at least 3 points to form a shape with area#
+					
+						portalPlane = {norm3({multVectorByMatrix({curTri[8],cameraRotationMatrix})}),portalPoint[4]}
+						
+						cameraRotationQuaternion = multQuaternionByQuaternion({portalSecondaryToPrimaryQuaternion, cameraRotationQuaternionOld})
+						cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({cameraPositionOld,portalPrimary[1]}), portalPrimarytoSecondaryMatrix})})
+						
+						
+						
+						portalPrimaryMinDepth = curTri[7]
+						j = 1
+						findingMinPortalDepthLoop:
+							j = j + 1
+							portalPrimaryMinDepth = mn({portalPrimaryMinDepth,portalTris[j][7]})
+						#portalTris>j ~ findingMinPortalDepthLoop
+						
+						curViewInfo[i] = portalPrimaryMinDepth
+						
+						remainingRenderingPasses[#remainingRenderingPasses+1] = {cameraPosition,cameraRotationQuaternion,viewBounding,{portalPlane},itterLevel+1,{curView,i}}
 			skipCurrentPortal:
 		2 > i ~ portalViewMathsLoop
 	skipAllPortalRendering:
@@ -787,6 +792,7 @@ skipConditionWrite9:
 
 
 sourceObjectInfo = M[1][index]
+sourceObjectInfoLen = #sourceObjectInfo
 newPoints={}
 j=1
 ilocal = sourceObjectInfo[1]-1
@@ -836,12 +842,13 @@ newObject={$-- position, velocity, acceleration, orientation, rotation velocity,
 	conditions[7],$ -- 10 ability to be moved, higher is easier to be moved
 	conditions[8],$ -- 11 ability to be rotated, should really be a vec3
 	conditions[9],$ -- 12 gravity
-	M[1][index][7],$ -- 13 max point dist from object's origin
+	{M[1][index][sourceObjectInfoLen-1],M[1][index][sourceObjectInfoLen]},$ -- 13 max point dist from object's origin
 	index,$ -- 14
 	{},$ -- 15 previous collision points, not used
 	{},$ -- 16 rotation matrix
 	{},$ -- 17 don't collide with
 	{1},$ -- 18 keep object
+	0,$ -- 19 render itter number
 }
 objects[#objects+1]=newObject
 

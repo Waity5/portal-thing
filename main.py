@@ -67,6 +67,8 @@ if __name__ == '__main__':
 
         path = "./stl/"
 
+        max_dist_render = 0
+
         
 
         if colour == "ply":
@@ -87,6 +89,7 @@ if __name__ == '__main__':
                 if not cr_point in point_map:
                     #processed_points.append(cr_point)
                     packets.append((2,cr_point))
+                    max_dist_render = max(max_dist_render, dist(cr_point,(0,0,0)))
                     total_points += 1
                     point_map[cr_point] = total_points-points_mesh_start+1
                 
@@ -139,7 +142,7 @@ if __name__ == '__main__':
             for i in points:
                 packets.append((2,(i[0],i[1],i[2])))
                 total_points += 1
-                #max_dist = max(max_dist, dist(i,(0,0,0)))
+                max_dist_render = max(max_dist_render, dist(i,(0,0,0)))
             points_mesh_end = total_points
 
             tris_start = total_render_tris+1
@@ -181,7 +184,7 @@ if __name__ == '__main__':
             for i in points:
                 packets.append((2,(i[0],i[2],i[1])))
                 total_points += 1
-                #max_dist = max(max_dist, dist(i,(0,0,0)))
+                max_dist_render = max(max_dist_render, dist(i,(0,0,0)))
             points_mesh_end = total_points
 
 
@@ -226,7 +229,7 @@ if __name__ == '__main__':
 
 
 
-        max_dist = 0
+        max_dist_phys = 0
         points_phys_starts = []
         points_phys_ends = []
 
@@ -245,7 +248,7 @@ if __name__ == '__main__':
             for i in phys_points:
                 packets.append((2,(i[0],i[2],i[1])))
                 total_points += 1
-                max_dist = max(max_dist, dist(i,(0,0,0)))
+                max_dist_phys = max(max_dist_phys, dist(i,(0,0,0)))
             points_phys_ends.append(total_points)
         else:
             number = 1
@@ -261,7 +264,7 @@ if __name__ == '__main__':
                     
                     packets.append((2,cr_point))
                     total_points += 1
-                    max_dist = max(max_dist, dist(cr_point,(0,0,0)))
+                    max_dist_phys = max(max_dist_phys, dist(cr_point,(0,0,0)))
                 points_phys_ends.append(total_points)
 
                 number += 1
@@ -273,8 +276,10 @@ if __name__ == '__main__':
         packets.append((1,(
             points_mesh_start,points_mesh_end,
             tris_start,tris_end,)+all_phys_markers+(
-            max_dist,
+            max_dist_phys,max_dist_render,
             )))
+
+        #print(object_name,max_dist_phys,max_dist_render)
         #print(packets[-1])
 
         
