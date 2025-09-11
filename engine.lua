@@ -36,6 +36,8 @@ function add3(a,b)return{a[1]+b[1],a[2]+b[2],a[3]+b[3]}end
 function sub3(a,b)return{a[1]-b[1],a[2]-b[2],a[3]-b[3]}end
 function mul3(a,b)return{a[1]*b,a[2]*b,a[3]*b}end
 --function stringRound3(a)return string.format("%.3f", a or 0)end
+function cross3(a,b)return {a[2]*b[3] - a[3]*b[2], a[3]*b[1] - a[1]*b[3], a[1]*b[2] - a[2]*b[1]}end
+function dot3(a,b)return a[1]*b[1]+a[2]*b[2]+a[3]*b[3]end
 function crossPoints(a,b,c)return cross3(sub3(b,a),sub3(c,a))end
 function norm3(a)return mul3(a,1/sqrt(a[1]^2+a[2]^2+a[3]^2))end
 function dist3(a,b)return sqrt((a[1]-b[1])^2 + (a[2]-b[2])^2 + (a[3]-b[3])^2)end
@@ -44,11 +46,11 @@ M={}
 romCr=1
 levelCr=3
 stg=1
---loaded=falseVar
 init=trueVar
 --httpTk=0
 tick=0
 
+-- this is the sscript interpreter
 function executeScript(line,opcode) -- do not input anything for opcode
 	_ENVvar = _ENV
 	while opcode ~= 0 do
@@ -98,7 +100,7 @@ function transformPhysPoints(object)
 	end
 end
 
-function intersectTriangle(rayPos,rayDir,a,b,c) -- https://stackoverflow.com/questions/42740765/intersection-between-line-and-triangle-in-3d
+function intersectTriangle(rayPos,rayDir,a,b,c) -- https://stackoverflow.com/a/42752998
 	E1 = sub3(b, a)
 	E2 = sub3(c, a)
 	N = cross3(E1,E2)
@@ -162,7 +164,7 @@ function gjkSupport(points,searchDirection)
 		crDot = dot3(v[2],searchDirection)
 		if abs(crDot-crDist)<0.0005 then -- must be more strict than the epa's exit condition to prevent unreachable conditions
 			pointList[#pointList+1]=i
-		elseif crDot>crDist then
+		elseif crDot>crDist then -- the extra points are used to find the edge/face that's being collided
 			point=v[2]
 			pointList={i}
 			crDist=crDot
@@ -206,7 +208,7 @@ function gjkCollisionDetection(points1,points2)
 				searchDirection = adb
 			else -- expanded polytope algorithm
 				-- taken from https://github.com/kevinmoran/GJK/blob/master/GJK.h
-				--if trueVar then return "GOOD" end
+				
 				faces={
 					{a,b,c},
 					{a,c,d},
@@ -312,14 +314,6 @@ function gjkCollisionDetection(points1,points2)
 		end
 	end
 	-- only reaches here when a timeout happens
-end
-
-function cross3(a,b)
-	return {a[2]*b[3] - a[3]*b[2], a[3]*b[1] - a[1]*b[3], a[1]*b[2] - a[2]*b[1]}
-end
-
-function dot3(a,b)
-	return a[1]*b[1]+a[2]*b[2]+a[3]*b[3]
 end
 
 function vectorToQuaternion(vec)
@@ -453,9 +447,6 @@ function onTick()
 		executeScript("tickFunc")
 		
 		
-		
-		--keyboardRotationInput = {-0.01*gN(2),0.01*gN(1),0.01*gN(3)}
-		--overalRayHit = falseVar
 		
 		debugTris = {}
 		
