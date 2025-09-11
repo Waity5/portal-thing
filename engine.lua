@@ -103,13 +103,13 @@ function intersectTriangle(rayPos,rayDir,a,b,c) -- https://stackoverflow.com/que
 	E2 = sub3(c, a)
 	N = cross3(E1,E2)
 	det = -dot3(rayDir, N)
-	invdet = 1.0/det
+	invdet = 1/det
 	AO  = sub3(rayPos, a)
 	DAO = cross3(AO, rayDir)
 	u =  dot3(E2,DAO) * invdet
 	v = -dot3(E1,DAO) * invdet
 	t =  dot3(AO,N)  * invdet
-	return (-det >= 0.0001 and t >= 0 and u >= 0 and v >= 0 and u+v <= 1)
+	return -det >= 0.0001 and t >= 0 and u >= 0 and v >= 0 and u+v <= 1
 end
 
 function doRaycast(source,direction,maxLen)
@@ -491,7 +491,6 @@ function onTick()
 								if #collMesh1>0 and #collMesh2>0 then
 									
 									isColliding = gjkCollisionDetection(collMesh1,collMesh2)
-									--monkeyCollision = gjkCollisionDetection(objects[1][7],objects[2][7])
 									if isColliding then
 										if object1 == player or object2 == player then
 											coefficientOfFriction = 1
@@ -500,7 +499,6 @@ function onTick()
 										end
 										newAndOldCollPoints = object1[15][j] or {}
 										
-										--collideAtAll = trueVar
 										gjkSupport(collMesh1,isColliding[1])
 										collPoints1 = pointList
 										gjkSupport(collMesh2,mul3(isColliding[1],-1))
@@ -535,14 +533,6 @@ function onTick()
 										if totalVelocityNormal>0 then
 											--goodCollPoints[#goodCollPoints+1] = collPoints
 											
-											--totalInverseResistance = object1[10]+object2[10]
-											--totalForce = mul3(isColliding[1],totalVelocity*(0.5-0.25*(abs(object1[10]-object2[10])/totalInverseResistance))) -- the inverse resistance maths causes a mult of 0.5 between identically weighted objects
-											-- and a multiplier of 0.25 between very differently weighted objects
-											--applyForce(object1,trueContactPoint,mul3(totalForce,-1))
-											--applyForce(object2,trueContactPoint,totalForce)
-											
-											--object1[1] = add3(object1[1],mul3(isColliding[1],-isColliding[2]*object1[10]/totalInverseResistance))
-											--object2[1] = add3(object2[1],mul3(isColliding[1],isColliding[2]*object2[10]/totalInverseResistance))
 											
 											movementFromPushing = getMovementPerUnitForce(object1,trueContactPoint,isColliding[1]) + getMovementPerUnitForce(object2,trueContactPoint,isColliding[1])
 											-- ^ should technically be velocityChangeFromPushing, but that's a bit long for my tastes
@@ -574,9 +564,6 @@ function onTick()
 												applyForce(object2,trueContactPoint,mul3(unitFriction,frictionForce))
 											end
 											
-											--totalInverseResistance = object1[10]+object2[10]
-											--object1[1] = add3(object1[1],mul3(isColliding[1],-isColliding[2]*object1[10]/totalInverseResistance))
-											--object2[1] = add3(object2[1],mul3(isColliding[1],isColliding[2]*object2[10]/totalInverseResistance))
 											
 											pushMovement = isColliding[2]/movementFromPushing
 											
@@ -651,7 +638,7 @@ function renderView()
 		end			
 		
 		
-		if sideVal>-object[13][2]*2 and (object~=player or itterLevel>1) then
+		if sideVal>-object[13][2] and (object~=player or itterLevel>1) then
 			--object[16] = quaternionToMatrix(object[4])
 			object[19] = overallViewNumber
 			
@@ -749,30 +736,6 @@ function onDraw()
 	screenHeight2=screenHeight/2
 	
 	
-	--stCl(255,255,255)
-	--text(1,1,"TPS: ")
-	--text(26,1,httpTkP)
-	
-	
-	--for i=1,#allM do
-	--	stCl(255,255,255)
-	--	text(0,i*6-5,allM[i])
-	--	text(20,i*6-5,M[allM[i]])
-	--end
-	
-	--viewBounding = {{-90,-60},{100,-50},{100,50},{-100,50}}
-	--viewBoundingInnerBoxL = -90
-	--viewBoundingInnerBoxR = 100
-	--viewBoundingInnerBoxT = -50
-	--viewBoundingInnerBoxB = 50
-	--viewBoundingOuterBoxL = -100
-	--viewBoundingOuterBoxR = 100
-	--viewBoundingOuterBoxT = -60
-	--viewBoundingOuterBoxB = 50
-	--viewBounding = {{-9,-60},{10,-50},{10,50},{-10,50}}
-	--viewBounding = {{0,70},{-40,40},{-40,-40},{0,-70},{40,-40},{40,40}}
-	
-	
 	if loaded then
 		--screenScale = tan(fov/2)*screenWidth2
 		
@@ -796,67 +759,6 @@ function onDraw()
 			junk =stCl(unpack(debugTri[4]))
 			triF(p1[1]+screenWidth2,p1[2]+screenHeight2,p2[1]+screenWidth2,p2[2]+screenHeight2,p3[1]+screenWidth2,p3[2]+screenHeight2)
 		end
-		--print(processed,accepted,culled)
-		
-		--if collideAtAll then
-		--	stCl(255,255,0)
-		--	for i=1,#collPoints1 do
-		--		crPoint=multVectorByMatrix(sub3(collPoints1[i],camPos),cameraRotationMatrix)
-		--		crPoint=mul(mul(crPoint,1/crPoint[3]),screenScale)
-		--		rec(screenWidth2+crPoint[1]-2,screenHeight2-crPoint[2]-2,5,5)
-		--	end
-		--		stCl(0,255,255)
-		--	for i=1,#collPoints2 do
-		--		crPoint=multVectorByMatrix(sub3(collPoints2[i],camPos),cameraRotationMatrix)
-		--		crPoint=mul(mul(crPoint,1/crPoint[3]),screenScale)
-		--		rec(screenWidth2+crPoint[1]-2,screenHeight2-crPoint[2]-2,5,5)
-		--	end
-		--	if trueContactPoint then
-		--		stCl(255,0,255)
-		--		crPoint=multVectorByMatrix(sub3(trueContactPoint,camPos),cameraRotationMatrix)
-		--		crPoint=mul(mul(crPoint,1/crPoint[3]),screenScale)
-		--		rec(screenWidth2+crPoint[1]-2,screenHeight2-crPoint[2]-2,5,5)
-		--	end
-		--end
-		
-		
-		--if monkeyCollision then
-		--	text(1,1,"Collision:")
-		--	for i=1,3 do
-		--		text(1,i*6+1,stringRound3(monkeyCollision[1][i]))
-		--	end
-		--	text(1,4*6+1,stringRound3(monkeyCollision[2]))
-		--end
-		--if trueContactPoint then
-		--	for i=1,3 do
-		--		text(1,i*6+37,stringRound3(trueContactPoint[i]))
-		--	end
-		--end
-		--text(1,1,"Orientation Quaternion:")
-		--for i=1,4 do
-		--	text(1,i*6+1,stringRound3(monkeyRotationQuaternion[i]))
-		--end
-		--text(1,37,"Rotational Velocity:")
-		--for i=1,3 do
-		--	text(1,i*6+37,stringRound3(monkeyRotationVelocity[i]))
-		--end
-		--text(1,73,"Ray col pos:")
-		--for i=1,3 do
-		--	text(1,i*6+73,stringRound3(collPointMonkeyRelative[i]))
-		--end
-		--text(1,109,"Ray dir:")
-		--for i=1,3 do
-		--	text(1,i*6+109,stringRound3(collDirMonkeyRelative[i]))
-		--end
-		
-		--text(100,1,monkeyRayHit and "YES" or "NO")
-		
-		--stCl(unpack(pushColour))
-		
-		--if overalRayHit then
-		--	recSize=30/collPointCamRelative[3]
-		--	rec(collPointScreenPos[1]+screenWidth2-(recSize//2),collPointScreenPos[2]+screenHeight2-(recSize//2),recSize,recSize)
-		--end
 	end
 	
 	stCl(100,255,255)
