@@ -551,7 +551,7 @@ while not glfw.window_should_close(window) do
 	timePassed = timePassed + (t3-t1)
 	timeUsed = timeUsed + (t2-t1)
 	if tick%100 == 0 then
-		print(math.floor(1/(timePassed/100)).." tps	"..math.floor(timeUsed/timePassed*100).."% capacity")
+		print(math.floor(1/(timePassed/100)).." tps	"..math.floor(timeUsed/timePassed*100).."% capacity "..(math.floor((timeUsed/100*1000)*10)/10).."ms per tick")
 		timePassed = 0
 		timeUsed = 0
 	end

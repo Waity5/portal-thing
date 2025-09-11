@@ -7,6 +7,7 @@ mx=m.max
 mn=m.min
 sqrt=math.sqrt
 flr=m.floor
+ceil=m.ceil
 pi=m.pi
 gN=input.getNumber
 gB=input.getBool
@@ -81,6 +82,7 @@ function executeScript(line,opcode) -- do not input anything for opcode
 			_ENVvar[arg1] = arg2var==arg3var
 		end
 		
+		sscriptInstructionCount = sscriptInstructionCount + 1
 		line = line + 1
 	end
 end
@@ -438,6 +440,8 @@ function onTick()
 			loaded=rom==""
 		end
 	end
+	
+	sscriptInstructionCount = 0
 
 	if loaded and screenWidth then
 		tick = tick+1
@@ -856,5 +860,5 @@ function onDraw()
 	end
 	
 	stCl(100,255,255)
-	screenVar.drawText(1,1,"hello!!a#")
+	screenVar.drawText(1,1,"sscript instructions: "..sscriptInstructionCount)
 end

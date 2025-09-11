@@ -22,7 +22,7 @@ grav = {0,-600,0}
 walkingSpeed = 150
 walkingAccelerate = 10
 
-camRot={0.0001-pi/2,0,0}
+camRot={0.0001-pi/3,0,0}
 
 verticalLookLimiter = pi/2-0.001
 rotateSpeed = 90
@@ -65,7 +65,7 @@ portalBlue = objects[#objects]
 --portalBlue[17][1] = objects[1]
 
 index = "player_bounding"
-conditions = {{0,64,0},[7]=0.02,[8]=0,[9]=grav}
+conditions = {{-256,64,0},[7]=0.02,[8]=0,[9]=grav}
 junk = executeScript({summonObjectFunc})
 player = objects[#objects]
 
@@ -665,6 +665,8 @@ viewProcessingLoop1:
 	curViewShapes = curView[1]
 	curViewInfo = curView[2]
 	
+	moveCalls = {}
+	
 	j = 0
 	viewProcessingLoop2:
 		j = j+1
@@ -677,25 +679,43 @@ viewProcessingLoop1:
 			--junk = move({viewToAdd,1,#viewToAdd,1,curViewShapes})
 			depthToFind = curViewInfo[j]
 			
-			index = 0
+			index1 = 1
+			index2 = #curViewShapes+1
 			depthFindingLoop:
-				index = index + 1
-				depthToFind > curViewShapes[index][5] ~ foundDepth
-			#curViewShapes>index ~ depthFindingLoop
-			1 ~ didntFoundDepth
-			foundDepth:
-			index = index-1
-			didntFoundDepth:
-			index = index+1
-			--junk = print({index,depthToFind,curViewShapes[1][5],curViewShapes[2][5],curViewShapes[3][5],#curViewShapes,#viewToAdd})
+				index = index1 + flr({(index2-index1)/2})
+				depthToFind > curViewShapes[index][5] ~ depthSearchLower
+					index1 = index+1
+				1 ~ depthSearchEnd
+				depthSearchLower:
+					index2 = index-0
+				depthSearchEnd:
+			index2>index1 ~ depthFindingLoop
+			index = index1-0
 			
-			junk = move({curViewShapes,index,#curViewShapes,index+#viewToAdd})
-			junk = move({viewToAdd,1,#viewToAdd,index,curViewShapes})
+			moveCalls[#moveCalls+1] = {index1,viewToAdd}
 			
 			--junk = move({viewToAdd,1,#viewToAdd,#curViewShapes+1,curViewShapes})
 		skipViewAdding:
 		
 	2>j ~ viewProcessingLoop2
+	
+	1 > #moveCalls ~ skipMoveCalls
+		2 > #moveCalls ~ skipMoveCallsSort
+			moveCalls[1][1] > moveCalls[2][1] ~ skipMoveCallsSort
+				junk = moveCalls[2]
+				moveCalls[2] = moveCalls[1]
+				moveCalls[1] = junk
+		skipMoveCallsSort:
+		
+		j = 0
+		moveCallsLoop:
+			j = j+1
+			index = moveCalls[j][1]
+			viewToAdd = moveCalls[j][2]
+			junk = move({curViewShapes,index,#curViewShapes,index+#viewToAdd})
+			junk = move({viewToAdd,1,#viewToAdd,index,curViewShapes})
+		#moveCalls > j ~ moveCallsLoop
+	skipMoveCalls:
 	
 	i = i - 1
 i > 0 ~ viewProcessingLoop1
