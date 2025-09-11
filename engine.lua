@@ -146,14 +146,14 @@ function applyInstantMovement(object,position,force)
 	end
 end
 
-function applyForce(object,position,force)
+function applyForce(object,position,force,skipExtra)
 	collPointObjectRelative=sub3(position,object[1])
 	object[5]=add3(object[5],mul3(cross3(collPointObjectRelative,force),object[11]))
 	object[2]=add3(object[2],mul3(force,object[10]))
 	pairInfo = object[18]
 	object2=pairInfo[2]
-	if object2 then
-		applyForce(object2, add3(multVectorByMatrix(sub3(position,pairInfo[3][2]),pairInfo[4][2]),pairInfo[3][1]), multVectorByMatrix(force,pairInfo[4][2]))
+	if object2 and not skipExtra then
+		applyForce(object2, add3(multVectorByMatrix(sub3(position,pairInfo[3][2]),pairInfo[4][2]),pairInfo[3][1]), multVectorByMatrix(force,pairInfo[4][2]), true)
 		--object2[2]=add3(object2[2],multVectorByMatrix(mul3(force,object2[10]),pairInfo[4][2]))
 	end
 end

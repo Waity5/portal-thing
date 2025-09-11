@@ -45,6 +45,7 @@ coefficientOfFriction = 1
 index = "platform"
 conditions = {{0,-8,0},[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
+platformObject = objects[#objects]
 index = "skybox"
 conditions = {[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
@@ -72,11 +73,17 @@ player = objects[#objects]
 index = "cube_large"
 conditions = {{128,64,256},[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
-portalBlue[17][1] = objects[#objects]
+cube1 = objects[#objects]
+portalBlue[17][1] = cube1
 
 conditions = {{-128,64,256},[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
-portalOrange[17][1] = objects[#objects]
+cube2 = objects[#objects]
+portalOrange[17][1] = cube2
+
+conditions = {{-128,384,384},[7]=0,[8]=0}
+junk = executeScript({summonObjectFunc})
+cube3 = objects[#objects]
 
 
 index1 = -3
@@ -133,16 +140,29 @@ gB4 ~ isGB4
 	
 	1 ~ endOfPush
 isGB1:
-	
+	portalOrange[18][1] = nilVar
+	index = "portal_orange"
+	conditions = {{-64,56,256},[4]={0.5,0,0.5,0},[7]=0,[8]=0}
+	junk = executeScript({summonObjectFunc})
+	portalOrange = objects[#objects]
+	portalOrange[17][1] = cube2
 	1 ~ endOfPush
 isGB3:
-	
+	portalBlue[18][1] = nilVar
+	index = "portal_blue"
+	conditions = {{-128,320,384},[4]={0.5,0.5,0,0},[7]=0,[8]=0}
+	junk = executeScript({summonObjectFunc})
+	portalBlue = objects[#objects]
+	portalBlue[17][1] = cube3
 	1 ~ endOfPush
 isGB4:
-	portalOrange[1]={-4,2.5,10}
-	portalOrange[4]={0.75,-0.25,0,0}
-	portalBlue[1]={0.75,1,11}
-	
+	portalOrange[18][1] = nilVar
+	index = "portal_orange"
+	conditions = {{-128,0,384},[4]=multQuaternionByQuaternion({norm4({{0.5,-0.5,0,0}}),{0,0,1,0}}),[7]=0,[8]=0}
+	junk = executeScript({summonObjectFunc})
+	portalOrange = objects[#objects]
+	portalOrange[17][1] = platformObject
+	1 ~ endOfPush
 endOfPush:
 
 
@@ -302,6 +322,7 @@ objectIndex = #objects
 portalTeleportLoop:
 	object = objects[objectIndex]
 	object[17][2] = nilVar
+	object[18][2] = nilVar
 	i = 0
 	
 	object[10] > 0 ~ doPortalCollisionLoop
@@ -356,8 +377,8 @@ portalTeleportLoop:
 					skipObjectSlowing:
 						
 					0 > sideVal ~ skipPortalTeleport
-					holdObject == object ~ skipPortalTeleport
-						object[1] = newPos
+					holdObject == object ~ skipPortalTeleport 
+						object[1] = newPos -- teleport object
 						object[2] = newVel
 						object[4] = newQuat
 						object[5] = newRotVel
@@ -380,6 +401,7 @@ portalTeleportLoop:
 
 					1 ~ skipPortalCollision:
 					skipPortalTeleport:
+						-- create a clone of the object on the opposite side
 					
 						index = object[14]
 						conditions = {newPos,newVel,[4]=newQuat,[5]=newRotVel,[7]=object[10],[8]=object[11]}
@@ -390,6 +412,9 @@ portalTeleportLoop:
 						newObject[18][2] = object
 						newObject[18][3] = {portalPrimary[1],portalSecondary[1]}
 						newObject[18][4] = {portalSecondarytoPrimaryQuaternion,portalSecondarytoPrimaryMatrix}
+						object[18][2] = newObject
+						object[18][3] = {portalSecondary[1],portalPrimary[1]}
+						object[18][4] = {portalPrimarytoSecondaryQuaternion,portalPrimarytoSecondaryMatrix}
 						
 						newObject[17][2] = portalSecondary[17][1]
 						
