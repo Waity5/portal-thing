@@ -701,11 +701,10 @@ function intersectShapeWithPlanes(shape1,planes) -- hacked together from https:/
 			t = sideVal / -dot3(rayDir, planeNormal) -- *invdet
 			
 			if t>0 and t<1 then
-				intersection = add3(v3,mul3(rayDir,t))
 				if sideVal>0 then
 					newShape1[#newShape1+1] = v3
 				end
-				newShape1[#newShape1+1] = intersection
+				newShape1[#newShape1+1] = add3(v3,mul3(rayDir,t))
 			elseif sideVal>0 then
 				newShape1[#newShape1+1] = v3
 			end
