@@ -6,8 +6,8 @@ local gl = require("moongl")
 local glfw = require("moonglfw")
 local mi = require("moonimage")
 
-local SCR_WIDTH, SCR_HEIGHT = 288*4, 160*4
 local SCR_SCALE = 4
+local SCR_WIDTH, SCR_HEIGHT = 288*SCR_SCALE, 160*SCR_SCALE
 
 local vertex_shader_source = [[
 #version 330 core

@@ -623,15 +623,15 @@ function renderView()
 		planeStart = object[17][2] and itterLevel>1 and 2 or 1 -- skips the portal's near plane if the object is inside a portal
 		sideVal = bigNum
 		for j=planeStart,#viewBoundingPlanes do
-			planeNormal, planePoint = unpack(viewBoundingPlanes[j])
-			AO  = sub3(objectPosLocal, planePoint)
-			sideVal = mn(dot3(AO,planeNormal),sideVal)
+			planeNormal, planeD = unpack(viewBoundingPlanes[j])
+			sideVal = mn(dot3(objectPosLocal,planeNormal)-planeD,sideVal)
 		end			
 		
 		
 		if sideVal>-object[13][2] and (object~=player or itterLevel>1) then
 			--object[16] = quaternionToMatrix(object[4])
 			object[19] = overallViewNumber
+			viewPerformanceInfoObjects = viewPerformanceInfoObjects+1
 			
 			for i=1,#object[7] do
 				crPoint=object[7][i]
@@ -683,28 +683,25 @@ end
 
 
 
-function intersectShapeWithPlanes(shape1,planes)
+function intersectShapeWithPlanes(shape1,planes) -- hacked together from https://stackoverflow.com/a/13105297 and intersectTriangle()
+	local shape1Len, newShape1, v3, v4, rayDir, sideVal, t
 	planesLen = #planes
 	for j=planeStart,planesLen do
-		planeNormal, planePoint = unpack(planes[j])
+		planeNormal, planeD = unpack(planes[j])
 		newShape1 = {}
 		shape1Len = #shape1
 		for k=1,shape1Len do
 			v3 = shape1[k]
-			v3[3] = v3[3] or 0
 			v4 = shape1[k%shape1Len+1]
-			v4[3] = v4[3] or 0
 			
 			rayDir = sub3(v4,v3)
-			rayPos = v3
-			det = -dot3(rayDir, planeNormal)
-			invdet = 1.0/det
-			AO  = sub3(v3, planePoint)
-			sideVal = dot3(AO,planeNormal)
-			t = sideVal * invdet
+			--det = -dot3(rayDir, planeNormal)
+			--invdet = 1/det
+			sideVal = dot3(v3,planeNormal) - planeD
+			t = sideVal / -dot3(rayDir, planeNormal) -- *invdet
 			
 			if t>0 and t<1 then
-				intersection = add3(rayPos,mul3(rayDir,t))
+				intersection = add3(v3,mul3(rayDir,t))
 				if sideVal>0 then
 					newShape1[#newShape1+1] = v3
 				end
@@ -720,7 +717,7 @@ end
 
 function onDraw()
 	screenVar=screen
-	local triF,tri,rec,stCl=screenVar.drawTriangleF,screenVar.drawTriangle,screenVar.drawRectF,screenVar.setColor --locals are faster because lua
+	local triF,tri,rec,stCl,text=screenVar.drawTriangleF,screenVar.drawTriangle,screenVar.drawRectF,screenVar.setColor,screenVar.drawText --locals are faster because lua
 	screenWidth = screenVar.getWidth()
 	screenHeight = screenVar.getHeight()
 	screenWidth2=screenWidth/2
@@ -750,8 +747,10 @@ function onDraw()
 			junk =stCl(unpack(debugTri[4]))
 			triF(p1[1]+screenWidth2,p1[2]+screenHeight2,p2[1]+screenWidth2,p2[2]+screenHeight2,p3[1]+screenWidth2,p3[2]+screenHeight2)
 		end
+		
+		executeScript("onDrawFunc")
 	end
 	
 	stCl(100,255,255)
-	screenVar.drawText(1,1,"sscript instructions: "..sscriptInstructionCount)
+	text(1,1,"sscript instructions: "..sscriptInstructionCount)
 end

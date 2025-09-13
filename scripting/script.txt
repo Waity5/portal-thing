@@ -540,6 +540,7 @@ exit
 renderFunc:
 
 
+viewPerformanceInfo = {}
 
 
 portalsBoth = {portalOrange,portalBlue}
@@ -580,7 +581,8 @@ renderingLoop:
 		i = i+1
 		point1 = viewBounding[i]
 		point2 = viewBounding[i+1]
-		viewBoundingPlanes[#viewBoundingPlanes+1] = {norm3({crossPoints({point1,{0,0,0},point2})}),point1}
+		planeNormal = norm3({crossPoints({point1,{0,0,0},point2})})
+		viewBoundingPlanes[#viewBoundingPlanes+1] = {planeNormal,dot3({point1,planeNormal})}
 	viewBoundingLen > i ~ viewBoundingConversionLoop
 	viewBounding[viewBoundingLen+1] = nil
 	
@@ -589,9 +591,9 @@ renderingLoop:
 	
 	cameraRotationMatrix = quaternionToMatrix({cameraRotationQuaternion})
 	
-	
+	viewPerformanceInfoObjects = 0
 	junk = renderView({1})
-	
+	viewPerformanceInfo[#viewPerformanceInfo+1] = viewPerformanceInfoObjects
 	
 	
 	
@@ -659,7 +661,8 @@ renderingLoop:
 					
 					3 > viewBoundingLen ~ skipCurrentPortal -- need at least 3 points to form a shape with area#
 					
-						portalPlane = {norm3({multVectorByMatrix({curTri[8],cameraRotationMatrix})}),portalPoint[4]}
+						planeNormal = norm3({multVectorByMatrix({curTri[8],cameraRotationMatrix})})
+						portalPlane = {planeNormal,dot3({portalPoint[4],planeNormal})}
 						
 						cameraRotationQuaternion = multQuaternionByQuaternion({portalSecondaryToPrimaryQuaternion, cameraRotationQuaternionOld})
 						cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({cameraPositionOld,portalPrimary[1]}), portalPrimarytoSecondaryMatrix})})
@@ -896,5 +899,32 @@ newObject={$-- position, velocity, acceleration, orientation, rotation velocity,
 	0,$ -- 19 render itter number
 }
 objects[#objects+1]=newObject
+
+exit
+
+
+
+
+
+
+
+
+
+onDrawFunc:
+
+text = screen["drawText"]
+stCl = screen["setColor"]
+
+
+junk = stCl({100,255,255})
+
+junk = text({1,8,"obj"})
+
+i = 0
+viewPerformanceInfoLen = #viewPerformanceInfo
+performanceMetricsLoop:
+	i = i+1
+	junk = text({1,i*6+8,viewPerformanceInfo[i]})
+viewPerformanceInfoLen > i ~ performanceMetricsLoop
 
 exit
