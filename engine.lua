@@ -593,7 +593,7 @@ function onTick()
 				for i=1,#object[8] do
 					curTri = object[8][i]
 					--print(curTri[1],curTri[2],curTri[3])
-					curTri[8]=crossPoints(object[7][curTri[1]][2], object[7][curTri[2]][2], object[7][curTri[3]][2])
+					curTri[9]=crossPoints(object[7][curTri[1]][2], object[7][curTri[2]][2], object[7][curTri[3]][2])
 				end
 			end
 		end
@@ -656,9 +656,9 @@ function renderView()
 				p1 = object[7][curTri[1]]
 				p2 = object[7][curTri[2]]
 				p3 = object[7][curTri[3]]
-				curTri[7]=mx(p1[7],p2[7],p3[7])
+				curTri[8]=mx(p1[7],p2[7],p3[7])
 				b=p1[3]
-				if dot3(curTri[8],b)>0 then --  and curTri[7]>depthMinimum
+				if dot3(curTri[9],b)>0 then --  and curTri[8]>depthMinimum
 					sideVal=p1[6]+p2[6]+p3[6]
 					
 					shape = {p1[4],p3[4],p2[4]}
@@ -671,14 +671,14 @@ function renderView()
 						shape[j]={crPoint[1]*screenScale/crPoint[3],-crPoint[2]*screenScale/crPoint[3]}
 					end
 					
-					renderShapes[#renderShapes+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7]}
+					renderShapes[#renderShapes+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7],curTri[8]}
 					
 				end
 			end
 		end
 	end
 	
-	table.sort(renderShapes,function(a,b)return a[5]>b[5]end)
+	table.sort(renderShapes,function(a,b)return a[6]>b[6]end)
 end
 
 
@@ -734,7 +734,7 @@ function onDraw()
 			for j=3,#shape do
 				p2 = shape[j-1]
 				p3 = shape[j]
-				stCl(curShape[2],curShape[3],curShape[4])
+				stCl(curShape[2],curShape[3],curShape[4],curShape[5] or 255)
 				triF(p1[1]+screenWidth2,p1[2]+screenHeight2,p2[1]+screenWidth2,p2[2]+screenHeight2,p3[1]+screenWidth2,p3[2]+screenHeight2)
 				--stCl(curShape[2]*0.5,curShape[3]*0.5,curShape[4]*0.5)
 				--tri(p1[1]+screenWidth2,p1[2]+screenHeight2-0.5,p2[1]+screenWidth2,p2[2]+screenHeight2-0.5,p3[1]+screenWidth2,p3[2]+screenHeight2-0.5)

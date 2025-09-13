@@ -85,6 +85,10 @@ conditions = {{-128,384,384},[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 cube3 = objects[#objects]
 
+index = "window"
+conditions = {{256,64,128},[7]=0,[8]=0}
+junk = executeScript({summonObjectFunc})
+
 
 index1 = -3
 index = "cube"
@@ -359,7 +363,7 @@ portalTeleportLoop:
 					
 					--object[18][2] ~ skipPortalCollision
 					
-					sideVal = dot3({sub3({object[1],portalPrimary[1]}), portalPrimary[8][1][8]})
+					sideVal = dot3({sub3({object[1],portalPrimary[1]}), portalPrimary[8][1][9]})
 					
 					newPos = add3({multVectorByMatrix({sub3({object[1],portalPrimary[1]}),portalPrimarytoSecondaryMatrix}), portalSecondary[1]})
 					newVel = multVectorByMatrix({sub3({object[2],mul3({object[12],deltaTime})}),portalPrimarytoSecondaryMatrix}) -- the "subtracting gravity" thing is needed to prevent the object from getting double friction on the ground. yes there is probably a better way
@@ -642,7 +646,7 @@ renderingLoop:
 				curTri = portalTris[1]
 				portalPoint = portalMesh[curTri[1]]
 				
-				0 > dot3({curTri[8],portalPoint[3]}) ~ skipCurrentPortal -- skip portal if portal is facing away from player
+				0 > dot3({curTri[9],portalPoint[3]}) ~ skipCurrentPortal -- skip portal if portal is facing away from player
 				
 					
 					
@@ -661,7 +665,7 @@ renderingLoop:
 					
 					3 > viewBoundingLen ~ skipCurrentPortal -- need at least 3 points to form a shape with area#
 					
-						planeNormal = norm3({multVectorByMatrix({curTri[8],cameraRotationMatrix})})
+						planeNormal = norm3({multVectorByMatrix({curTri[9],cameraRotationMatrix})})
 						portalPlane = {planeNormal,dot3({portalPoint[4],planeNormal})}
 						
 						cameraRotationQuaternion = multQuaternionByQuaternion({portalSecondaryToPrimaryQuaternion, cameraRotationQuaternionOld})
@@ -669,11 +673,11 @@ renderingLoop:
 						
 						
 						
-						portalPrimaryMinDepth = curTri[7]
+						portalPrimaryMinDepth = curTri[8]
 						j = 1
 						findingMinPortalDepthLoop:
 							j = j + 1
-							portalPrimaryMinDepth = mn({portalPrimaryMinDepth,portalTris[j][7]})
+							portalPrimaryMinDepth = mn({portalPrimaryMinDepth,portalTris[j][8]})
 						#portalTris>j ~ findingMinPortalDepthLoop
 						
 						curViewInfo[i] = portalPrimaryMinDepth
@@ -711,7 +715,7 @@ viewProcessingLoop1:
 			index2 = #curViewShapes+1
 			depthFindingLoop:
 				index = index1 + flr({(index2-index1)/2})
-				depthToFind > curViewShapes[index][5] ~ depthSearchLower
+				depthToFind > curViewShapes[index][6] ~ depthSearchLower
 					index1 = index+1
 				1 ~ depthSearchEnd
 				depthSearchLower:
@@ -857,7 +861,7 @@ ilocal = sourceObjectInfo[3]-1
 newObjectCopyRenderTris:
 	ilocal=ilocal+1
 	cr=M[3][ilocal]
-	newTris[j]={cr[1],cr[2],cr[3],cr[4],cr[5],cr[6]}
+	newTris[j]={cr[1],cr[2],cr[3],cr[4],cr[5],cr[6],cr[7]}
 	j=j+1
 sourceObjectInfo[4] > ilocal ~ newObjectCopyRenderTris
 

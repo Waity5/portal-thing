@@ -12,7 +12,7 @@ local SCR_WIDTH, SCR_HEIGHT = 288*SCR_SCALE, 160*SCR_SCALE
 local vertex_shader_source = [[
 #version 330 core
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
+layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aTexCoord;
 
 out vec4 ourColor;
@@ -21,7 +21,7 @@ out vec2 TexCoord;
 void main()
 {
 	gl_Position = vec4(aPos, 1.0);
-	ourColor = vec4(aColor, 1.0);
+	ourColor = aColor;
 	TexCoord = vec2(aTexCoord.x, aTexCoord.y);
 }
 ]]
@@ -39,7 +39,7 @@ uniform sampler2D texture1;
 void main()
 {
 	FragColor = texture(texture1, TexCoord) * ourColor;
-	if(FragColor.a < 0.1)
+	if(FragColor.a == 0.0)
         discard;
 }]]
 
@@ -110,28 +110,31 @@ gl.delete_shader(fsh)
 
 local vertices = {
         -- positions           colors            texture coords
-         0.5,  0.5, 0.0,   1.0, 1.0, 1.0,   0.9, 0.8, -- top right
-         0.5, -0.5, 0.0,   1.0, 1.0, 1.0,   0.9, 0.9, -- bottom right
-        -0.5, 0.5, 0.0,   1.0, 1.0, 1.0,   0.8, 0.9, -- bottom left
+         0.5,  0.5, 0.0,   1.0, 1.0, 1.0, 1.0,   0.9, 0.8, -- top right
+         0.5, -0.5, 0.0,   1.0, 1.0, 1.0, 1.0,   0.9, 0.9, -- bottom right
+        -0.5, 0.5, 0.0,   1.0, 1.0, 1.0, 1.0,   0.8, 0.9, -- bottom left
 }
 
 local vao = gl.gen_vertex_arrays()
 local vbo = gl.gen_buffers()
+
 -- bind the Vertex Array Object first, then bind and set vertex buffer(s), and then
 -- configure vertex attributes(s).
 gl.bind_vertex_array(vao)
 gl.bind_buffer('array', vbo)
 gl.buffer_data('array', gl.pack('float', vertices), 'static draw')
-gl.vertex_attrib_pointer(0, 3, 'float', false, 8*gl.sizeof('float'), 0)
+gl.vertex_attrib_pointer(0, 3, 'float', false, 9*gl.sizeof('float'), 0)
 gl.enable_vertex_attrib_array(0)
-gl.vertex_attrib_pointer(1, 3, 'float', false, 8*gl.sizeof('float'), 3*gl.sizeof('float'))
+gl.vertex_attrib_pointer(1, 4, 'float', false, 9*gl.sizeof('float'), 3*gl.sizeof('float'))
 gl.enable_vertex_attrib_array(1)
-gl.vertex_attrib_pointer(2, 2, 'float', false, 8*gl.sizeof('float'), 6*gl.sizeof('float'))
+gl.vertex_attrib_pointer(2, 2, 'float', false, 9*gl.sizeof('float'), 7*gl.sizeof('float'))
 gl.enable_vertex_attrib_array(2)
 gl.unbind_buffer('array')
 gl.unbind_vertex_array() 
 
-
+gl.enable("blend")
+--gl.blend_equation("add")
+gl.blend_func("src alpha", "one minus src alpha");
 
 
 
@@ -162,7 +165,6 @@ end
 function nilFunction()
 end
 
-lastCol = {0,0,0,0}
 
 SWscreen = {}
 function SWscreen.getWidth()
@@ -172,7 +174,6 @@ function SWscreen.getHeight()
 	return SCR_HEIGHT/SCR_SCALE
 end
 function SWscreen.setColor(r,g,b,a)
-	lastCol = {r,g,b,a or 255}
 	local colorCorrection = 1/2.2
 	local r = (r/255.0)^colorCorrection
 	local g = (g/255.0)^colorCorrection
@@ -181,39 +182,40 @@ function SWscreen.setColor(r,g,b,a)
 	vertices[4] = r
 	vertices[5] = g
 	vertices[6] = b
-	vertices[12] = r
-	vertices[13] = g
-	vertices[14] = b
-	vertices[20] = r
-	vertices[21] = g
-	vertices[22] = b
+	vertices[7] = a
+	vertices[13] = r
+	vertices[14] = g
+	vertices[15] = b
+	vertices[16] = a
+	vertices[22] = r
+	vertices[23] = g
+	vertices[24] = b
+	vertices[25] = a
 end
 function SWscreen.drawTriangleF(x1,y1,x2,y2,x3,y3)
 	local widthConvert = 2/SCR_WIDTH*SCR_SCALE
 	local heightConvert = -2/SCR_HEIGHT*SCR_SCALE
-	if lastCol[4]>100 then
-		vertices[1]=x1 * widthConvert - 1
-		vertices[2]=y1 * heightConvert + 1
-		vertices[9]=x2 * widthConvert - 1
-		vertices[10]=y2 * heightConvert + 1
-		vertices[17]=x3 * widthConvert - 1
-		vertices[18]=y3 * heightConvert + 1
-		
-		gl.bind_vertex_array(vao)
-		gl.bind_buffer('array', vbo)
-		gl.buffer_sub_data('array',0 , gl.pack('float', vertices), 'static draw')
-		--gl.vertex_attrib_pointer(0, 3, 'float', false, 3*gl.sizeof('float'), 0)
-		--gl.enable_vertex_attrib_array(0)
-		gl.unbind_buffer('array')
-		gl.unbind_vertex_array()
+	vertices[1]=x1 * widthConvert - 1
+	vertices[2]=y1 * heightConvert + 1
+	vertices[10]=x2 * widthConvert - 1
+	vertices[11]=y2 * heightConvert + 1
+	vertices[19]=x3 * widthConvert - 1
+	vertices[20]=y3 * heightConvert + 1
+	
+	gl.bind_vertex_array(vao)
+	gl.bind_buffer('array', vbo)
+	gl.buffer_sub_data('array',0 , gl.pack('float', vertices), 'static draw')
+	--gl.vertex_attrib_pointer(0, 3, 'float', false, 3*gl.sizeof('float'), 0)
+	--gl.enable_vertex_attrib_array(0)
+	gl.unbind_buffer('array')
+	gl.unbind_vertex_array()
 
 
-		-- draw the triangle
-		gl.bind_vertex_array(vao)
-		--
-		gl.draw_arrays('triangles', 0, 3)
-		gl.unbind_vertex_array()
-	end
+	-- draw the triangle
+	gl.bind_vertex_array(vao)
+	--
+	gl.draw_arrays('triangles', 0, 3)
+	gl.unbind_vertex_array()
 end
 function SWscreen.drawTriangle()
 end
@@ -256,26 +258,26 @@ function SWscreen.drawText(x,y,text)
 			ty2 = ty2 / fontImageHeight
 			
 			
-			vertices[7] = tx1
-			vertices[8] = ty1
-			vertices[15] = tx2
-			vertices[16] = ty1
-			vertices[23] = tx2
-			vertices[24] = ty2
+			vertices[8] = tx1
+			vertices[9] = ty1
+			vertices[17] = tx2
+			vertices[18] = ty1
+			vertices[26] = tx2
+			vertices[27] = ty2
 			SWscreen.drawTriangleF(x1,y1,x2,y1,x2,y2)
-			vertices[15] = tx1
-			vertices[16] = ty2
+			vertices[17] = tx1
+			vertices[18] = ty2
 			SWscreen.drawTriangleF(x1,y1,x1,y2,x2,y2)
 			cx1 = cx1 + characterInfo.xadvance
 		end
 	end
 	
-	vertices[7] = 0.9
-	vertices[8] = 0.8
-	vertices[15] = 0.9
-	vertices[16] = 0.9
-	vertices[23] = 0.8
-	vertices[24] = 0.9
+	vertices[8] = 0.9
+	vertices[9] = 0.8
+	vertices[17] = 0.9
+	vertices[18] = 0.9
+	vertices[26] = 0.8
+	vertices[27] = 0.9
 end
 
 

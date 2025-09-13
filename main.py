@@ -51,6 +51,7 @@ if __name__ == '__main__':
         "portal_orange": {"colour": (255,100,0), "shading": False},
         "portal_blue": {"colour": (0,100,255), "shading": False},
         "player_bounding": {"colour": (255,0,0), "shading": True},
+        "window": {"colour": "json", "shading": False},
         }
 
     object_names = [*objects]
@@ -147,13 +148,23 @@ if __name__ == '__main__':
 
             tris_start = total_render_tris+1
             for i in triangles:
-                packets.append((3,(i[0][0],
-                                i[0][1],
-                                i[0][2],
-                                i[1][0],
-                                i[1][1],
-                                i[1][2],
-                                )))
+                if len(i[1]) == 3:
+                    packets.append((3,(i[0][0],
+                                    i[0][1],
+                                    i[0][2],
+                                    i[1][0],
+                                    i[1][1],
+                                    i[1][2],
+                                    )))
+                else:
+                    packets.append((3,(i[0][0],
+                                    i[0][1],
+                                    i[0][2],
+                                    i[1][0],
+                                    i[1][1],
+                                    i[1][2],
+                                    i[1][3],
+                                    )))
                 #print(packets[-1])
                 total_render_tris += 1
             tris_end = total_render_tris
