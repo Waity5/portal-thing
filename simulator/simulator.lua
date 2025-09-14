@@ -8,8 +8,10 @@ local mi = require("moonimage")
 
 local SCR_SCALE = 4
 local SCR_WIDTH, SCR_HEIGHT = 288*SCR_SCALE, 160*SCR_SCALE
+local SCR_WIDTH_SW = SCR_WIDTH/SCR_SCALE
+local SCR_HEIGHT_SW = SCR_HEIGHT/SCR_SCALE
 
-local vertex_shader_source = [[
+local vertex_shader_source1 = [[
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -26,7 +28,7 @@ void main()
 }
 ]]
 
-local fragment_shader_source = [[
+local fragment_shader_source1 = [[
 #version 330 core
 out vec4 FragColor;
 
@@ -43,6 +45,48 @@ void main()
         discard;
 }]]
 
+
+
+local vertex_shader_source2 = [[
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aTexCoord;
+
+out vec4 ourColor;
+out vec2 TexCoord;
+
+void main()
+{
+	gl_Position = vec4(aPos, 1.0);
+	ourColor = aColor;
+	TexCoord = vec2(aTexCoord.x, aTexCoord.y);
+}
+]]
+
+local fragment_shader_source2 = [[
+#version 330 core
+out vec4 FragColor;
+
+in vec4 ourColor;
+in vec2 TexCoord;
+
+// texture sampler
+uniform sampler2D texture1;
+
+void main()
+{
+	FragColor = texture(texture1, TexCoord);
+	FragColor[0] = pow(FragColor[0],1.0/2.2);
+	FragColor[1] = pow(FragColor[1],1.0/2.2);
+	FragColor[2] = pow(FragColor[2],1.0/2.2);
+	FragColor[3] = pow(FragColor[3],1.0/2.2);
+	if(FragColor.a == 0.0)
+        discard;
+}]]
+
+
+
 -- glfw inits and window creation ---------------------------------------------
 glfw.version_hint(3, 3, 'core')
 local window = glfw.create_window(SCR_WIDTH, SCR_HEIGHT, "SW External Environment")
@@ -52,7 +96,23 @@ glfw.set_framebuffer_size_callback(window, function (window, width, height)
     gl.viewport(0, 0, width, height)
 	SCR_WIDTH = width
 	SCR_HEIGHT = height
+	SCR_WIDTH_SW = SCR_WIDTH/SCR_SCALE
+	SCR_HEIGHT_SW = SCR_HEIGHT/SCR_SCALE
 end)
+
+local framebuffer = gl.new_framebuffer("draw read")
+gl.bind_framebuffer("draw read",framebuffer)
+
+framebufferTex = gl.new_texture("2d")
+gl.texture_parameter('2d', 'wrap s', 'repeat')
+gl.texture_parameter('2d', 'wrap t', 'repeat')
+gl.texture_parameter('2d', 'min filter', 'nearest')
+gl.texture_parameter('2d', 'mag filter', 'nearest')
+gl.texture_image('2d', 0, 'rgba', 'rgba', 'ubyte', nil, SCR_WIDTH, SCR_HEIGHT)
+
+gl.framebuffer_texture_2d("draw read",'color attachment 0','2d',framebufferTex,0)
+gl.unbind_texture('2d')
+
 
 -- Creating the texture:
 tex_id = gl.new_texture('2d')
@@ -75,38 +135,70 @@ gl.unbind_texture('2d')
 
 -- build and compile our shader program ----------------------------------------
 -- vertex shader
-local vsh = gl.create_shader('vertex')
-gl.shader_source(vsh, vertex_shader_source)
-gl.compile_shader(vsh)
-if not gl.get_shader(vsh, 'compile status') then
-   error(gl.get_shader_info_log(vsh))
+local vsh1 = gl.create_shader('vertex')
+gl.shader_source(vsh1, vertex_shader_source1)
+gl.compile_shader(vsh1)
+if not gl.get_shader(vsh1, 'compile status') then
+   error(gl.get_shader_info_log(vsh1))
 end
 -- fragment shader
-local fsh = gl.create_shader('fragment')
-gl.shader_source(fsh, fragment_shader_source)
-gl.compile_shader(fsh)
-if not gl.get_shader(fsh, 'compile status') then
-   error(gl.get_shader_info_log(fsh))
+local fsh1 = gl.create_shader('fragment')
+gl.shader_source(fsh1, fragment_shader_source1)
+gl.compile_shader(fsh1)
+if not gl.get_shader(fsh1, 'compile status') then
+   error(gl.get_shader_info_log(fsh1))
 end
 -- link shaders
-local prog = gl.create_program()
-gl.attach_shader(prog, vsh)
-gl.attach_shader(prog, fsh)
-gl.link_program(prog)
+local prog1 = gl.create_program()
+gl.attach_shader(prog1, vsh1)
+gl.attach_shader(prog1, fsh1)
+gl.link_program(prog1)
 -- check for linking errors
-if not gl.get_program(prog, 'link status') then
-   error(gl.get_program_info_log(prog))
+if not gl.get_program(prog1, 'link status') then
+   error(gl.get_program_info_log(prog1))
 end
 
+
+
+local vsh2 = gl.create_shader('vertex')
+gl.shader_source(vsh2, vertex_shader_source2)
+gl.compile_shader(vsh2)
+if not gl.get_shader(vsh2, 'compile status') then
+   error(gl.get_shader_info_log(vsh2))
+end
+-- fragment shader
+local fsh2 = gl.create_shader('fragment')
+gl.shader_source(fsh2, fragment_shader_source2)
+gl.compile_shader(fsh2)
+if not gl.get_shader(fsh2, 'compile status') then
+   error(gl.get_shader_info_log(fsh2))
+end
+-- link shaders
+local prog2 = gl.create_program()
+gl.attach_shader(prog2, vsh2)
+gl.attach_shader(prog2, fsh2)
+gl.link_program(prog2)
+-- check for linking errors
+if not gl.get_program(prog2, 'link status') then
+   error(gl.get_program_info_log(prog2))
+end
+
+
+
+
+
+
 -- Using the texture in the game loop:
-gl.use_program(prog)
+gl.use_program(prog1)
 gl.active_texture(0) -- activate texture unit 0
 gl.bind_texture('2d', tex_id)
 -- Assuming our program has a sampler2D uniform named mytexture:
---gl.uniform(gl.get_uniform_location(prog, 'mytexture'), 'int', 0)
+--gl.uniform(gl.get_uniform_location(prog1, 'mytexture'), 'int', 0)
 
-gl.delete_shader(vsh)
-gl.delete_shader(fsh)
+gl.delete_shader(vsh1)
+gl.delete_shader(fsh1)
+gl.delete_shader(vsh2)
+gl.delete_shader(fsh2)
 
 local vertices = {
         -- positions           colors            texture coords
@@ -117,6 +209,15 @@ local vertices = {
 
 local vao = gl.gen_vertex_arrays()
 local vbo = gl.gen_buffers()
+
+
+--gl.delete_framebuffers(framebufferTex)
+
+--gl.unbind_framebuffer("draw read",framebuffer)
+
+
+
+-- print(gl.check_framebuffer_status("draw read",framebuffer))
 
 -- bind the Vertex Array Object first, then bind and set vertex buffer(s), and then
 -- configure vertex attributes(s).
@@ -168,17 +269,16 @@ end
 
 SWscreen = {}
 function SWscreen.getWidth()
-	return SCR_WIDTH/SCR_SCALE
+	return SCR_WIDTH_SW
 end
 function SWscreen.getHeight()
-	return SCR_HEIGHT/SCR_SCALE
+	return SCR_HEIGHT_SW
 end
 function SWscreen.setColor(r,g,b,a)
-	local colorCorrection = 1/2.2
-	local r = (r/255.0)^colorCorrection
-	local g = (g/255.0)^colorCorrection
-	local b = (b/255.0)^colorCorrection
-	local a = ((a or 255)/255.0)^colorCorrection
+	local r = r/255.0
+	local g = g/255.0
+	local b = b/255.0
+	local a = (a or 255)/255.0
 	vertices[4] = r
 	vertices[5] = g
 	vertices[6] = b
@@ -193,8 +293,8 @@ function SWscreen.setColor(r,g,b,a)
 	vertices[25] = a
 end
 function SWscreen.drawTriangleF(x1,y1,x2,y2,x3,y3)
-	local widthConvert = 2/SCR_WIDTH*SCR_SCALE
-	local heightConvert = -2/SCR_HEIGHT*SCR_SCALE
+	local widthConvert = 2/SCR_WIDTH_SW
+	local heightConvert = -2/SCR_HEIGHT_SW
 	vertices[1]=x1 * widthConvert - 1
 	vertices[2]=y1 * heightConvert + 1
 	vertices[10]=x2 * widthConvert - 1
@@ -504,12 +604,14 @@ while not glfw.window_should_close(window) do
 		keyBoolInputs[i]=glfw.get_key(window, v) == 'press'
 	end
 	
-
+	gl.use_program(prog1)
+	gl.bind_texture('2d', tex_id)
+	gl.bind_framebuffer("draw read",framebuffer)
 	-- render
 	gl.clear_color(0.0, 0.0, 0.0, 1.0)
 	gl.clear('color')
 	-- be sure to activate the shader before any calls to glUniform
-	gl.use_program(prog)
+	gl.use_program(prog1)
 	-- update shader uniform
 	
 	
@@ -538,6 +640,39 @@ while not glfw.window_should_close(window) do
 		end
 	end
 	
+	gl.use_program(prog2)
+	gl.bind_framebuffer("draw read",0)
+	gl.bind_texture('2d', framebufferTex)
+	
+	gl.clear_color(0.0, 0.0, 0.0, 1.0)
+	
+	vertices[8] = 0.0
+	vertices[9] = 1.0
+	vertices[17] = 1.0
+	vertices[18] = 1.0
+	vertices[26] = 0.0
+	vertices[27] = 0.0
+	
+	SWscreen.drawTriangleF(0,0,SCR_WIDTH_SW,0,0,SCR_HEIGHT_SW)
+	
+	vertices[8] = 1.0
+	vertices[9] = 0.0
+	vertices[17] = 1.0
+	vertices[18] = 1.0
+	vertices[26] = 0.0
+	vertices[27] = 0.0
+	
+	SWscreen.drawTriangleF(SCR_WIDTH_SW,SCR_HEIGHT_SW,SCR_WIDTH_SW,0,0,SCR_HEIGHT_SW)
+	
+	vertices[8] = 0.9
+	vertices[9] = 0.8
+	vertices[17] = 0.9
+	vertices[18] = 0.9
+	vertices[26] = 0.8
+	vertices[27] = 0.9
+	
+	gl.texture_image('2d', 0, 'rgba', 'rgba', 'ubyte', nil, SCR_WIDTH, SCR_HEIGHT)
+	
 	sandboxesComposite[1][3][32]=true
 	
 	updateCompositeLinks()
@@ -562,4 +697,4 @@ end
 -- optional: de-allocate all resources once they've outlived their purpose:
 gl.delete_vertex_arrays(vao)
 gl.delete_buffers(vbo)
-gl.delete_program(prog)
+gl.delete_program(prog1)
