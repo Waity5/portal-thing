@@ -41,8 +41,6 @@ uniform sampler2D texture1;
 void main()
 {
 	FragColor = texture(texture1, TexCoord) * ourColor;
-	if(FragColor.a == 0.0)
-        discard;
 }]]
 
 
@@ -80,9 +78,7 @@ void main()
 	FragColor[0] = pow(FragColor[0],1.0/2.2);
 	FragColor[1] = pow(FragColor[1],1.0/2.2);
 	FragColor[2] = pow(FragColor[2],1.0/2.2);
-	FragColor[3] = pow(FragColor[3],1.0/2.2);
-	if(FragColor.a == 0.0)
-        discard;
+	FragColor[3] = 1.0;
 }]]
 
 
@@ -233,8 +229,9 @@ gl.enable_vertex_attrib_array(2)
 gl.unbind_buffer('array')
 gl.unbind_vertex_array() 
 
+
 gl.enable("blend")
---gl.blend_equation("add")
+gl.blend_equation("add")
 gl.blend_func("src alpha", "one minus src alpha");
 
 
