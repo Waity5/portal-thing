@@ -64,7 +64,7 @@ void main()
 
 local fragment_shader_source2 = [[
 #version 330 core
-out vec4 FragColor;
+out vec4 color_out;
 
 in vec4 ourColor;
 in vec2 TexCoord;
@@ -72,13 +72,44 @@ in vec2 TexCoord;
 // texture sampler
 uniform sampler2D texture1;
 
+const float exposure = 3.0; // sadly not defined in SW's glsl, but 3 seems to be about right
+
+const float A = 0.22; // Shoulder Strength
+const float B = 0.10; // Linear Strength
+const float C = 0.10; // Linear Angle
+const float D = 0.50; // Toe Strength
+const float E = 0.01; // Toe Numerator
+const float F = 0.30; // Toe Denominator
+const float W = 11.2; // Linear White Point Value
+
+vec3 uncharted_2_tonemap(vec3 x)
+{
+    x *= exposure;
+    return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F))-E/F;
+}
+
 void main()
 {
-	FragColor = texture(texture1, TexCoord);
-	FragColor[0] = pow(FragColor[0],1.0/2.2);
-	FragColor[1] = pow(FragColor[1],1.0/2.2);
-	FragColor[2] = pow(FragColor[2],1.0/2.2);
+	vec4 FragColor = texture(texture1, TexCoord);
+	
+	vec3 tex_color = vec3(FragColor);
+	//FragColor[0] = pow(FragColor[0],1.0/2.2);
+	//FragColor[1] = pow(FragColor[1],1.0/2.2);
+	//FragColor[2] = pow(FragColor[2],1.0/2.2);
 	FragColor[3] = 1.0;
+	
+	// Adjust exposure before tonemapping
+    vec3 tonemapped = uncharted_2_tonemap(tex_color);
+    vec3 white = uncharted_2_tonemap(vec3(W));
+
+	color_out = vec4(tonemapped / white, 1.0);
+
+    // Apply gamma correction
+	float gamma_correction_factor = 1.0 / 2.2;
+	color_out.r = pow(color_out.r, gamma_correction_factor);
+	color_out.g = pow(color_out.g, gamma_correction_factor);
+	color_out.b = pow(color_out.b, gamma_correction_factor);
+	color_out.a = 1.0;
 }]]
 
 
