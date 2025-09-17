@@ -27,6 +27,165 @@ def read_ply_file(path):
     file.close()
     return ply_file
 
+def get_stl_contents(path,shading_strength = 0,to_shade = False, sorty_thing = False, colour = (255,255,255)):
+    your_mesh = mesh.Mesh.from_file(path)
+
+    max_dist = 0
+    points = list(your_mesh.v0)+list(your_mesh.v1)+list(your_mesh.v2)#your_mesh.points
+    points = [tuple(i) for i in points]
+    points = list(set(points))
+
+    for i in points:
+        max_dist = max(max_dist, dist(i,(0,0,0)))
+
+    if sorty_thing: #with a better way to edit meshes this wouldn't be needed
+        points = [(-atan2(i[2],i[0]),i) for i in points]
+        points.sort()
+        points = [i[1] for i in points]
+        for i in range(len(points)):
+            points.append(points[i])
+            points[i] = [j*0.9 for j in points[i]]
+        #print(points)
+
+    processed_points = [(i[0],i[2],i[1]) for i in points]
+    
+    things = [your_mesh.v0,your_mesh.v1,your_mesh.v2]
+
+
+    
+
+
+    length = len(things[0])
+    colours = []
+
+
+    for i in range(length):
+        x1,x2,x3=your_mesh.v0[i][0],your_mesh.v2[i][0],your_mesh.v1[i][0]
+        y1,y2,y3=your_mesh.v0[i][2],your_mesh.v2[i][2],your_mesh.v1[i][2]
+        z1,z2,z3=your_mesh.v0[i][1],your_mesh.v2[i][1],your_mesh.v1[i][1]
+        normalx = ((y2-y1)*(z3-z1))-((z2-z1)*(y3-y1))
+        normaly = ((z2-z1)*(x3-x1))-((x2-x1)*(z3-z1))
+        normalz = ((x2-x1)*(y3-y1))-((y2-y1)*(x3-x1))
+        normalDist = sqrt((normalx**2)+(normaly**2)+(normalz**2))
+        unitNormaly = normaly/normalDist
+        if normalDist == 0:
+            print((x1,y1,z1),(x2,y2,z2),(x3,y3,z3))
+        shade = ((unitNormaly-1)/2) * shading_strength + 1
+        cur_colour = colour
+        if to_shade:
+            cur_colour = tuple([cur_colour[i]*shade for i in range(3)])
+
+        cur_colour = sq(cur_colour)
+        
+        
+        colours.append(cur_colour)
+
+    processed_tris = []
+    for i in range(len(your_mesh.v0)):
+        cur_colour = colours[i]
+        
+        processed_tris.append((points.index(tuple(your_mesh.v0[i]))+1,
+                        points.index(tuple(your_mesh.v1[i]))+1,
+                        points.index(tuple(your_mesh.v2[i]))+1,
+                        cur_colour[0],
+                        cur_colour[1],
+                        cur_colour[2],
+                        ))
+
+    return processed_points, processed_tris, max_dist
+
+def get_ply_contents(path,shading_strength = 0,to_shade = False):
+    point_map = {}
+    point_map2 = {}
+    ply_mesh = read_ply_file(path)
+
+    max_dist = 0
+    
+    
+    processed_points = []
+    raw_points = ply_mesh.elements[0].data
+    raw_tris = ply_mesh.elements[1].data
+
+    
+    for index in range(len(raw_points)):
+        point = raw_points[index]
+        cr_point = (point[0], point[2], point[1])
+        if not cr_point in point_map:
+            processed_points.append(cr_point)
+            point_map[cr_point] = total_points-points_mesh_start+1
+            max_dist = max(max_dist, dist(point,(0,0,0)))
+        point_map2[index] = point_map[cr_point]
+
+
+    processed_tris = []
+
+    
+    
+    for tri in raw_tris:
+        if type(tri[0]) != type(5) and type(tri[0]) != numpy.int32 and type(tri[0]) != numpy.int64:
+            corner_point1 = raw_points[tri[0][0]]
+            corner_point2 = raw_points[tri[0][1]]
+            corner_point3 = raw_points[tri[0][2]]
+            
+            x1,y1,z1=corner_point1[0],corner_point1[1],corner_point1[2]
+            x2,y2,z2=corner_point2[0],corner_point2[1],corner_point2[2]
+            x3,y3,z3=corner_point3[0],corner_point3[1],corner_point3[2]
+            normalx = ((y2-y1)*(z3-z1))-((z2-z1)*(y3-y1))
+            normaly = ((z2-z1)*(x3-x1))-((x2-x1)*(z3-z1))
+            normalz = ((x2-x1)*(y3-y1))-((y2-y1)*(x3-x1))
+            normalDist = sqrt((normalx**2)+(normaly**2)+(normalz**2))
+            
+            unitNormaly = normaly/normalDist
+            if normalDist == 0:
+                print((x1,y1,z1),(x2,y2,z2),(x3,y3,z3))
+            shade = ((unitNormaly-1)/2) * shading_strength + 1
+
+            
+            total_render_tris += 1
+            colour = (int(corner_point1[3]), int(corner_point1[4]), int(corner_point1[5]))
+            if to_shade:
+                colour = tuple([colour[i]*shade for i in range(3)])
+            cr_tri = (point_map2[tri[0][0]], point_map2[tri[0][2]], point_map2[tri[0][1]], colour[0], colour[1], colour[2])
+            
+    
+
+    return processed_points, processed_tris, max_dist
+
+def get_json_contents(path):
+    json_mesh = json.load(open(path))
+    points = json_mesh[0]
+    triangles = json_mesh[1]
+
+    max_dist = 0
+
+    processed_points = []
+    for i in points:
+        processed_points.append((i[0],i[1],i[2]))
+        max_dist = max(max_dist, dist(i,(0,0,0)))
+    
+    processed_tris = []
+    for i in triangles:
+        if len(i[1]) == 3:
+            processed_tris.append((i[0][0],
+                            i[0][1],
+                            i[0][2],
+                            i[1][0],
+                            i[1][1],
+                            i[1][2],
+                            ))
+        else:
+            processed_tris.append((i[0][0],
+                            i[0][1],
+                            i[0][2],
+                            i[1][0],
+                            i[1][1],
+                            i[1][2],
+                            i[1][3],
+                            ))
+        #print(packets[-1])
+
+    return processed_points, processed_tris, max_dist
+
 if __name__ == '__main__':
     packets = []
     curmax = 4096 # 8192
@@ -68,175 +227,33 @@ if __name__ == '__main__':
 
         path = "./stl/"
 
-        max_dist_render = 0
-
-        
 
         if colour == "ply":
-        
-            point_map = {}
-            point_map2 = {}
-            ply_mesh = read_ply_file(path+object_name+"/mesh.ply")
             
-            
-            processed_points = []
-            raw_points = ply_mesh.elements[0].data
-            raw_tris = ply_mesh.elements[1].data
-
-            points_mesh_start = total_points+1
-            for index in range(len(raw_points)):
-                point = raw_points[index]
-                cr_point = (point[0], point[2], point[1])
-                if not cr_point in point_map:
-                    #processed_points.append(cr_point)
-                    packets.append((2,cr_point))
-                    max_dist_render = max(max_dist_render, dist(cr_point,(0,0,0)))
-                    total_points += 1
-                    point_map[cr_point] = total_points-points_mesh_start+1
-                
-                point_map2[index] = point_map[cr_point]
-            points_mesh_end = total_points
-
-
-            tris_start = total_render_tris+1
-            for tri in raw_tris:
-                corner_point1 = raw_points[tri[0][0]]
-                corner_point2 = raw_points[tri[0][1]]
-                corner_point3 = raw_points[tri[0][2]]
-                
-                x1,y1,z1=corner_point1[0],corner_point1[1],corner_point1[2]
-                x2,y2,z2=corner_point2[0],corner_point2[1],corner_point2[2]
-                x3,y3,z3=corner_point3[0],corner_point3[1],corner_point3[2]
-                normalx = ((y2-y1)*(z3-z1))-((z2-z1)*(y3-y1))
-                normaly = ((z2-z1)*(x3-x1))-((x2-x1)*(z3-z1))
-                normalz = ((x2-x1)*(y3-y1))-((y2-y1)*(x3-x1))
-                normalDist = sqrt((normalx**2)+(normaly**2)+(normalz**2))
-                
-                unitNormaly = normaly/normalDist
-                if normalDist == 0:
-                    print((x1,y1,z1),(x2,y2,z2),(x3,y3,z3))
-                shade = ((unitNormaly-1)/2) * shading_strength + 1
-
-                
-                total_render_tris += 1
-                colour = (int(corner_point1[3]), int(corner_point1[4]), int(corner_point1[5]))
-                if to_shade:
-                    colour = tuple([colour[i]*shade for i in range(3)])
-                cr_tri = (point_map2[tri[0][0]], point_map2[tri[0][2]], point_map2[tri[0][1]], colour[0], colour[1], colour[2])
-                packets.append((3,cr_tri))
-            tris_end = total_render_tris
-
-            
-            #print(ply_mesh.elements[0].data[0].tolist())
-            #print(ply_mesh.elements[1].data[0].tolist())
-            #for i in ply_mesh.elements:
-            #    print(i.name)
-            
-
+            cur_points, cur_tris, max_dist_render = get_ply_contents(path+object_name+"/mesh.ply",shading_strength = shading_strength,to_shade = to_shade)
 
         elif colour == "json":
-            json_mesh = json.load(open(path+object_name+"/mesh.json"))
-            points = json_mesh[0]
-            triangles = json_mesh[1]
-
-            points_mesh_start = total_points+1
-            for i in points:
-                packets.append((2,(i[0],i[1],i[2])))
-                total_points += 1
-                max_dist_render = max(max_dist_render, dist(i,(0,0,0)))
-            points_mesh_end = total_points
-
-            tris_start = total_render_tris+1
-            for i in triangles:
-                if len(i[1]) == 3:
-                    packets.append((3,(i[0][0],
-                                    i[0][1],
-                                    i[0][2],
-                                    i[1][0],
-                                    i[1][1],
-                                    i[1][2],
-                                    )))
-                else:
-                    packets.append((3,(i[0][0],
-                                    i[0][1],
-                                    i[0][2],
-                                    i[1][0],
-                                    i[1][1],
-                                    i[1][2],
-                                    i[1][3],
-                                    )))
-                #print(packets[-1])
-                total_render_tris += 1
-            tris_end = total_render_tris
+            cur_points, cur_tris, max_dist_render = get_json_contents(path+object_name+"/mesh.json")
+            
         else:
-        
+            cur_points, cur_tris, max_dist_render = get_stl_contents(path+object_name+"/mesh.stl",shading_strength = shading_strength,to_shade = to_shade, sorty_thing = object_name == "portal_orange" or object_name == "portal_blue", colour = colour)
+            
+        points_mesh_start = total_points+1
+        for i in cur_points:
+            total_points += 1
+            packets.append((2,i))
+        points_mesh_end = total_points
 
-            your_mesh = mesh.Mesh.from_file(path+object_name+"/mesh.stl")
+        tris_start = total_render_tris+1
+        for i in cur_tris:
+            total_render_tris += 1
+            packets.append((3,i))
+        tris_end = total_render_tris
 
-
-            points = list(your_mesh.v0)+list(your_mesh.v1)+list(your_mesh.v2)#your_mesh.points
-            points = [tuple(i) for i in points]
-            points = list(set(points))
 
             
-            if object_name == "portal_orange" or object_name == "portal_blue": #with a better way to edit meshes this wouldn't be needed
-                points = [(-atan2(i[2],i[0]),i) for i in points]
-                points.sort()
-                points = [i[1] for i in points]
-                for i in range(len(points)):
-                    points.append(points[i])
-                    points[i] = [j*0.9 for j in points[i]]
-                #print(points)
 
-            things = [your_mesh.v0,your_mesh.v1,your_mesh.v2]
-
-
-            points_mesh_start = total_points+1
-            for i in points:
-                packets.append((2,(i[0],i[2],i[1])))
-                total_points += 1
-                max_dist_render = max(max_dist_render, dist(i,(0,0,0)))
-            points_mesh_end = total_points
-
-
-            length = len(things[0])
-            colours = []
-
-
-            for i in range(length):
-                x1,x2,x3=your_mesh.v0[i][0],your_mesh.v2[i][0],your_mesh.v1[i][0]
-                y1,y2,y3=your_mesh.v0[i][2],your_mesh.v2[i][2],your_mesh.v1[i][2]
-                z1,z2,z3=your_mesh.v0[i][1],your_mesh.v2[i][1],your_mesh.v1[i][1]
-                normalx = ((y2-y1)*(z3-z1))-((z2-z1)*(y3-y1))
-                normaly = ((z2-z1)*(x3-x1))-((x2-x1)*(z3-z1))
-                normalz = ((x2-x1)*(y3-y1))-((y2-y1)*(x3-x1))
-                normalDist = sqrt((normalx**2)+(normaly**2)+(normalz**2))
-                unitNormaly = normaly/normalDist
-                if normalDist == 0:
-                    print((x1,y1,z1),(x2,y2,z2),(x3,y3,z3))
-                shade = ((unitNormaly-1)/2) * shading_strength + 1
-                cur_colour = colour
-                if to_shade:
-                    cur_colour = tuple([cur_colour[i]*shade for i in range(3)])
-
-                cur_colour = sq(cur_colour)
-                
-                colours.append(cur_colour)
-
-            tris_start = total_render_tris+1
-            for i in range(len(your_mesh.v0)):
-                cur_colour = colours[i]
-                
-                packets.append((3,(points.index(tuple(your_mesh.v0[i]))+1,
-                                points.index(tuple(your_mesh.v1[i]))+1,
-                                points.index(tuple(your_mesh.v2[i]))+1,
-                                cur_colour[0],
-                                cur_colour[1],
-                                cur_colour[2],
-                                )))
-                #print(packets[-1])
-                total_render_tris += 1
-            tris_end = total_render_tris
+            
 
 
 
@@ -246,39 +263,39 @@ if __name__ == '__main__':
 
         glob_result = glob(path+object_name+"/phys*")
         glob_result = process_glob_result(glob_result)
-        if "phys.stl" in glob_result:
-
-
-            phys_mesh = mesh.Mesh.from_file(path+object_name+"/phys.stl")
-
-            phys_points = list(phys_mesh.v0)+list(phys_mesh.v1)+list(phys_mesh.v2)#your_mesh.points
-            phys_points = [tuple(i) for i in phys_points]
-            phys_points = list(set(phys_points))
-
-            points_phys_starts.append(total_points+1)
-            for i in phys_points:
-                packets.append((2,(i[0],i[2],i[1])))
-                total_points += 1
-                max_dist_phys = max(max_dist_phys, dist(i,(0,0,0)))
-            points_phys_ends.append(total_points)
-        else:
-            number = 1
-            while "phys"+str(number)+".ply" in glob_result:
-                phys_mesh = read_ply_file(path+object_name+"/phys"+str(number)+".ply")
+        searching_for_phys_meshes = True
+        phys_mesh_number = 1
+        while searching_for_phys_meshes:
+            if "phys.stl" in glob_result and phys_mesh_number == 1:
+                phys_points, cur_tris, max_dist_phys = get_stl_contents(path+object_name+"/phys.stl")
                 
-                phys_points = phys_mesh.elements[0].data
-                #phys_points = list(set(list(phys_points)))
+            elif "phys"+str(phys_mesh_number)+".stl" in glob_result:
+                phys_points, cur_tris, max_dist_phys = get_stl_contents(path+object_name+"/phys"+str(phys_mesh_number)+".stl")
 
+            elif "phys.ply" in glob_result and phys_mesh_number == 1:
+                phys_points, cur_tris, max_dist_phys = get_ply_contents(path+object_name+"/phys.ply")
+
+            elif "phys"+str(phys_mesh_number)+".ply" in glob_result:
+                phys_points, cur_tris, max_dist_phys = get_ply_contents(path+object_name+"/phys"+str(phys_mesh_number)+".ply")
+
+            elif "phys.json" in glob_result and phys_mesh_number == 1:
+                phys_points, cur_tris, max_dist_phys = get_json_contents(path+object_name+"/phys.json")
+
+            elif "phys"+str(phys_mesh_number)+".json" in glob_result:
+                phys_points, cur_tris, max_dist_phys = get_json_contents(path+object_name+"/phys"+str(phys_mesh_number)+".json")
+
+            else:
+                searching_for_phys_meshes = False
+
+            if searching_for_phys_meshes:
                 points_phys_starts.append(total_points+1)
-                for point in phys_points:
-                    cr_point = (point[0], point[2], point[1])
-                    
-                    packets.append((2,cr_point))
+                for i in phys_points:
                     total_points += 1
-                    max_dist_phys = max(max_dist_phys, dist(cr_point,(0,0,0)))
+                    packets.append((2,i))
+
                 points_phys_ends.append(total_points)
 
-                number += 1
+                phys_mesh_number += 1
 
         all_phys_markers = tuple()
         for i in range(len(points_phys_starts)):
