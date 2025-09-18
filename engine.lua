@@ -90,12 +90,21 @@ function executeScript(line,opcode) -- do not input anything for opcode
 end
 
 function transformPhysPoints(object)
-	object[16] = quaternionToMatrix(object[4])
+	object[16][1] = quaternionToMatrix(object[4][1])
+	for i,submeshInformationCur in ipairsVar(object[20]) do
+		sourceIndex = submeshInformationCur[1]
+		object[4][i+1] = multQuaternionByQuaternion(submeshInformationCur[3],object[4][sourceIndex])
+		object[1][i+1] = add3(multVectorByMatrix(submeshInformationCur[2],object[16][sourceIndex]),object[1][sourceIndex])
+		
+		object[16][i+1] = quaternionToMatrix(object[4][i+1])
+	end
+	
+	
 			
 	for j,collMesh1 in ipairsVar(object[9]) do
 		for k,crPoint in ipairsVar(collMesh1) do
-			crPoint[2] = multVectorByMatrix(crPoint[1],object[16])
-			crPoint[2]=add3(crPoint[2],object[1])
+			crPoint[2] = multVectorByMatrix(crPoint[1],object[16][j])
+			crPoint[2]=add3(crPoint[2],object[1][j])
 		end
 	end
 end
@@ -134,23 +143,23 @@ function doRaycast(source,direction,maxLen)
 end
 
 function getMovementPerUnitForce(object,position,direction)
-	trueContactPoint1 = sub3(position,object[1])
+	trueContactPoint1 = sub3(position,object[1][1])
 	return dot3(cross3(mul3(cross3(trueContactPoint1,direction),object[11]),trueContactPoint1),direction) + object[10]
 end
 
 function applyInstantMovement(object,position,force)
-	collPointObjectRelative=sub3(position,object[1])
-	object[4]=updateQuaternionByVector(object[4],mul3(cross3(collPointObjectRelative,force),-object[11]))
-	object[1]=add3(object[1],mul3(force,object[10]))
+	collPointObjectRelative=sub3(position,object[1][1])
+	object[4][1]=updateQuaternionByVector(object[4][1],mul3(cross3(collPointObjectRelative,force),-object[11]))
+	object[1][1]=add3(object[1][1],mul3(force,object[10]))
 	pairInfo = object[18]
 	object2=pairInfo[2]
 	if object2 then
-		object2[1]=add3(object2[1],multVectorByMatrix(mul3(force,object2[10]),pairInfo[4][2]))
+		object2[1][1]=add3(object2[1][1],multVectorByMatrix(mul3(force,object2[10]),pairInfo[4][2]))
 	end
 end
 
 function applyForce(object,position,force,skipExtra)
-	collPointObjectRelative=sub3(position,object[1])
+	collPointObjectRelative=sub3(position,object[1][1])
 	object[5]=add3(object[5],mul3(cross3(collPointObjectRelative,force),object[11]))
 	object[2]=add3(object[2],mul3(force,object[10]))
 	pairInfo = object[18]
@@ -455,10 +464,10 @@ function onTick()
 		
 		for index = 1,#objects do
 			object = objects[index]
-			object[4] = updateQuaternionByVector(object[4],mul3(object[5],-deltaTime)) -- apply rotational velocity to orientation, not sure why the minus is needed
+			object[4][1] = updateQuaternionByVector(object[4][1],mul3(object[5],-deltaTime)) -- apply rotational velocity to orientation, not sure why the minus is needed
 			--object[2] = add3(object[2],mul3(object[12],deltaTime)) -- apply acceleration to velocity
 			object[2] = add3(object[2],mul3(object[12],deltaTime)) -- apply acceleration to velocity
-			object[1] = add3(object[1],mul3(object[2],deltaTime)) -- apply velocity to position			
+			object[1][1] = add3(object[1][1],mul3(object[2],deltaTime)) -- apply velocity to position			
 			--object[3] = mul3(object[12],1) -- reset acceleration to gravity
 			--object[2] = mul3(object[2],0.9995) -- slow down velocity, optional
 			--object[5] = mul3(object[5],0.9995) -- slow down rotation, optional
@@ -477,7 +486,7 @@ function onTick()
 		for i,object1 in ipairsVar(objects) do
 			if object1[10]>0 or object1[11]>0 then
 				for j,object2 in ipairsVar(objects) do
-					if i~=j and dist3(object1[1],object2[1])<=object1[13][1]+object2[13][1] and object1[17][2]~=object2 and object2[17][2]~=object1 then
+					if i~=j and dist3(object1[1][1],object2[1][1])<=object1[13][1]+object2[13][1] and object1[17][2]~=object2 and object2[17][2]~=object1 then
 						for k,collMesh1 in ipairsVar(object1[9]) do
 							for n,collMesh2 in ipairsVar(object2[9]) do
 								--collCals=collCals+1
@@ -519,8 +528,8 @@ function onTick()
 										end
 										--velocity1 = object1[2]
 										--velocity2 = object2[2]
-										velocity1 = add3(cross3(object1[5],sub3(trueContactPoint,object1[1])),object1[2])
-										velocity2 = add3(cross3(object2[5],sub3(trueContactPoint,object2[1])),object2[2])
+										velocity1 = add3(cross3(object1[5],sub3(trueContactPoint,object1[1][1])),object1[2])
+										velocity2 = add3(cross3(object2[5],sub3(trueContactPoint,object2[1][1])),object2[2])
 										totalVelocity = sub3(velocity1,velocity2)
 										
 										totalVelocityNormal = dot3(isColliding[1],totalVelocity)
@@ -540,8 +549,8 @@ function onTick()
 											-- re-calculating velocites since they will have changed
 											-- this step bugs me but it produces inaccurate & visibly wrong results otherwise
 											
-											velocity1 = add3(cross3(object1[5],sub3(trueContactPoint,object1[1])),object1[2])
-											velocity2 = add3(cross3(object2[5],sub3(trueContactPoint,object2[1])),object2[2])
+											velocity1 = add3(cross3(object1[5],sub3(trueContactPoint,object1[1][1])),object1[2])
+											velocity2 = add3(cross3(object2[5],sub3(trueContactPoint,object2[1][1])),object2[2])
 											totalVelocity = sub3(velocity1,velocity2)
 											
 											totalVelocityNormal = dot3(isColliding[1],totalVelocity)
@@ -582,13 +591,13 @@ function onTick()
 			
 		for index = 1,#objects do -- pre-rendering maths
 			object = objects[index]
-			--object[16] = quaternionToMatrix(object[4])
+			--object[16][1] = quaternionToMatrix(object[4])
 			
 			for i,curMesh in ipairsVar(object[7]) do
 				for j=1,#curMesh do
 					crPoint=curMesh[j]
-					crPoint[2] = multVectorByMatrix(crPoint[1],object[16])
-					crPoint[2]=add3(crPoint[2],object[1])
+					crPoint[2] = multVectorByMatrix(crPoint[1],object[16][i])
+					crPoint[2]=add3(crPoint[2],object[1][i])
 					
 				end
 			end
@@ -627,7 +636,7 @@ function renderView()
 	for index = 1,#objects do -- triangle position calculation a.k.a. the 3D rendering
 		object = objects[index]
 		
-		objectPosLocal = multVectorByMatrix(sub3(object[1],cameraPosition),cameraRotationMatrix)
+		objectPosLocal = multVectorByMatrix(sub3(object[1][1],cameraPosition),cameraRotationMatrix)
 		planeStart = object[17][2] and itterLevel>1 and 2 or 1 -- skips the portal's near plane if the object is inside a portal
 		sideVal = bigNum
 		for j=planeStart,#viewBoundingPlanes do
@@ -637,7 +646,7 @@ function renderView()
 		
 		
 		if sideVal>-object[13][2] and (object~=player or itterLevel>1) then
-			--object[16] = quaternionToMatrix(object[4])
+			--object[16][1] = quaternionToMatrix(object[4])
 			object[19] = overallViewNumber
 			viewPerformanceInfoObjects = viewPerformanceInfoObjects+1
 			

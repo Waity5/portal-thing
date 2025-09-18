@@ -93,7 +93,7 @@ junk = executeScript({summonObjectFunc})
 index1 = -3
 index = "cube"
 summonBoxes:
-	conditions = {{160,20,index1*64},[7]=0.1,[8]=0.0001,[9]=grav}
+	conditions = {{160,20+(index1+3)*25,index1*64},[7]=0.1,[8]=0.0001,[9]=grav,[10]={{1,{0,20,0},norm4({{0.5,0.5,0,0}})}}}
 	junk = executeScript({summonObjectFunc})
 	index1 = index1+1
 4>index1 ~ summonBoxes
@@ -211,7 +211,7 @@ rotateSpeedInv = 1/rotateSpeedCr
 --	maxPushForce = 2.5
 --	otherPushColours = 0
 --endCamMove:
-camPos = player[1]
+camPos = player[1][1]
 
 playerYVelocity = player[2][2]
 playerGrounded = 1 > abs({playerYVelocity-playerYVelocityOld})
@@ -272,7 +272,7 @@ gB2 = gB({2})
 gB2==falseVar ~ skipgB2
 gB2Old ~ skipgB2
 	holdObject ~ dropObject
-		junk = doRaycast({player[1],cameraRotationVector,holdRange})
+		junk = doRaycast({player[1][1],cameraRotationVector,holdRange})
 		
 		rayHit ~ doHoldObject
 		1 ~ skipgB2
@@ -296,7 +296,7 @@ doCalcHoldObject:
 		holdVectorOld = {holdVector}[1]
 	skipHoldVectorOldInit:
 	
-	holdObject[1] = holdVectorOld
+	holdObject[1][1] = holdVectorOld
 	holdObject[2] = mul3({sub3({holdVector,holdVectorOld}),1/deltaTime})
 	holdVectorOld = {holdVector}[1]
 	
@@ -309,8 +309,8 @@ exit
 
 postTransformFunc:
 
-portalOrangeQuaternion = portalOrange[4]
-portalBlueQuaternion = multQuaternionByQuaternion({{0,0,1,0},portalBlue[4]})
+portalOrangeQuaternion = portalOrange[4][1]
+portalBlueQuaternion = multQuaternionByQuaternion({{0,0,1,0},portalBlue[4][1]})
 portalBlueQuaternionInverse = {0-portalBlueQuaternion[1],portalBlueQuaternion[2],portalBlueQuaternion[3],portalBlueQuaternion[4]}
 
 portalBlueToOrangeQuaternion = multQuaternionByQuaternion({portalBlueQuaternionInverse,portalOrangeQuaternion})
@@ -352,7 +352,7 @@ portalTeleportLoop:
 				portalSecondarytoPrimaryMatrix = {portalOrangeToBlueMatrix}[1]
 			endPortalChoosingCollision:
 			
-			dist3({object[1],portalPrimary[1]}) > object[13][1]+portalPrimary[13][1] ~ skipPortalCollision
+			dist3({object[1][1],portalPrimary[1][1]}) > object[13][1]+portalPrimary[13][1] ~ skipPortalCollision
 				portalPrimaryPhysMesh1 = portalPrimary[9][1]
 				portalPrimaryPhysMesh2 = portalPrimary[9][2]
 				isColliding = gjkCollisionDetection({{portalPrimaryPhysMesh1[1],portalPrimaryPhysMesh1[2],portalPrimaryPhysMesh2[1],portalPrimaryPhysMesh2[2]},object[9][1]})
@@ -363,16 +363,16 @@ portalTeleportLoop:
 					
 					--object[18][2] ~ skipPortalCollision
 					
-					sideVal = dot3({sub3({object[1],portalPrimary[1]}), portalPrimary[8][1][1][9]})
+					sideVal = dot3({sub3({object[1][1],portalPrimary[1][1]}), portalPrimary[8][1][1][9]})
 					
-					newPos = add3({multVectorByMatrix({sub3({object[1],portalPrimary[1]}),portalPrimarytoSecondaryMatrix}), portalSecondary[1]})
+					newPos = add3({multVectorByMatrix({sub3({object[1][1],portalPrimary[1][1]}),portalPrimarytoSecondaryMatrix}), portalSecondary[1][1]})
 					newVel = multVectorByMatrix({sub3({object[2],mul3({object[12],deltaTime})}),portalPrimarytoSecondaryMatrix}) -- the "subtracting gravity" thing is needed to prevent the object from getting double friction on the ground. yes there is probably a better way
 					newSpeed = dist3({object[2],{0,0,0}})
 					object[11] > 0 ~ doTeleportRotate
-						newQuat = object[4]
+						newQuat = object[4][1]
 					1 ~ endTeleportRotate
 					doTeleportRotate:
-						newQuat = multQuaternionByQuaternion({object[4],portalPrimarytoSecondaryQuaternion})
+						newQuat = multQuaternionByQuaternion({object[4][1],portalPrimarytoSecondaryQuaternion})
 					endTeleportRotate:
 					newRotVel = multVectorByMatrix({object[5],portalPrimarytoSecondaryMatrix})
 					
@@ -382,9 +382,9 @@ portalTeleportLoop:
 						
 					0 > sideVal ~ skipPortalTeleport
 					holdObject == object ~ skipPortalTeleport 
-						object[1] = newPos -- teleport object
+						object[1][1] = newPos -- teleport object
 						object[2] = newVel
-						object[4] = newQuat
+						object[4][1] = newQuat
 						object[5] = newRotVel
 						
 						object==player ~ doTeleportPlayerView
@@ -414,10 +414,10 @@ portalTeleportLoop:
 						junk = transformPhysPoints({newObject})
 						newObject[18][1] = nilVar
 						newObject[18][2] = object
-						newObject[18][3] = {portalPrimary[1],portalSecondary[1]}
+						newObject[18][3] = {portalPrimary[1][1],portalSecondary[1][1]}
 						newObject[18][4] = {portalSecondarytoPrimaryQuaternion,portalSecondarytoPrimaryMatrix}
 						object[18][2] = newObject
-						object[18][3] = {portalSecondary[1],portalPrimary[1]}
+						object[18][3] = {portalSecondary[1][1],portalPrimary[1][1]}
 						object[18][4] = {portalPrimarytoSecondaryQuaternion,portalPrimarytoSecondaryMatrix}
 						
 						newObject[17][2] = portalSecondary[17][1]
@@ -430,7 +430,7 @@ portalTeleportLoop:
 	objectIndex = objectIndex - 1
 objectIndex > 0 ~ portalTeleportLoop
 
-camPos = player[1]
+camPos = player[1][1]
 
 
 
@@ -456,11 +456,11 @@ pegPointLoop:
 	correctionDirectionSkip1:
 	
 	correctionDirectionInverse ~ correctionDirectionSkip2
-		correctionDirection = norm3({multVectorByMatrix({correctionDirection,object2[16]})})
+		correctionDirection = norm3({multVectorByMatrix({correctionDirection,object2[16][1]})})
 	correctionDirectionSkip2:
 	
-	crPoint1 = add3({multVectorByMatrix({crPointLocal1,object1[16]}),object1[1]})
-	crPoint2 = add3({multVectorByMatrix({crPointLocal2,object2[16]}),object3[1]})
+	crPoint1 = add3({multVectorByMatrix({crPointLocal1,object1[16][1]}),object1[1][1]})
+	crPoint2 = add3({multVectorByMatrix({crPointLocal2,object2[16][1]}),object3[1][1]})
 	
 	totalDisplacement = sub3({crPoint1,crPoint2})
 	correctionDirectionInverse ~ correctionDirectionSkip3
@@ -474,17 +474,17 @@ pegPointLoop:
 		junk = applyInstantMovement({object1,crPoint1,mul3({totalDisplacement,-1/movementFromPushing})})
 		junk = applyInstantMovement({object2,crPoint1,mul3({totalDisplacement,1/movementFromPushing})})
 		
-		object1[16] = quaternionToMatrix({object1[4]})
-		object2[16] = quaternionToMatrix({object2[4]})
+		object1[16][1] = quaternionToMatrix({object1[4]})
+		object2[16][1] = quaternionToMatrix({object2[4]})
 	skipPegMovement:
 	
 	
 	
-	crPoint1 = add3({multVectorByMatrix({crPointLocal1,object1[16]}),object1[1]})
-	crPoint2 = add3({multVectorByMatrix({crPointLocal2,object2[16]}),object3[1]})
+	crPoint1 = add3({multVectorByMatrix({crPointLocal1,object1[16][1]}),object1[1][1]})
+	crPoint2 = add3({multVectorByMatrix({crPointLocal2,object2[16][1]}),object3[1][1]})
 	
-	velocity1 = add3({cross3({object1[5],sub3({crPoint1,object1[1]})}),object1[2]})
-	velocity2 = add3({cross3({object2[5],sub3({crPoint2,object2[1]})}),object2[2]})
+	velocity1 = add3({cross3({object1[5],sub3({crPoint1,object1[1][1]})}),object1[2]})
+	velocity2 = add3({cross3({object2[5],sub3({crPoint2,object2[1][1]})}),object2[2]})
 	totalVelocity = sub3({velocity1,velocity2})
 	correctionDirectionInverse ~ correctionDirectionSkip4
 		totalVelocity = sub3({totalVelocity,mul3({correctionDirection,dot3({totalVelocity,correctionDirection})})})
@@ -498,8 +498,8 @@ pegPointLoop:
 		junk = applyForce({object2,crPoint1,mul3({totalVelocity,1/movementFromPushing})})
 	skipPegForce:
 	
-	--object1[16] = quaternionToMatrix({object1[4]}) -- not needed, previous section of code doesn't move objects
-	--object2[16] = quaternionToMatrix({object2[4]})
+	--object1[16][1] = quaternionToMatrix({object1[4]}) -- not needed, previous section of code doesn't move objects
+	--object2[16][1] = quaternionToMatrix({object2[4]})
 pegPointsLen > i ~ pegPointLoop
 pegPointLoopSkip:
 
@@ -511,8 +511,8 @@ springsLoop:
 	spring = springs[i]
 	object1 = objects[spring[1]]
 	object2 = objects[spring[2]]
-	crPoint1 = add3({multVectorByMatrix({spring[3],object1[16]}),object1[1]})
-	crPoint2 = add3({multVectorByMatrix({spring[4],object2[16]}),object2[1]})
+	crPoint1 = add3({multVectorByMatrix({spring[3],object1[16][1]}),object1[1][1]})
+	crPoint2 = add3({multVectorByMatrix({spring[4],object2[16][1]}),object2[1][1]})
 	
 	displacement = sub3({crPoint2,crPoint1})
 	distance = dist3({displacement,{0,0,0}})
@@ -669,7 +669,7 @@ renderingLoop:
 						portalPlane = {planeNormal,dot3({portalPoint[4],planeNormal})}
 						
 						cameraRotationQuaternion = multQuaternionByQuaternion({portalSecondaryToPrimaryQuaternion, cameraRotationQuaternionOld})
-						cameraPosition = add3({portalSecondary[1], multVectorByMatrix({sub3({cameraPositionOld,portalPrimary[1]}), portalPrimarytoSecondaryMatrix})})
+						cameraPosition = add3({portalSecondary[1][1], multVectorByMatrix({sub3({cameraPositionOld,portalPrimary[1][1]}), portalPrimarytoSecondaryMatrix})})
 						
 						
 						
@@ -848,6 +848,7 @@ sourceObjectInfoLen = #sourceObjectInfo
 newPointses = {}
 newTrises = {}
 newPhyses = {}
+submeshInformation = {}
 n = 3
 newObjectCopyStuff:
 
@@ -881,21 +882,31 @@ newObjectCopyStuff:
 	newPhys={}
 	j=1
 	ilocal = sourceObjectInfo[n+4]-1
+	sourceObjectInfo[n+4] > sourceObjectInfo[n+5] ~ skipObjectCopyPhysPoints
 	newObjectCopyPhysPoints2:
 		ilocal=ilocal+1
 		cr=M[2][ilocal]
 		newPhys[j]={{cr[1],cr[2],cr[3]}}
 		j=j+1
 	sourceObjectInfo[n+5] > ilocal ~ newObjectCopyPhysPoints2
+	skipObjectCopyPhysPoints:
 	newPhyses[#newPhyses+1] = newPhys
 	n=n+6
+	
+	submeshInformation[#submeshInformation+1] = {1,{0,0,0},{1,0,0,0}}
 #sourceObjectInfo > n ~ newObjectCopyStuff
+submeshInformation[#submeshInformation] = nilVar
+
+
+conditions[10] ~ skipConditionWrite10
+conditions[10] = submeshInformation
+skipConditionWrite10:
 
 newObject={$-- position, velocity, acceleration, orientation, rotation velocity, rotation acceleration, points, tris
-	conditions[1],$ -- 1
+	{conditions[1]},$ -- 1
 	conditions[2],$ -- 2
 	conditions[3],$ -- 3
-	conditions[4],$ -- 4
+	{conditions[4]},$ -- 4
 	conditions[5],$ -- 5
 	conditions[6],$ -- 6
 	newPointses,$ -- 7
@@ -911,6 +922,7 @@ newObject={$-- position, velocity, acceleration, orientation, rotation velocity,
 	{},$ -- 17 don't collide with
 	{1},$ -- 18 keep object
 	0,$ -- 19 render itter number
+	conditions[10], $ -- 20
 }
 objects[#objects+1]=newObject
 
