@@ -118,13 +118,16 @@ function doRaycast(source,direction,maxLen)
 	bestT = maxLen
 	rayHit = falseVar
 	for i,object in ipairsVar(objects) do
-		for j=1,#object[8] do
-			curTri = object[8][j]
-			curHit = intersectTriangle(source,direction,object[7][curTri[1]][2],object[7][curTri[2]][2],object[7][curTri[3]][2])
-			if curHit and t<bestT then
-				rayHit = trueVar
-				bestT=t
-				bestObject=object
+		for j,curMeshTris in ipairsVar(object[8]) do
+			curMeshPoints = object[7][j]
+			for k=1,#curMeshTris do
+				curTri = curMeshTris[k]
+				curHit = intersectTriangle(source,direction,curMeshPoints[curTri[1]][2],curMeshPoints[curTri[2]][2],curMeshPoints[curTri[3]][2])
+				if curHit and t<bestT then
+					rayHit = trueVar
+					bestT=t
+					bestObject=object
+				end
 			end
 		end
 	end
@@ -581,19 +584,24 @@ function onTick()
 			object = objects[index]
 			--object[16] = quaternionToMatrix(object[4])
 			
-			for i=1,#object[7] do
-				crPoint=object[7][i]
-				crPoint[2] = multVectorByMatrix(crPoint[1],object[16])
-				crPoint[2]=add3(crPoint[2],object[1])
-				
+			for i,curMesh in ipairsVar(object[7]) do
+				for j=1,#curMesh do
+					crPoint=curMesh[j]
+					crPoint[2] = multVectorByMatrix(crPoint[1],object[16])
+					crPoint[2]=add3(crPoint[2],object[1])
+					
+				end
 			end
 			
-			if object[11]>0 or not object[8][1][8]then
+			if object[11]>0 or object[19]==0 then
 				--print(#object[7],#object[8],#object[9])
-				for i=1,#object[8] do
-					curTri = object[8][i]
-					--print(curTri[1],curTri[2],curTri[3])
-					curTri[9]=crossPoints(object[7][curTri[1]][2], object[7][curTri[2]][2], object[7][curTri[3]][2])
+				for i,curMesh in ipairsVar(object[8]) do
+					for j=1,#curMesh do
+						curTri = curMesh[j]
+						--print(curTri[1],curTri[2],curTri[3])
+						--print(unpack(object[7][i]))
+						curTri[9]=crossPoints(object[7][i][curTri[1]][2], object[7][i][curTri[2]][2], object[7][i][curTri[3]][2])
+					end
 				end
 			end
 		end
@@ -633,46 +641,53 @@ function renderView()
 			object[19] = overallViewNumber
 			viewPerformanceInfoObjects = viewPerformanceInfoObjects+1
 			
-			for i=1,#object[7] do
-				crPoint=object[7][i]
-				crPoint[3]=sub3(crPoint[2],cameraPosition)
-				
-				crPoint[4]=multVectorByMatrix(crPoint[3],cameraRotationMatrix)
-				distances=crPoint[3]
-				crPoint[7]=sqrt(distances[1]^2 + distances[2]^2 + distances[3]^2)
-				
-				crPoint[5]={crPoint[4][1]*screenScale/crPoint[4][3],-crPoint[4][2]*screenScale/crPoint[4][3]}
-				crPoint[6]=crPoint[4][3]>0 and 1 or 0
-				
-			end
-			
 			doViewFrustumCutting = sideVal<object[13][2]
+			
+			
+			
+			
 			
 
 			
-			
-			for i=1,#object[8] do
-				curTri = object[8][i]
-				p1 = object[7][curTri[1]]
-				p2 = object[7][curTri[2]]
-				p3 = object[7][curTri[3]]
-				curTri[8]=mx(p1[7],p2[7],p3[7])
-				b=p1[3]
-				if dot3(curTri[9],b)>0 then --  and curTri[8]>depthMinimum
-					sideVal=p1[6]+p2[6]+p3[6]
+			for i,curMeshTris in ipairsVar(object[8]) do
+				curMeshPoints = object[7][i]
+				
+				for j=1,#curMeshPoints do
+					crPoint=curMeshPoints[j]
+					crPoint[3]=sub3(crPoint[2],cameraPosition)
 					
-					shape = {p1[4],p3[4],p2[4]}
-					if doViewFrustumCutting then
-						shape = intersectShapeWithPlanes(shape,viewBoundingPlanes)
+					crPoint[4]=multVectorByMatrix(crPoint[3],cameraRotationMatrix)
+					distances=crPoint[3]
+					crPoint[7]=sqrt(distances[1]^2 + distances[2]^2 + distances[3]^2)
+					
+					crPoint[5]={crPoint[4][1]*screenScale/crPoint[4][3],-crPoint[4][2]*screenScale/crPoint[4][3]}
+					crPoint[6]=crPoint[4][3]>0 and 1 or 0
+					
+				end
+				
+				for j=1,#curMeshTris do
+					curTri = curMeshTris[j]
+					p1 = curMeshPoints[curTri[1]]
+					p2 = curMeshPoints[curTri[2]]
+					p3 = curMeshPoints[curTri[3]]
+					curTri[8]=mx(p1[7],p2[7],p3[7])
+					b=p1[3]
+					if dot3(curTri[9],b)>0 then --  and curTri[8]>depthMinimum
+						sideVal=p1[6]+p2[6]+p3[6]
+						
+						shape = {p1[4],p3[4],p2[4]}
+						if doViewFrustumCutting then
+							shape = intersectShapeWithPlanes(shape,viewBoundingPlanes)
+						end
+						
+						for j = 1,#shape do
+							crPoint = shape[j]
+							shape[j]={crPoint[1]*screenScale/crPoint[3],-crPoint[2]*screenScale/crPoint[3]}
+						end
+						
+						renderShapes[#renderShapes+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7],curTri[8]}
+						
 					end
-					
-					for j = 1,#shape do
-						crPoint = shape[j]
-						shape[j]={crPoint[1]*screenScale/crPoint[3],-crPoint[2]*screenScale/crPoint[3]}
-					end
-					
-					renderShapes[#renderShapes+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7],curTri[8]}
-					
 				end
 			end
 		end
