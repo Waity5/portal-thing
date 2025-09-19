@@ -6,10 +6,12 @@ local gl = require("moongl")
 local glfw = require("moonglfw")
 local mi = require("moonimage")
 
-local SCR_SCALE = 4
-local SCR_WIDTH, SCR_HEIGHT = 288*SCR_SCALE, 160*SCR_SCALE
-local SCR_WIDTH_SW = SCR_WIDTH/SCR_SCALE
-local SCR_HEIGHT_SW = SCR_HEIGHT/SCR_SCALE
+local SCR_RENDER_SCALE = 1
+local SCR_COPY_SCALE = 4
+local SCR_BUFFER_WIDTH, SCR_BUFFER_HEIGHT = 288*SCR_RENDER_SCALE, 160*SCR_RENDER_SCALE
+local SCR_WIDTH, SCR_HEIGHT = SCR_BUFFER_WIDTH*SCR_COPY_SCALE, SCR_BUFFER_HEIGHT*SCR_COPY_SCALE
+local SCR_WIDTH_SW = SCR_WIDTH/SCR_RENDER_SCALE/SCR_COPY_SCALE
+local SCR_HEIGHT_SW = SCR_HEIGHT/SCR_RENDER_SCALE/SCR_COPY_SCALE
 
 local vertex_shader_source1 = [[
 #version 330 core
@@ -123,8 +125,10 @@ glfw.set_framebuffer_size_callback(window, function (window, width, height)
     gl.viewport(0, 0, width, height)
 	SCR_WIDTH = width
 	SCR_HEIGHT = height
-	SCR_WIDTH_SW = SCR_WIDTH/SCR_SCALE
-	SCR_HEIGHT_SW = SCR_HEIGHT/SCR_SCALE
+	SCR_BUFFER_WIDTH = math.floor(SCR_WIDTH/SCR_COPY_SCALE)
+	SCR_BUFFER_HEIGHT = math.floor(SCR_HEIGHT/SCR_COPY_SCALE)
+	SCR_WIDTH_SW = SCR_BUFFER_WIDTH/SCR_RENDER_SCALE
+	SCR_HEIGHT_SW = SCR_BUFFER_HEIGHT/SCR_RENDER_SCALE
 end)
 
 local framebuffer = gl.new_framebuffer("draw read")
@@ -135,7 +139,7 @@ gl.texture_parameter('2d', 'wrap s', 'repeat')
 gl.texture_parameter('2d', 'wrap t', 'repeat')
 gl.texture_parameter('2d', 'min filter', 'nearest')
 gl.texture_parameter('2d', 'mag filter', 'nearest')
-gl.texture_image('2d', 0, 'rgba', 'rgba', 'ubyte', nil, SCR_WIDTH, SCR_HEIGHT)
+gl.texture_image('2d', 0, 'rgba', 'rgba', 'ubyte', nil, SCR_BUFFER_WIDTH, SCR_BUFFER_HEIGHT)
 
 gl.framebuffer_texture_2d("draw read",'color attachment 0','2d',framebufferTex,0)
 gl.unbind_texture('2d')
@@ -321,14 +325,17 @@ function SWscreen.setColor(r,g,b,a)
 	vertices[25] = a
 end
 function SWscreen.drawTriangleF(x1,y1,x2,y2,x3,y3)
-	local widthConvert = 2/SCR_WIDTH_SW
-	local heightConvert = -2/SCR_HEIGHT_SW
-	vertices[1]=x1 * widthConvert - 1
-	vertices[2]=y1 * heightConvert + 1
-	vertices[10]=x2 * widthConvert - 1
-	vertices[11]=y2 * heightConvert + 1
-	vertices[19]=x3 * widthConvert - 1
-	vertices[20]=y3 * heightConvert + 1
+	local widthConvert = 2/SCR_WIDTH_SW/SCR_COPY_SCALE -- why does scaling it to -1 to 1 not work here?
+	local heightConvert = -2/SCR_HEIGHT_SW/SCR_COPY_SCALE -- it works when the intermediary buffer is the same size as the display buffer
+	local heightOffset = 2/SCR_COPY_SCALE - 1 -- but then it breaks when it's smaller
+	local xOffset = 0
+	local yOffset = 0
+	vertices[1]=(x1+xOffset) * widthConvert - 1
+	vertices[2]=(y1+yOffset) * heightConvert + heightOffset
+	vertices[10]=(x2+xOffset) * widthConvert - 1
+	vertices[11]=(y2+yOffset) * heightConvert + heightOffset
+	vertices[19]=(x3+xOffset) * widthConvert - 1
+	vertices[20]=(y3+yOffset) * heightConvert + heightOffset
 	
 	gl.bind_vertex_array(vao)
 	gl.bind_buffer('array', vbo)
@@ -359,7 +366,7 @@ function SWscreen.drawLine(x1,y1,x2,y2)
 end
 
 function SWscreen.drawText(x,y,text)
-	local textBytes = {string.byte(text,1,-1)}
+	local textBytes = {string.byte(text.."",1,-1)}
 	
 	local cx1 = x
 	local cy1 = y
@@ -680,17 +687,49 @@ while not glfw.window_should_close(window) do
 	vertices[18] = 1.0
 	vertices[26] = 0.0
 	vertices[27] = 0.0
+	vertices[1]= - 1
+	vertices[2]=  1
+	vertices[10]=  1
+	vertices[11]=  1
+	vertices[19]= - 1
+	vertices[20]= - 1
 	
-	SWscreen.drawTriangleF(0,0,SCR_WIDTH_SW,0,0,SCR_HEIGHT_SW)
+	gl.bind_vertex_array(vao)
+	gl.bind_buffer('array', vbo)
+	gl.buffer_sub_data('array',0 , gl.pack('float', vertices), 'static draw')
+	--gl.vertex_attrib_pointer(0, 3, 'float', false, 3*gl.sizeof('float'), 0)
+	--gl.enable_vertex_attrib_array(0)
+	gl.unbind_buffer('array')
+	gl.unbind_vertex_array()
+
+
+	-- draw the triangle
+	gl.bind_vertex_array(vao)
+	--
+	gl.draw_arrays('triangles', 0, 3)
+	gl.unbind_vertex_array()
 	
 	vertices[8] = 1.0
 	vertices[9] = 0.0
-	vertices[17] = 1.0
-	vertices[18] = 1.0
-	vertices[26] = 0.0
-	vertices[27] = 0.0
+	vertices[1]=  1
+	vertices[2]= - 1
 	
-	SWscreen.drawTriangleF(SCR_WIDTH_SW,SCR_HEIGHT_SW,SCR_WIDTH_SW,0,0,SCR_HEIGHT_SW)
+	gl.bind_vertex_array(vao)
+	gl.bind_buffer('array', vbo)
+	gl.buffer_sub_data('array',0 , gl.pack('float', vertices), 'static draw')
+	--gl.vertex_attrib_pointer(0, 3, 'float', false, 3*gl.sizeof('float'), 0)
+	--gl.enable_vertex_attrib_array(0)
+	gl.unbind_buffer('array')
+	gl.unbind_vertex_array()
+	
+	-- draw the triangle
+	gl.bind_vertex_array(vao)
+	--
+	gl.draw_arrays('triangles', 0, 3)
+	gl.unbind_vertex_array()
+	
+	
+	
 	
 	vertices[8] = 0.9
 	vertices[9] = 0.8
@@ -699,7 +738,9 @@ while not glfw.window_should_close(window) do
 	vertices[26] = 0.8
 	vertices[27] = 0.9
 	
-	gl.texture_image('2d', 0, 'rgba', 'rgba', 'ubyte', nil, SCR_WIDTH, SCR_HEIGHT)
+	gl.texture_image('2d', 0, 'rgba', 'rgba', 'ubyte', nil, SCR_BUFFER_WIDTH, SCR_BUFFER_HEIGHT)
+	
+	--print(SCR_WIDTH,SCR_BUFFER_WIDTH,SCR_WIDTH_SW)
 	
 	sandboxesComposite[1][3][32]=true
 	
