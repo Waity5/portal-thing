@@ -90,6 +90,11 @@ conditions = {{256,64,128},[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 
 
+index = "security_camera"
+conditions = {{-128,64,0},[7]=0.1,[8]=0.001}
+junk = executeScript({summonObjectFunc})
+
+
 index1 = -3
 index = "cube"
 summonBoxes:
