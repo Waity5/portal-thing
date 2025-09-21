@@ -254,78 +254,77 @@ if __name__ == '__main__':
         searching_for_render_meshes = True
         mesh_number = 1
         while searching_for_phys_meshes or searching_for_render_meshes:
+            do_render_mesh1 = False
+            do_render_mesh1 = do_render_mesh1 or ("mesh"+str(mesh_number)+".stl" in glob_result)
+            do_render_mesh1 = do_render_mesh1 or ("mesh"+str(mesh_number)+".ply" in glob_result)
+            do_render_mesh1 = do_render_mesh1 or ("mesh"+str(mesh_number)+".json" in glob_result)
+            if do_render_mesh1:
+                render_mesh_name = "mesh"+str(mesh_number)
+
+            do_render_mesh2 = False
+            do_render_mesh2 = do_render_mesh2 or ("mesh.stl" in glob_result and mesh_number == 1)
+            do_render_mesh2 = do_render_mesh2 or ("mesh.ply" in glob_result and mesh_number == 1)
+            do_render_mesh2 = do_render_mesh2 or ("mesh.json" in glob_result and mesh_number == 1)
+            if do_render_mesh2:
+                render_mesh_name = "mesh"
+
+
+            searching_for_render_meshes = do_render_mesh1 or do_render_mesh2
             if searching_for_render_meshes:
-                do_render_mesh1 = False
-                do_render_mesh1 = do_render_mesh1 or ("mesh"+str(mesh_number)+".stl" in glob_result)
-                do_render_mesh1 = do_render_mesh1 or ("mesh"+str(mesh_number)+".ply" in glob_result)
-                do_render_mesh1 = do_render_mesh1 or ("mesh"+str(mesh_number)+".json" in glob_result)
-                if do_render_mesh1:
-                    render_mesh_name = "mesh"+str(mesh_number)
+                if colour == "ply":
+                    cur_points, cur_tris, max_dist_render = get_ply_contents(path+object_name+"/"+render_mesh_name+".ply",shading_strength = shading_strength,to_shade = to_shade)
 
-                do_render_mesh2 = False
-                do_render_mesh2 = do_render_mesh2 or ("mesh.stl" in glob_result and mesh_number == 1)
-                do_render_mesh2 = do_render_mesh2 or ("mesh.ply" in glob_result and mesh_number == 1)
-                do_render_mesh2 = do_render_mesh2 or ("mesh.json" in glob_result and mesh_number == 1)
-                if do_render_mesh2:
-                    render_mesh_name = "mesh"
-
-
-                searching_for_render_meshes = do_render_mesh1 or do_render_mesh2
-                if searching_for_render_meshes:
-                    if colour == "ply":
-                        cur_points, cur_tris, max_dist_render = get_ply_contents(path+object_name+"/"+render_mesh_name+".ply",shading_strength = shading_strength,to_shade = to_shade)
-
-                    elif colour == "json":
-                        cur_points, cur_tris, max_dist_render = get_json_contents(path+object_name+"/"+render_mesh_name+".json")
-                        
-                    else:
-                        cur_points, cur_tris, max_dist_render = get_stl_contents(path+object_name+"/"+render_mesh_name+".stl",shading_strength = shading_strength,to_shade = to_shade, sorty_thing = object_name == "portal_orange" or object_name == "portal_blue", colour = colour)
-                        
-                    points_mesh_starts.append(total_points+1)
-                    for i in cur_points:
-                        total_points += 1
-                        packets.append((2,i))
-                    points_mesh_ends.append(total_points)
-
-                    tris_starts.append(total_render_tris+1)
-                    for i in cur_tris:
-                        total_render_tris += 1
-                        packets.append((3,i))
-                    tris_ends.append(total_render_tris)
-
+                elif colour == "json":
+                    cur_points, cur_tris, max_dist_render = get_json_contents(path+object_name+"/"+render_mesh_name+".json")
                     
-                    
-            
-            
-            if searching_for_phys_meshes:
-                if "phys.stl" in glob_result and mesh_number == 1:
-                    phys_points, cur_tris, max_dist_phys = get_stl_contents(path+object_name+"/phys.stl")
-                    
-                elif "phys"+str(mesh_number)+".stl" in glob_result:
-                    phys_points, cur_tris, max_dist_phys = get_stl_contents(path+object_name+"/phys"+str(mesh_number)+".stl")
-
-                elif "phys.ply" in glob_result and mesh_number == 1:
-                    phys_points, cur_tris, max_dist_phys = get_ply_contents(path+object_name+"/phys.ply")
-
-                elif "phys"+str(mesh_number)+".ply" in glob_result:
-                    phys_points, cur_tris, max_dist_phys = get_ply_contents(path+object_name+"/phys"+str(mesh_number)+".ply")
-
-                elif "phys.json" in glob_result and mesh_number == 1:
-                    phys_points, cur_tris, max_dist_phys = get_json_contents(path+object_name+"/phys.json")
-
-                elif "phys"+str(mesh_number)+".json" in glob_result:
-                    phys_points, cur_tris, max_dist_phys = get_json_contents(path+object_name+"/phys"+str(mesh_number)+".json")
-
                 else:
-                    searching_for_phys_meshes = False
+                    cur_points, cur_tris, max_dist_render = get_stl_contents(path+object_name+"/"+render_mesh_name+".stl",shading_strength = shading_strength,to_shade = to_shade, sorty_thing = object_name == "portal_orange" or object_name == "portal_blue", colour = colour)
+                    
+                points_mesh_starts.append(total_points+1)
+                for i in cur_points:
+                    total_points += 1
+                    packets.append((2,i))
+                points_mesh_ends.append(total_points)
 
-                if searching_for_phys_meshes:
-                    points_phys_starts.append(total_points+1)
-                    for i in phys_points:
-                        total_points += 1
-                        packets.append((2,i))
+                tris_starts.append(total_render_tris+1)
+                for i in cur_tris:
+                    total_render_tris += 1
+                    packets.append((3,i))
+                tris_ends.append(total_render_tris)
 
-                    points_phys_ends.append(total_points)
+                    
+                    
+            
+            
+            searching_for_phys_meshes = True
+            if "phys.stl" in glob_result and mesh_number == 1:
+                phys_points, cur_tris, max_dist_phys = get_stl_contents(path+object_name+"/phys.stl")
+                
+            elif "phys"+str(mesh_number)+".stl" in glob_result:
+                phys_points, cur_tris, max_dist_phys = get_stl_contents(path+object_name+"/phys"+str(mesh_number)+".stl")
+
+            elif "phys.ply" in glob_result and mesh_number == 1:
+                phys_points, cur_tris, max_dist_phys = get_ply_contents(path+object_name+"/phys.ply")
+
+            elif "phys"+str(mesh_number)+".ply" in glob_result:
+                phys_points, cur_tris, max_dist_phys = get_ply_contents(path+object_name+"/phys"+str(mesh_number)+".ply")
+
+            elif "phys.json" in glob_result and mesh_number == 1:
+                phys_points, cur_tris, max_dist_phys = get_json_contents(path+object_name+"/phys.json")
+
+            elif "phys"+str(mesh_number)+".json" in glob_result:
+                phys_points, cur_tris, max_dist_phys = get_json_contents(path+object_name+"/phys"+str(mesh_number)+".json")
+
+            else:
+                searching_for_phys_meshes = False
+
+            if searching_for_phys_meshes:
+                points_phys_starts.append(total_points+1)
+                for i in phys_points:
+                    total_points += 1
+                    packets.append((2,i))
+
+                points_phys_ends.append(total_points)
 
             mesh_number += 1
 
