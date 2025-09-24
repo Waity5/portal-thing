@@ -91,7 +91,7 @@ junk = executeScript({summonObjectFunc})
 
 
 index = "security_camera"
-conditions = {{-213,80,256},[4]={0.5,0,0.5,0},[7]=0,[8]=0, [10] = {$
+conditions = {{-213,80,256},[4]={0.5,0,0.5,0},[7]=0.1,[8]=0.001, [10] = {$
 {1,{0,0,0},norm4({{1,0,0.2,0}})},$
 {2,{0,0,0},norm4({{1,-0.1,0,0}})},$
 }}
@@ -360,13 +360,24 @@ portalTeleportLoop:
 				portalSecondarytoPrimaryMatrix = {portalOrangeToBlueMatrix}[1]
 			endPortalChoosingCollision:
 			
-			dist3({object[1][1],portalPrimary[1][1]}) > object[13][1]+portalPrimary[13][1] ~ skipPortalCollision
+			j = 0
+			cr = #object[9]
+			portalCollisionCheckLoop1:
+				j = j + 1
+				dist3({object[1][j],portalPrimary[1][1]}) > object[13][1][j]+portalPrimary[13][1][1] ~ skipPortalCollision
+			cr > j ~ portalCollisionCheckLoop1
+			
+			dontSkipPortalCollision1:
 				portalPrimaryPhysMesh1 = portalPrimary[9][1]
 				portalPrimaryPhysMesh2 = portalPrimary[9][2]
-				isColliding = gjkCollisionDetection({{portalPrimaryPhysMesh1[1],portalPrimaryPhysMesh1[2],portalPrimaryPhysMesh2[1],portalPrimaryPhysMesh2[2]},object[9][1]})
-				isColliding ~ dontSkipPortalCollision
+				j = 0
+				portalCollisionCheckLoop2:
+					j = j + 1
+					isColliding = gjkCollisionDetection({{portalPrimaryPhysMesh1[1],portalPrimaryPhysMesh1[2],portalPrimaryPhysMesh2[1],portalPrimaryPhysMesh2[2]},object[9][j]})
+					isColliding ~ dontSkipPortalCollision2
+				cr > j ~ portalCollisionCheckLoop2
 				1 ~ skipPortalCollision
-				dontSkipPortalCollision:
+				dontSkipPortalCollision2:
 					object[17][2] = portalPrimary[17][1]
 					
 					--object[18][2] ~ skipPortalCollision
@@ -416,14 +427,14 @@ portalTeleportLoop:
 						-- create a clone of the object on the opposite side
 					
 						index = object[14]
-						conditions = {newPos,newVel,[4]=newQuat,[5]=newRotVel,[7]=object[10],[8]=object[11]}
+						conditions = {newPos,newVel,[4]=newQuat,[5]=newRotVel,[7]=object[10],[8]=object[11],[10]=object[20]}
 						junk = executeScript({summonObjectFunc})
 						newObject = objects[#objects]
-						junk = transformPhysPoints({newObject})
 						newObject[18][1] = nilVar
 						newObject[18][2] = object
 						newObject[18][3] = {portalPrimary[1][1],portalSecondary[1][1]}
 						newObject[18][4] = {portalSecondarytoPrimaryQuaternion,portalSecondarytoPrimaryMatrix}
+						junk = transformPhysPoints({newObject})
 						object[18][2] = newObject
 						object[18][3] = {portalSecondary[1][1],portalPrimary[1][1]}
 						object[18][4] = {portalPrimarytoSecondaryQuaternion,portalPrimarytoSecondaryMatrix}
@@ -855,9 +866,11 @@ sourceObjectInfo = M[1][index]
 sourceObjectInfoLen = #sourceObjectInfo
 newPointses = {}
 newTrises = {}
+newRenderDists = {}
 newPhyses = {}
+newPhysDists = {}
 submeshInformation = {}
-n = 3
+n = 1
 newObjectCopyStuff:
 
 	newPoints={}
@@ -886,20 +899,25 @@ newObjectCopyStuff:
 	skipObjectCopyRenderTris:
 	newTrises[#newTrises+1] = newTris
 	
+	newRenderDists[#newRenderDists+1] = sourceObjectInfo[n+4]
+	
 
 	newPhys={}
 	j=1
-	ilocal = sourceObjectInfo[n+4]-1
-	sourceObjectInfo[n+4] > sourceObjectInfo[n+5] ~ skipObjectCopyPhysPoints
+	ilocal = sourceObjectInfo[n+5]-1
+	sourceObjectInfo[n+5] > sourceObjectInfo[n+6] ~ skipObjectCopyPhysPoints
 	newObjectCopyPhysPoints2:
 		ilocal=ilocal+1
 		cr=M[2][ilocal]
 		newPhys[j]={{cr[1],cr[2],cr[3]}}
 		j=j+1
-	sourceObjectInfo[n+5] > ilocal ~ newObjectCopyPhysPoints2
+	sourceObjectInfo[n+6] > ilocal ~ newObjectCopyPhysPoints2
 	skipObjectCopyPhysPoints:
 	newPhyses[#newPhyses+1] = newPhys
-	n=n+6
+	
+	newPhysDists[#newPhysDists+1] = sourceObjectInfo[n+7]
+	
+	n=n+8
 	
 	submeshInformation[#submeshInformation+1] = {1,{0,0,0},{1,0,0,0}}
 #sourceObjectInfo > n ~ newObjectCopyStuff
@@ -923,7 +941,7 @@ newObject={$-- position, velocity, acceleration, orientation, rotation velocity,
 	conditions[7],$ -- 10 ability to be moved, higher is easier to be moved
 	conditions[8],$ -- 11 ability to be rotated, should really be a vec3
 	conditions[9],$ -- 12 gravity
-	{M[1][index][1],M[1][index][2]},$ -- 13 max point dist from object's origin
+	{newPhysDists,newRenderDists},$ -- 13 max point dist from object's origin
 	index,$ -- 14
 	{},$ -- 15 previous collision points, not used
 	{},$ -- 16 rotation matrix

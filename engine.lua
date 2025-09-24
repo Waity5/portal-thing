@@ -486,12 +486,12 @@ function onTick()
 		for i,object1 in ipairsVar(objects) do
 			if object1[10]>0 or object1[11]>0 then
 				for j,object2 in ipairsVar(objects) do
-					if i~=j and dist3(object1[1][1],object2[1][1])<=object1[13][1]+object2[13][1] and object1[17][2]~=object2 and object2[17][2]~=object1 then
+					if i~=j and object1[17][2]~=object2 and object2[17][2]~=object1 then
 						for k,collMesh1 in ipairsVar(object1[9]) do
 							for n,collMesh2 in ipairsVar(object2[9]) do
 								--collCals=collCals+1
 								
-								if #collMesh1>0 and #collMesh2>0 then
+								if #collMesh1>0 and #collMesh2>0 and dist3(object1[1][k],object2[1][n])<=object1[13][1][k]+object2[13][1][n] then
 									
 									isColliding = gjkCollisionDetection(collMesh1,collMesh2)
 									if isColliding then
@@ -524,7 +524,7 @@ function onTick()
 											mul3(direction1,
 											dot3(sub3(collMesh2[collPoints2[1]][2],collMesh1[collPoints1[1]][2]),normal2) / dot3(direction1,normal2)))
 										else
-											trueContactPoint = object1[13][1]>object2[13][1] and collMesh2[collPoints2[1]][2] or collMesh1[collPoints1[1]][2]
+											trueContactPoint = object1[13][1][k]>object2[13][1][n] and collMesh2[collPoints2[1]][2] or collMesh1[collPoints1[1]][2]
 										end
 										--velocity1 = object1[2]
 										--velocity2 = object2[2]
@@ -636,66 +636,63 @@ function renderView()
 	for index = 1,#objects do -- triangle position calculation a.k.a. the 3D rendering
 		object = objects[index]
 		
-		objectPosLocal = multVectorByMatrix(sub3(object[1][1],cameraPosition),cameraRotationMatrix)
-		planeStart = object[17][2] and itterLevel>1 and 2 or 1 -- skips the portal's near plane if the object is inside a portal
-		sideVal = bigNum
-		for j=planeStart,#viewBoundingPlanes do
-			planeNormal, planeD = unpack(viewBoundingPlanes[j])
-			sideVal = mn(dot3(objectPosLocal,planeNormal)-planeD,sideVal)
-		end			
-		
-		
-		if sideVal>-object[13][2] and (object~=player or itterLevel>1) then
+		if object~=player or itterLevel>1 then
 			--object[16][1] = quaternionToMatrix(object[4])
-			object[19] = overallViewNumber
+			
 			viewPerformanceInfoObjects = viewPerformanceInfoObjects+1
 			
-			doViewFrustumCutting = sideVal<object[13][2]
-			
-			
-			
-			
-			
-
+			planeStart = object[17][2] and itterLevel>1 and 2 or 1 -- skips the portal's near plane if the object is inside a portal
 			
 			for i,curMeshTris in ipairsVar(object[8]) do
-				curMeshPoints = object[7][i]
-				
-				for j=1,#curMeshPoints do
-					crPoint=curMeshPoints[j]
-					crPoint[3]=sub3(crPoint[2],cameraPosition)
-					
-					crPoint[4]=multVectorByMatrix(crPoint[3],cameraRotationMatrix)
-					distances=crPoint[3]
-					crPoint[7]=sqrt(distances[1]^2 + distances[2]^2 + distances[3]^2)
-					
-					crPoint[5]={crPoint[4][1]*screenScale/crPoint[4][3],-crPoint[4][2]*screenScale/crPoint[4][3]}
-					crPoint[6]=crPoint[4][3]>0 and 1 or 0
-					
+				objectPosLocal = multVectorByMatrix(sub3(object[1][i],cameraPosition),cameraRotationMatrix)
+				sideVal = bigNum
+				for j=planeStart,#viewBoundingPlanes do
+					planeNormal, planeD = unpack(viewBoundingPlanes[j])
+					sideVal = mn(dot3(objectPosLocal,planeNormal)-planeD,sideVal)
 				end
 				
-				for j=1,#curMeshTris do
-					curTri = curMeshTris[j]
-					p1 = curMeshPoints[curTri[1]]
-					p2 = curMeshPoints[curTri[2]]
-					p3 = curMeshPoints[curTri[3]]
-					curTri[8]=mx(p1[7],p2[7],p3[7])
-					b=p1[3]
-					if dot3(curTri[9],b)>0 then --  and curTri[8]>depthMinimum
-						sideVal=p1[6]+p2[6]+p3[6]
+				doViewFrustumCutting = sideVal<object[13][2][i]
+				
+				if sideVal>-object[13][2][i] then
+					curMeshPoints = object[7][i]
+					object[19] = overallViewNumber
+					
+					for j=1,#curMeshPoints do
+						crPoint=curMeshPoints[j]
+						crPoint[3]=sub3(crPoint[2],cameraPosition)
 						
-						shape = {p1[4],p3[4],p2[4]}
-						if doViewFrustumCutting then
-							shape = intersectShapeWithPlanes(shape,viewBoundingPlanes)
+						crPoint[4]=multVectorByMatrix(crPoint[3],cameraRotationMatrix)
+						distances=crPoint[3]
+						crPoint[7]=sqrt(distances[1]^2 + distances[2]^2 + distances[3]^2)
+						
+						crPoint[5]={crPoint[4][1]*screenScale/crPoint[4][3],-crPoint[4][2]*screenScale/crPoint[4][3]}
+						crPoint[6]=crPoint[4][3]>0 and 1 or 0
+						
+					end
+					
+					for j=1,#curMeshTris do
+						curTri = curMeshTris[j]
+						p1 = curMeshPoints[curTri[1]]
+						p2 = curMeshPoints[curTri[2]]
+						p3 = curMeshPoints[curTri[3]]
+						curTri[8]=mx(p1[7],p2[7],p3[7])
+						b=p1[3]
+						if dot3(curTri[9],b)>0 then --  and curTri[8]>depthMinimum
+							sideVal=p1[6]+p2[6]+p3[6]
+							
+							shape = {p1[4],p3[4],p2[4]}
+							if doViewFrustumCutting then
+								shape = intersectShapeWithPlanes(shape,viewBoundingPlanes)
+							end
+							
+							for j = 1,#shape do
+								crPoint = shape[j]
+								shape[j]={crPoint[1]*screenScale/crPoint[3],-crPoint[2]*screenScale/crPoint[3]}
+							end
+							
+							renderShapes[#renderShapes+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7],curTri[8]}
+							
 						end
-						
-						for j = 1,#shape do
-							crPoint = shape[j]
-							shape[j]={crPoint[1]*screenScale/crPoint[3],-crPoint[2]*screenScale/crPoint[3]}
-						end
-						
-						renderShapes[#renderShapes+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7],curTri[8]}
-						
 					end
 				end
 			end

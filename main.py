@@ -238,10 +238,11 @@ if __name__ == '__main__':
 
 
         
-        max_dist_phys = 0
+        max_dist_physes = []
         points_phys_starts = []
         points_phys_ends = []
 
+        max_dist_renderes = []
         points_mesh_starts = []
         points_mesh_ends = []
 
@@ -292,6 +293,8 @@ if __name__ == '__main__':
                     packets.append((3,i))
                 tris_ends.append(total_render_tris)
 
+                max_dist_renderes.append(max_dist_render)
+
                     
                     
             
@@ -326,9 +329,11 @@ if __name__ == '__main__':
 
                 points_phys_ends.append(total_points)
 
+                max_dist_physes.append(max_dist_phys)
+
             mesh_number += 1
 
-        new_object_packet = (max_dist_phys,max_dist_render)
+        new_object_packet = tuple()
 
         #print(object_name,mesh_number-2)
         for i in range(mesh_number-2):
@@ -337,14 +342,19 @@ if __name__ == '__main__':
                 points_mesh_ends.append(1)
                 tris_starts.append(2)
                 tris_ends.append(1)
+                max_dist_renderes.append(0)
 
             if len(points_phys_starts)-1<=i:
                 points_phys_starts.append(2)
                 points_phys_ends.append(1)
+                max_dist_physes.append(0)
 
             new_object_packet += (points_mesh_starts[i],points_mesh_ends[i],
                                   tris_starts[i],tris_ends[i],
-                                  points_phys_starts[i],points_phys_ends[i])
+                                  max_dist_renderes[i],
+                                  points_phys_starts[i],points_phys_ends[i],
+                                  max_dist_physes[i],
+                                  )
 
         packets.append((1,new_object_packet))
 
