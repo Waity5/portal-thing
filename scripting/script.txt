@@ -97,6 +97,10 @@ conditions = {{-213,80,256},[4]={0.5,0,0.5,0},[7]=0.1,[8]=0.001, [10] = {$
 }}
 junk = executeScript({summonObjectFunc})
 
+index = "cube_button"
+conditions = {{0,0,-128},[7]=0,[8]=0}
+junk = executeScript({summonObjectFunc})
+
 
 index1 = -3
 index = "cube"

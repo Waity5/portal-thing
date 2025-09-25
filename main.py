@@ -212,6 +212,7 @@ if __name__ == '__main__':
         "player_bounding": {"colour": (255,0,0), "shading": True},
         "window": {"colour": "json", "shading": False},
         "security_camera": {"colour": "json", "shading":False},
+        "cube_button": {"colour": "json", "shading":False},
         }
 
     object_names = [*objects]
