@@ -328,6 +328,34 @@ function SWscreen.drawTriangleF(x1,y1,x2,y2,x3,y3)
 	local widthConvert = 2/SCR_WIDTH_SW/SCR_COPY_SCALE -- why does scaling it to -1 to 1 not work here?
 	local heightConvert = -2/SCR_HEIGHT_SW/SCR_COPY_SCALE -- it works when the intermediary buffer is the same size as the display buffer
 	local heightOffset = 2/SCR_COPY_SCALE - 1 -- but then it breaks when it's smaller
+	local xOffset = 0.5
+	local yOffset = -0.5
+	vertices[1]=(x1+xOffset) * widthConvert - 1
+	vertices[2]=(y1+yOffset) * heightConvert + heightOffset
+	vertices[10]=(x2+xOffset) * widthConvert - 1
+	vertices[11]=(y2+yOffset) * heightConvert + heightOffset
+	vertices[19]=(x3+xOffset) * widthConvert - 1
+	vertices[20]=(y3+yOffset) * heightConvert + heightOffset
+	
+	gl.bind_vertex_array(vao)
+	gl.bind_buffer('array', vbo)
+	gl.buffer_sub_data('array',0 , gl.pack('float', vertices), 'static draw')
+	--gl.vertex_attrib_pointer(0, 3, 'float', false, 3*gl.sizeof('float'), 0)
+	--gl.enable_vertex_attrib_array(0)
+	gl.unbind_buffer('array')
+	gl.unbind_vertex_array()
+
+
+	-- draw the triangle
+	gl.bind_vertex_array(vao)
+	--
+	gl.draw_arrays('triangles', 0, 3)
+	gl.unbind_vertex_array()
+end
+function drawTriangleFRaw(x1,y1,x2,y2,x3,y3)
+	local widthConvert = 2/SCR_WIDTH_SW/SCR_COPY_SCALE -- why does scaling it to -1 to 1 not work here?
+	local heightConvert = -2/SCR_HEIGHT_SW/SCR_COPY_SCALE -- it works when the intermediary buffer is the same size as the display buffer
+	local heightOffset = 2/SCR_COPY_SCALE - 1 -- but then it breaks when it's smaller
 	local xOffset = 0
 	local yOffset = 0
 	vertices[1]=(x1+xOffset) * widthConvert - 1
@@ -399,10 +427,10 @@ function SWscreen.drawText(x,y,text)
 			vertices[18] = ty1
 			vertices[26] = tx2
 			vertices[27] = ty2
-			SWscreen.drawTriangleF(x1,y1,x2,y1,x2,y2)
+			drawTriangleFRaw(x1,y1,x2,y1,x2,y2)
 			vertices[17] = tx1
 			vertices[18] = ty2
-			SWscreen.drawTriangleF(x1,y1,x1,y2,x2,y2)
+			drawTriangleFRaw(x1,y1,x1,y2,x2,y2)
 			cx1 = cx1 + characterInfo.xadvance
 		end
 	end
