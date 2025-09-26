@@ -203,7 +203,7 @@ if __name__ == '__main__':
     objects = {
         "cube": {"colour": "json", "shading": False},
         "cube_large": {"colour": (255,0,255), "shading": True},
-        "platform": {"colour": (100,119,133), "shading": True},
+        "platform": {"colour": (230,230,230), "shading": True},
         "monkey": {"colour": (0,255,0), "shading": True},
         "utah_teapot": {"colour": (0,255,0), "shading": True},
         "skybox": {"colour": (46,132,200), "shading": False},
@@ -291,6 +291,8 @@ if __name__ == '__main__':
                 tris_starts.append(total_render_tris+1)
                 for i in cur_tris:
                     total_render_tris += 1
+                    if len(i)<7:
+                        i += (255,)
                     packets.append((3,i))
                 tris_ends.append(total_render_tris)
 

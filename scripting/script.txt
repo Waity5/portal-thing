@@ -39,6 +39,7 @@ holdRange = 100
 
 playerYVelocityOld = 0
 overallViewNumber = 0
+colourAdjustment = {0.7,1.0,1.2,1.0}
 
 coefficientOfFriction = 1
 playerFriction = 1*grav[2]
@@ -274,11 +275,11 @@ skipPlayerAccelerate:
 
 
 camRot[1]=camRot[1] - gN({3})/rotateSpeedInv
-camRot[2]=clmp({camRot[2] + gN({4})/rotateSpeedInv,0-verticalLookLimiter,verticalLookLimiter})
+camRot[2]=mn({mx({camRot[2] + gN({4})/rotateSpeedInv,0-verticalLookLimiter}),verticalLookLimiter})
 --camRot[3]=camRot[3] + gN({1})/rotateSpeedInv
 
 maxRollCorrectionCur = maxRollCorrection*deltaTime
-camRot[3] = clmp({0, camRot[3]-maxRollCorrectionCur, camRot[3]+maxRollCorrectionCur})
+camRot[3] = mn({mx({0, camRot[3]-maxRollCorrectionCur}), camRot[3]+maxRollCorrectionCur})
 
 
 
@@ -710,7 +711,7 @@ renderingLoop:
 						j = 1
 						findingMinPortalDepthLoop:
 							j = j + 1
-							portalPrimaryMinDepth = mn({portalPrimaryMinDepth,portalTris[j][8]})
+							portalPrimaryMinDepth = mn({portalPrimaryMinDepth,portalTris[j][3]})
 						#portalTris>j ~ findingMinPortalDepthLoop
 						
 						curViewInfo[i] = portalPrimaryMinDepth
@@ -748,7 +749,7 @@ viewProcessingLoop1:
 			index2 = #curViewShapes+1
 			depthFindingLoop:
 				index = index1 + flr({(index2-index1)/2})
-				depthToFind > curViewShapes[index][6] ~ depthSearchLower
+				depthToFind > curViewShapes[index][3] ~ depthSearchLower
 					index1 = index+1
 				1 ~ depthSearchEnd
 				depthSearchLower:
@@ -907,7 +908,7 @@ newObjectCopyStuff:
 	newObjectCopyRenderTris:
 		ilocal=ilocal+1
 		cr=M[3][ilocal]
-		newTris[j]={cr[1],cr[2],cr[3],{cr[4],cr[5],cr[6],cr[7]},{}}
+		newTris[j]={cr[1],cr[2],cr[3],{cr[4],cr[5],cr[6],cr[7]},{[4]=cr[7]}}
 		j=j+1
 	sourceObjectInfo[n+3] > ilocal ~ newObjectCopyRenderTris
 	skipObjectCopyRenderTris:

@@ -29,7 +29,7 @@ bigNum=m.huge
 function add2(a,b)return{(a[1]+b[1]),(a[2]+b[2])}end
 function sub2(a,b)return{(a[1]-b[1]),(a[2]-b[2])}end
 function mul2(a,b)return{a[1]*b,a[2]*b}end
-function clmp(a,b,c)return mn(mx(b,a),c)end
+--function clmp(a,b,c)return mn(mx(b,a),c)end
 --function rnd(a)return flr(a+0.5)end
 --function dist(a,b)return sqrt(((a[1]-b[1])^2)+((a[2]-b[2])^2)+((a[3]-b[3])^2))end
 function add3(a,b)return{a[1]+b[1],a[2]+b[2],a[3]+b[3]}end
@@ -605,11 +605,13 @@ function onTick()
 			if object[11]>0 or object[19]==0 then
 				--print(#object[7],#object[8],#object[9])
 				for i,curMesh in ipairsVar(object[8]) do
-					for j=1,#curMesh do
-						curTri = curMesh[j]
+					for j,curTri in ipairsVar(curMesh) do
 						--print(curTri[1],curTri[2],curTri[3])
 						--print(unpack(object[7][i]))
-						curTri[9]=crossPoints(object[7][i][curTri[1]][2], object[7][i][curTri[2]][2], object[7][i][curTri[3]][2])
+						curTri[9]=norm3(crossPoints(object[7][i][curTri[1]][2], object[7][i][curTri[2]][2], object[7][i][curTri[3]][2]))
+						for k=1,3 do
+							curTri[5][k] = mn(curTri[4][k]*colourAdjustment[k],255)*(curTri[9][2]*-0.4+0.6)
+						end
 					end
 				end
 			end
@@ -690,7 +692,7 @@ function renderView()
 								shape[j]={crPoint[1]*screenScale/crPoint[3],-crPoint[2]*screenScale/crPoint[3]}
 							end
 							
-							renderShapes[#renderShapes+1] = {shape,curTri[4],curTri[5],curTri[6],curTri[7],curTri[8]}
+							renderShapes[#renderShapes+1] = {shape,curTri[5],curTri[8]}
 							
 						end
 					end
@@ -699,7 +701,7 @@ function renderView()
 		end
 	end
 	
-	table.sort(renderShapes,function(a,b)return a[6]>b[6]end)
+	table.sort(renderShapes,function(a,b)return a[3]>b[3]end)
 end
 
 
@@ -755,7 +757,7 @@ function onDraw()
 			for j=3,#shape do
 				p2 = shape[j-1]
 				p3 = shape[j]
-				stCl(curShape[2],curShape[3],curShape[4],curShape[5] or 255)
+				stCl(unpack(curShape[2]))
 				triF(p1[1]+screenWidth2,p1[2]+screenHeight2,p2[1]+screenWidth2,p2[2]+screenHeight2,p3[1]+screenWidth2,p3[2]+screenHeight2)
 				--stCl(curShape[2]*0.5,curShape[3]*0.5,curShape[4]*0.5)
 				--tri(p1[1]+screenWidth2,p1[2]+screenHeight2-0.5,p2[1]+screenWidth2,p2[2]+screenHeight2-0.5,p3[1]+screenWidth2,p3[2]+screenHeight2-0.5)
