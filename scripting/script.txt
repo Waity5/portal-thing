@@ -41,6 +41,7 @@ playerYVelocityOld = 0
 overallViewNumber = 0
 
 coefficientOfFriction = 1
+playerFriction = 1*grav[2]
 
 index = "platform"
 conditions = {{0,-8,0},[7]=0,[8]=0}
@@ -230,6 +231,21 @@ playerYVelocity = player[2][2]
 playerGrounded = 1 > abs({playerYVelocity-playerYVelocityOld})
 playerYVelocityOld = player[2][2]
 
+playerGrounded ~ doPlayerGrounded
+1 ~ skipPlayerGrounded
+doPlayerGrounded:
+	playerVelocity = {player[2][1],0,player[2][3]}
+	playerSpeed = dist3({playerVelocity,{0,0,0}}) / (0-(playerFriction*deltaTime))
+	playerVelocity = mul3({playerVelocity, 1/(mx({playerSpeed,1}))})
+	player[2] = sub3({player[2],playerVelocity})
+	
+	
+	gB({31}) ~ doPlayerJump
+	1 ~ skipPlayerGrounded
+	doPlayerJump:
+		player[2][2] = player[2][2] + 150
+skipPlayerGrounded:
+
 
 wishVelocity = mul3({{gN({1})*cos({camRot[1]}) - (gN({2})*sin({camRot[1]})), 0, gN({1})*sin({camRot[1]}) + (gN({2})*cos({camRot[1]}))}, walkingSpeed})
 wishSpeed = dist3({wishVelocity,{0,0,0}})
@@ -245,7 +261,7 @@ skipAirSpeedCap:
 currentSpeed = dot3({player[2],wishVelocity})
 addSpeed = wishSpeed - currentSpeed
 
-0.001 > addSpeed ~ skipPlayerAccelerate
+0 > addSpeed ~ skipPlayerAccelerate
 	accelSpeed = walkingAccelerate * wishSpeed * deltaTime
 	
 	addSpeed = mn({accelSpeed, addSpeed})
@@ -253,14 +269,7 @@ addSpeed = wishSpeed - currentSpeed
 	
 skipPlayerAccelerate:
 
-playerGrounded ~ doPlayerJump1
-1 ~ skipPlayerJump
-doPlayerJump1:
-gB({31}) ~ doPlayerJump2
-1 ~ skipPlayerJump
-doPlayerJump2:
-	player[2][2] = player[2][2] + 150
-skipPlayerJump:
+
 
 
 
@@ -898,7 +907,7 @@ newObjectCopyStuff:
 	newObjectCopyRenderTris:
 		ilocal=ilocal+1
 		cr=M[3][ilocal]
-		newTris[j]={cr[1],cr[2],cr[3],cr[4],cr[5],cr[6],cr[7]}
+		newTris[j]={cr[1],cr[2],cr[3],{cr[4],cr[5],cr[6],cr[7]},{}}
 		j=j+1
 	sourceObjectInfo[n+3] > ilocal ~ newObjectCopyRenderTris
 	skipObjectCopyRenderTris:

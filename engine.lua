@@ -496,7 +496,7 @@ function onTick()
 									isColliding = gjkCollisionDetection(collMesh1,collMesh2)
 									if isColliding then
 										if object1 == player or object2 == player then
-											coefficientOfFriction = 1
+											coefficientOfFriction = 0
 										else
 											coefficientOfFriction = 1
 										end
