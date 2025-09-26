@@ -201,7 +201,7 @@ if __name__ == '__main__':
     
 
     objects = {
-        "cube": {"colour": "json", "shading": False},
+        "acquaintance_cube": {"colour": "json", "shading": False},
         "cube_large": {"colour": (255,0,255), "shading": True},
         "platform": {"colour": (230,230,230), "shading": True},
         "monkey": {"colour": (0,255,0), "shading": True},

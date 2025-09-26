@@ -105,7 +105,7 @@ class compiler:
                     cur = ""
                     last = ""
                     for i in cur_text:
-                        if i in instruction_dividers or (cur in instruction_dividers and not (cur == "-" and multi_command[-1] in "=/*+,{(")):
+                        if i in instruction_dividers or (cur in instruction_dividers and not (cur == "-" and (len(multi_command) == 0 or multi_command[-1] in "=/*+,{(>"))):
                             if cur != "":
                                 multi_command.append(cur)
                             cur = ""

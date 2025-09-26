@@ -105,7 +105,7 @@ junk = executeScript({summonObjectFunc})
 
 
 index1 = -3
-index = "cube"
+index = "acquaintance_cube"
 summonBoxes:
 	conditions = {{160,20+(index1+3)*25,index1*64},[7]=0.1,[8]=0.0001,[9]=grav,[10]={{1,{0,20,0},norm4({{0.5,0.5,0,0}})}}}
 	junk = executeScript({summonObjectFunc})
@@ -143,6 +143,65 @@ deleteObjectsLoop:
 	endDeleteObject:
 	i = i-1
 i > 0 ~ deleteObjectsLoop
+
+
+i = #objects
+objectActivationLoop:
+	object1 = objects[i]
+	
+	
+	(object1[14] == "cube_button") == falseVar ~ notCubeButton
+		pos = object1[1][2]
+		pos == nilVar ~ notCubeButton
+		
+		pressed = 0
+		
+		j = #objects
+		cubeButtonSearchLoop:
+			object2 = objects[j]
+			
+			(object2[14] == "acquaintance_cube") == falseVar ~ notAcquaintanceCube
+				cr = object2[1][1]
+				cr[1] > pos[1]+32 ~ notAcquaintanceCube
+				pos[1]-32 > cr[1] ~ notAcquaintanceCube
+				cr[3] > pos[3]+32 ~ notAcquaintanceCube
+				pos[3]-32 > cr[3] ~ notAcquaintanceCube
+				cr[2] > pos[2]+40 ~ notAcquaintanceCube
+				pos[2] > cr[2] ~ notAcquaintanceCube
+				
+				pressed = 1
+				
+			notAcquaintanceCube:
+			
+			(object2[14] == "player_bounding") == falseVar ~ notPlayer
+				cr = object2[1][1]
+				cr[1] > pos[1]+32 ~ notPlayer
+				pos[1]-32 > cr[1] ~ notPlayer
+				cr[3] > pos[3]+32 ~ notPlayer
+				pos[3]-32 > cr[3] ~ notPlayer
+				cr[2] > pos[2]+80 ~ notPlayer
+				pos[2] > cr[2] ~ notPlayer
+				
+				pressed = 1
+				
+			notPlayer:
+			
+			j = j - 1
+		j > 0 ~ cubeButtonSearchLoop
+		
+		
+		pressed == 1 ~ cubeButtonPressed
+			object1[20][1][2][2] > -1 ~ notCubeButton
+				object1[20][1][2][2] = object1[20][1][2][2] + (deltaTime*30)
+		1 ~ notCubeButton
+		cubeButtonPressed:
+			-5 > object1[20][1][2][2] ~ notCubeButton
+				object1[20][1][2][2] = object1[20][1][2][2] - (deltaTime*30)
+	notCubeButton:
+	
+	
+	i = i-1
+i > 0 ~ objectActivationLoop
 
 
 
