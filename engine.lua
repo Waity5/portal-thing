@@ -604,13 +604,23 @@ function onTick()
 			
 			if object[11]>0 or object[19]==0 then
 				--print(#object[7],#object[8],#object[9])
+				cr = object[21]
+				pos = #cr
 				for i,curMesh in ipairsVar(object[8]) do
 					for j,curTri in ipairsVar(curMesh) do
 						--print(curTri[1],curTri[2],curTri[3])
 						--print(unpack(object[7][i]))
 						curTri[9]=norm3(crossPoints(object[7][i][curTri[1]][2], object[7][i][curTri[2]][2], object[7][i][curTri[3]][2]))
-						for k=1,3 do
-							curTri[5][k] = mn(curTri[4][k]*colourAdjustment[k],255)*(curTri[9][2]*-0.4+0.6)
+						baseColour = curTri[4]
+						newColour = {0,0,0,baseColour[4]}
+						curTri[5] = newColour
+						
+						for k=1,pos do
+							light = cr[k]
+							strength = dot3(curTri[9],light) + light[7]
+							for n=1,3 do
+								newColour[n] = newColour[n] + mx(0,mn(baseColour[n]*light[n+3]*strength,255))
+							end
 						end
 					end
 				end

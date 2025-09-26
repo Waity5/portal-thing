@@ -48,8 +48,9 @@ index = "platform"
 conditions = {{0,-8,0},[7]=0,[8]=0}
 junk = executeScript({summonObjectFunc})
 platformObject = objects[#objects]
+
 index = "skybox"
-conditions = {[7]=0,[8]=0}
+conditions = {[7]=0,[8]=0,[11]={{0,0,0,1,1,1,1}}}
 junk = executeScript({summonObjectFunc})
 
 index = "portal_orange"
@@ -107,7 +108,9 @@ junk = executeScript({summonObjectFunc})
 index1 = -3
 index = "acquaintance_cube"
 summonBoxes:
-	conditions = {{160,20+(index1+3)*25,index1*64},[7]=0.1,[8]=0.0001,[9]=grav,[10]={{1,{0,20,0},norm4({{0.5,0.5,0,0}})}}}
+	conditions = {{160,20+(index1+3)*25,index1*64},[7]=0.1,[8]=0.0001,[9]=grav,[10]={{1,{0,20,0},norm4({{0.5,0.5,0,0}})}},$
+	[11] = {{0,-0.3,0,colourAdjustment[1],colourAdjustment[2],colourAdjustment[3],0.55}},$
+	}
 	junk = executeScript({summonObjectFunc})
 	index1 = index1+1
 4>index1 ~ summonBoxes
@@ -162,15 +165,19 @@ objectActivationLoop:
 			
 			(object2[14] == "acquaintance_cube") == falseVar ~ notAcquaintanceCube
 				cr = object2[1][1]
-				cr[1] > pos[1]+32 ~ notAcquaintanceCube
-				pos[1]-32 > cr[1] ~ notAcquaintanceCube
-				cr[3] > pos[3]+32 ~ notAcquaintanceCube
-				pos[3]-32 > cr[3] ~ notAcquaintanceCube
-				cr[2] > pos[2]+40 ~ notAcquaintanceCube
-				pos[2] > cr[2] ~ notAcquaintanceCube
+				cr[1] > pos[1]+32 ~ notAcquaintanceCubePressing
+				pos[1]-32 > cr[1] ~ notAcquaintanceCubePressing
+				cr[3] > pos[3]+32 ~ notAcquaintanceCubePressing
+				pos[3]-32 > cr[3] ~ notAcquaintanceCubePressing
+				cr[2] > pos[2]+40 ~ notAcquaintanceCubePressing
+				pos[2] > cr[2] ~ notAcquaintanceCubePressing
 				
 				pressed = 1
-				
+				object2[21][2] = {0,1,0,1,0.25,0,0.5}
+			
+			1 ~ notAcquaintanceCube
+			notAcquaintanceCubePressing:
+				object2[21][2] = nilVar
 			notAcquaintanceCube:
 			
 			(object2[14] == "player_bounding") == falseVar ~ notPlayer
@@ -191,10 +198,14 @@ objectActivationLoop:
 		
 		
 		pressed == 1 ~ cubeButtonPressed
+			object1[19] = 0
+			object1[21][2] = nilVar
 			object1[20][1][2][2] > -1 ~ notCubeButton
 				object1[20][1][2][2] = object1[20][1][2][2] + (deltaTime*30)
 		1 ~ notCubeButton
 		cubeButtonPressed:
+			object1[19] = 0
+			object1[21][2] = {0,-1,0,1,0.25,0,0.5}
 			-5 > object1[20][1][2][2] ~ notCubeButton
 				object1[20][1][2][2] = object1[20][1][2][2] - (deltaTime*30)
 	notCubeButton:
@@ -770,7 +781,7 @@ renderingLoop:
 						j = 1
 						findingMinPortalDepthLoop:
 							j = j + 1
-							portalPrimaryMinDepth = mn({portalPrimaryMinDepth,portalTris[j][3]})
+							portalPrimaryMinDepth = mn({portalPrimaryMinDepth,portalTris[j][8]})
 						#portalTris>j ~ findingMinPortalDepthLoop
 						
 						curViewInfo[i] = portalPrimaryMinDepth
@@ -934,6 +945,10 @@ skipConditionWrite8:
 conditions[9] ~ skipConditionWrite9
 conditions[9] = {0,0,0}
 skipConditionWrite9:
+conditions[11] ~ skipConditionWrite11
+conditions[11] = {{0,-0.45,0,colourAdjustment[1],colourAdjustment[2],colourAdjustment[3],0.55}}
+skipConditionWrite11:
+
 
 
 sourceObjectInfo = M[1][index]
@@ -1023,6 +1038,7 @@ newObject={$-- position, velocity, acceleration, orientation, rotation velocity,
 	{1},$ -- 18 keep object
 	0,$ -- 19 render itter number
 	conditions[10], $ -- 20
+	conditions[11], $ -- 21
 }
 objects[#objects+1]=newObject
 
