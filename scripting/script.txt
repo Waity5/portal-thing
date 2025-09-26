@@ -126,8 +126,8 @@ fovTan = tan({fov/2})
 screenScale = screenWidth2/fovTan
 
 tickRate=62.5
---deltaTime=1/tickRate
-deltaTime = 0
+deltaTime=1/tickRate
+--deltaTime = 0
 
 
 i = #objects
