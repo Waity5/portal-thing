@@ -38,7 +38,7 @@ function mul3(a,b)return{a[1]*b,a[2]*b,a[3]*b}end
 --function stringRound3(a)return string.format("%.3f", a or 0)end
 function cross3(a,b)return {a[2]*b[3] - a[3]*b[2], a[3]*b[1] - a[1]*b[3], a[1]*b[2] - a[2]*b[1]}end
 function dot3(a,b)return a[1]*b[1]+a[2]*b[2]+a[3]*b[3]end
-function crossPoints(a,b,c)return cross3(sub3(b,a),sub3(c,a))end
+function crossPointsNorm(a,b,c)return norm3(cross3(sub3(b,a),sub3(c,a)))end
 function norm3(a)return mul3(a,1/sqrt(a[1]^2+a[2]^2+a[3]^2))end
 function dist3(a,b)return sqrt((a[1]-b[1])^2 + (a[2]-b[2])^2 + (a[3]-b[3])^2)end
 
@@ -113,14 +113,14 @@ function intersectTriangle(rayPos,rayDir,a,b,c) -- https://stackoverflow.com/a/4
 	E1 = sub3(b, a)
 	E2 = sub3(c, a)
 	N = cross3(E1,E2)
-	det = -dot3(rayDir, N)
-	invdet = 1/det
+	det = dot3(rayDir, N)
+	invdet = 1/-det
 	AO  = sub3(rayPos, a)
 	DAO = cross3(AO, rayDir)
 	u =  dot3(E2,DAO) * invdet
 	v = -dot3(E1,DAO) * invdet
 	t =  dot3(AO,N)  * invdet
-	return -det >= 0.0001 and t >= 0 and u >= 0 and v >= 0 and u+v <= 1
+	return det >= 0.0001 and t >= 0 and u >= 0 and v >= 0 and u+v <= 1
 end
 
 function doRaycast(source,direction,maxLen)
@@ -228,7 +228,7 @@ function gjkCollisionDetection(points1,points2)
 					{b,d,c}
 				}
 				for i,v in ipairs(faces) do -- gives every face a normal
-					v[4]=norm3(crossPoints(v[1],v[2],v[3]))
+					v[4]=crossPointsNorm(v[1],v[2],v[3])
 				end
 				
 				for itteration2 = 1,32 do
@@ -277,7 +277,7 @@ function gjkCollisionDetection(points1,points2)
 					
 					for i,v in ipairs(looseEdges) do
 						newFace = {v[1],v[2],crPoint}
-						newFace[4] = norm3(crossPoints(newFace[1],newFace[2],newFace[3]))
+						newFace[4] = crossPointsNorm(newFace[1],newFace[2],newFace[3])
 						
 						--if dot3(newFace[1], newFace[4]) < 0 then -- I don't think this is needed, the winding should be preserved naturally
 						--	newFace[1],newFace[2]=newFace[2],newFace[1]
@@ -460,7 +460,7 @@ function onTick()
 		
 		
 		
-		debugTris = {}
+		--debugTris = {}
 		
 		for index = 1,#objects do
 			object = objects[index]
@@ -610,7 +610,7 @@ function onTick()
 					for j,curTri in ipairsVar(curMesh) do
 						--print(curTri[1],curTri[2],curTri[3])
 						--print(unpack(object[7][i]))
-						curTri[9]=norm3(crossPoints(object[7][i][curTri[1]][2], object[7][i][curTri[2]][2], object[7][i][curTri[3]][2]))
+						curTri[9]=crossPointsNorm(object[7][i][curTri[1]][2], object[7][i][curTri[2]][2], object[7][i][curTri[3]][2])
 						baseColour = curTri[4]
 						newColour = {0,0,0,baseColour[4]}
 						curTri[5] = newColour
@@ -774,11 +774,11 @@ function onDraw()
 			end
 		end
 		
-		for i,debugTri in ipairsVar(debugTris) do
-			p1,p2,p3 = unpack(debugTri)
-			junk =stCl(unpack(debugTri[4]))
-			triF(p1[1]+screenWidth2,p1[2]+screenHeight2,p2[1]+screenWidth2,p2[2]+screenHeight2,p3[1]+screenWidth2,p3[2]+screenHeight2)
-		end
+		--for i,debugTri in ipairsVar(debugTris) do
+		--	p1,p2,p3 = unpack(debugTri)
+		--	junk =stCl(unpack(debugTri[4]))
+		--	triF(p1[1]+screenWidth2,p1[2]+screenHeight2,p2[1]+screenWidth2,p2[2]+screenHeight2,p3[1]+screenWidth2,p3[2]+screenHeight2)
+		--end
 		
 		executeScript("onDrawFunc")
 	end

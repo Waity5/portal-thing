@@ -138,11 +138,13 @@ deltaTime=1/tickRate
 i = #objects
 deleteObjectsLoop:
 	
-	objects[i][18][1] ~ skipDeleteObject
+	object = objects[i]
+	object[18][1] ~ skipDeleteObject
 		junk = remove({objects,i})
 	1 ~ endDeleteObject
 	skipDeleteObject:
-		objects[i][18] = {1}
+		object[18] = {1}
+		object[21][2] = nilVar
 	endDeleteObject:
 	i = i-1
 i > 0 ~ deleteObjectsLoop
@@ -165,19 +167,17 @@ objectActivationLoop:
 			
 			(object2[14] == "acquaintance_cube") == falseVar ~ notAcquaintanceCube
 				cr = object2[1][1]
-				cr[1] > pos[1]+32 ~ notAcquaintanceCubePressing
-				pos[1]-32 > cr[1] ~ notAcquaintanceCubePressing
-				cr[3] > pos[3]+32 ~ notAcquaintanceCubePressing
-				pos[3]-32 > cr[3] ~ notAcquaintanceCubePressing
-				cr[2] > pos[2]+40 ~ notAcquaintanceCubePressing
-				pos[2] > cr[2] ~ notAcquaintanceCubePressing
+				cr[1] > pos[1]+32 ~ notAcquaintanceCube
+				pos[1]-32 > cr[1] ~ notAcquaintanceCube
+				cr[3] > pos[3]+32 ~ notAcquaintanceCube
+				pos[3]-32 > cr[3] ~ notAcquaintanceCube
+				cr[2] > pos[2]+40 ~ notAcquaintanceCube
+				pos[2] > cr[2] ~ notAcquaintanceCube
 				
 				pressed = 1
-				object2[21][2] = {0,1,0,1,0.25,0,0.5}
+				direction = mul3({norm3({sub3({cr,pos})}),0.5})
+				object2[21][2] = {direction[1],direction[2],direction[3],1,0.25,0,0.25}
 			
-			1 ~ notAcquaintanceCube
-			notAcquaintanceCubePressing:
-				object2[21][2] = nilVar
 			notAcquaintanceCube:
 			
 			(object2[14] == "player_bounding") == falseVar ~ notPlayer
@@ -689,7 +689,7 @@ renderingLoop:
 		i = i+1
 		point1 = viewBounding[i]
 		point2 = viewBounding[i+1]
-		planeNormal = norm3({crossPoints({point1,{0,0,0},point2})})
+		planeNormal = crossPointsNorm({point1,{0,0,0},point2})
 		viewBoundingPlanes[#viewBoundingPlanes+1] = {planeNormal,dot3({point1,planeNormal})}
 	viewBoundingLen > i ~ viewBoundingConversionLoop
 	viewBounding[viewBoundingLen+1] = nil
