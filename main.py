@@ -213,6 +213,7 @@ if __name__ == '__main__':
         "window": {"colour": "json", "shading": False},
         "security_camera": {"colour": "json", "shading":False},
         "cube_button": {"colour": "json", "shading":False},
+        "door_round": {"colour": "json", "shading":False},
         }
 
     object_names = [*objects]

@@ -696,6 +696,7 @@ function renderView()
 							if doViewFrustumCutting then
 								shape = intersectShapeWithPlanes(shape,viewBoundingPlanes)
 							end
+							shape = intersectShapeWithPlanes(shape,object[22])
 							
 							for j = 1,#shape do
 								crPoint = shape[j]
