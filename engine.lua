@@ -76,7 +76,7 @@ function executeScript(line,opcode) -- do not input anything for opcode
 			_ENVvar[arg1] = #arg2var
 		elseif opcode == 9 then -- conditional jump
 			if _ENVvar[arg1] then
-				line = arg2var-1
+				line = arg2
 			end
 		elseif opcode == 10 then -- greater than
 			_ENVvar[arg1] = arg2var>arg3var
@@ -453,10 +453,10 @@ function onTick()
 		tick = tick+1
 		if init then
 			executeScript(1)
-			executeScript("initFunc")
+			executeScript(initFunc)
 		end
 		
-		executeScript("tickFunc")
+		executeScript(tickFunc)
 		
 		
 		
@@ -477,7 +477,7 @@ function onTick()
 		
 		--camPos = multVectorByMatrix({0,1,-5},cameraRotationMatrix)
 		
-		executeScript("postTransformFunc")
+		executeScript(postTransformFunc)
 		
 		
 		
@@ -627,7 +627,7 @@ function onTick()
 			end
 		end
 		
-		executeScript("renderFunc")
+		executeScript(renderFunc)
 			
 			
 			
@@ -781,7 +781,7 @@ function onDraw()
 		--	triF(p1[1]+screenWidth2,p1[2]+screenHeight2,p2[1]+screenWidth2,p2[2]+screenHeight2,p3[1]+screenWidth2,p3[2]+screenHeight2)
 		--end
 		
-		executeScript("onDrawFunc")
+		executeScript(onDrawFunc)
 	end
 	
 	stCl(100,255,255)

@@ -72,7 +72,7 @@ class compiler:
 
         tags = 0
         for i in self.text:
-            if ":" in i:
+            if "::" in i:
                 tags += 1
 
         
@@ -91,12 +91,16 @@ class compiler:
         cur_tag = 0
         for i in range(len(self.text)):
             cur_text = self.text[i]
-            if ":" in cur_text: # lable
-                cur_name = cur_text.replace(":","")
+            if "::" in cur_text: # function lable
+                cur_name = cur_text.replace("::","")
                 self.code[cur_tag]=[1,cur_name,len(self.code)+1]
+                cur_tag += 1
                 script_markers[cur_name] = len(self.code)+1
                 
-                cur_tag += 1
+            elif ":" in cur_text: # lable
+                cur_name = cur_text.replace(":","")
+                script_markers[cur_name] = len(self.code)+1
+                
             else:
                 if "exit" in cur_text: # exit
                     self.code.append([0])
@@ -398,6 +402,12 @@ class compiler:
                             else:
                                 assert multi_command==None, "Invalid command "+cur_text+"\n"+"Got processed to "+token_string
 
+
+        for i in self.code:
+            if i[0] == 9:
+                i[2] = script_markers[i[2]]-1
+
+        
         return self.code, script_markers
 
 

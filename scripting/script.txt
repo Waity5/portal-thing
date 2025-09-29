@@ -9,7 +9,7 @@
 
 
 
-initFunc:
+initFunc::
 
 
 objects = {}
@@ -130,7 +130,7 @@ exit
 
 
 
-tickFunc:
+tickFunc::
 
 fovTan = tan({fov/2})
 screenScale = screenWidth2/fovTan
@@ -284,7 +284,7 @@ exit
 
 
 
-playerMovementFunc:
+playerMovementFunc::
 
 rotateSpeedCr=rotateSpeed*angleConvert/tickRate
 rotateSpeedInv = 1/rotateSpeedCr
@@ -364,7 +364,7 @@ exit
 
 
 
-playerHoldFunc:
+playerHoldFunc::
 
 gB2 = gB({2})
 gB2==falseVar ~ skipgB2
@@ -405,7 +405,7 @@ exit
 
 
 
-postTransformFunc:
+postTransformFunc::
 
 portalOrangeQuaternion = portalOrange[4][1]
 portalBlueQuaternion = multQuaternionByQuaternion({{0,0,1,0},portalBlue[4][1]})
@@ -500,11 +500,11 @@ portalTeleportLoop:
 						1 ~ skipTeleportPlayerView
 						cameraRotation = {camRot}[1]
 						doTeleportPlayerView:
-							junk = executeScript({cameraRotationToQuaternion}) -- todo: clean this up
+							junk = executeScript({cameraRotationToQuaternionFunc}) -- todo: clean this up
 							cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
 							cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalPrimarytoSecondaryQuaternion})
 							cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-							junk = executeScript({quaternionToCameraRotation})
+							junk = executeScript({quaternionToCameraRotationFunc})
 						skipTeleportPlayerView:
 						
 						--junk = print(portalOrangeToBlueCamQuaternion)
@@ -650,7 +650,7 @@ exit
 
 
 
-renderFunc:
+renderFunc::
 
 
 viewPerformanceInfo = {}
@@ -663,7 +663,7 @@ h_2 = 0-screenHeight2
 depth = screenWidth2/fovTan
 viewBounding = {{w_2,screenHeight2,depth},{screenWidth2,screenHeight2,depth},{screenWidth2,h_2,depth},{w_2,h_2,depth}}
 cameraRotation = {camRot}[1]
-junk = executeScript({cameraRotationToQuaternion})
+junk = executeScript({cameraRotationToQuaternionFunc})
 remainingRenderingPasses = {{camPos,cameraRotationQuaternion,viewBounding,{},1}}
 allViews = {}
 
@@ -868,7 +868,7 @@ exit
 	
 
 
-cameraRotationToQuaternion:
+cameraRotationToQuaternionFunc::
 
 a=cameraRotation[1]/-2
 b=cameraRotation[2]/-2
@@ -890,7 +890,7 @@ cameraRotationQuaternion[3] = cr * cp * sy - sr * sp * cy
 
 exit
 
-quaternionToCameraRotation:
+quaternionToCameraRotationFunc::
 
 
 qw = cameraRotationQuaternion[1]
@@ -917,7 +917,7 @@ exit
 
 
 
-summonObjectFunc:
+summonObjectFunc::
 
 conditions ~ skipConditionWrite0
 conditions = {}
@@ -1060,7 +1060,7 @@ exit
 
 
 
-onDrawFunc:
+onDrawFunc::
 
 text = screen["drawText"]
 stCl = screen["setColor"]
