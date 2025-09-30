@@ -1,7 +1,7 @@
 -- This is sscript, a scripting langauge made for StEVE (should pick a better name)
 -- It is used to get around the 8k character limit
 
--- The syntax is lua-like but has its oddities due to the symplistic interpreter
+-- The syntax is lua-like but has its oddities due to the simplistic interpreter
 -- e.g. using a table and a table.unpack on every function call
 
 
@@ -113,7 +113,7 @@ index1 = -3
 index = "acquaintance_cube"
 summonBoxes:
 	conditions = {{160,20+(index1+3)*25,index1*64},[7]=0.1,[8]=0.0001,[9]=grav,[10]={{1,{0,20,0},norm4({{0.5,0.5,0,0}})}},$
-	[11] = {{0,-0.3,0,colourAdjustment[1],colourAdjustment[2],colourAdjustment[3],0.55}},$
+	--[11] = {{0,-0.45,0,colourAdjustment[1],colourAdjustment[2],colourAdjustment[3],0.55}},$
 	--[12] = {{{0,1,0},64}},$
 	}
 	junk = executeScript({summonObjectFunc})
@@ -123,6 +123,28 @@ summonBoxes:
 --junk = summonObject({"hump",{{-10,0,0},[7]=0,[8]=0}})
 
 springs = {} -- obj1, obj2, offset1, offset2, desired length, spring rate, dampen rate
+
+
+portalableSurfaces = {}
+portalableSurfaces[#portalableSurfaces+1] = {cube2,{$
+{-192,0,192},$
+{-64,0,192},$
+{-64,128,192},$
+{-192,128,192},$
+}}
+
+portalableSurfaces[#portalableSurfaces+1] = {cube1,{$
+{64,0,192},$
+{192,0,192},$
+{192,128,192},$
+{64,128,192},$
+}}
+
+
+
+
+
+
 
 exit
 
@@ -158,6 +180,8 @@ i > 0 ~ deleteObjectsLoop
 i = #objects
 objectActivationLoop:
 	object1 = objects[i]
+	
+	object1[19][2] = object1[19][2] + 1
 	
 	
 	(object1[14] == "cube_button") == falseVar ~ notCubeButton
@@ -203,13 +227,13 @@ objectActivationLoop:
 		
 		
 		pressed == 1 ~ cubeButtonPressed
-			object1[19] = 0
+			object1[19][1] = 0
 			object1[21][2] = nilVar
 			object1[20][1][2][2] > -1 ~ notCubeButton
 				object1[20][1][2][2] = object1[20][1][2][2] + (deltaTime*30)
 		1 ~ notCubeButton
 		cubeButtonPressed:
-			object1[19] = 0
+			object1[19][1] = 0
 			object1[21][2] = {0,-1,0,1,0.25,0,0.5}
 			-5 > object1[20][1][2][2] ~ notCubeButton
 				object1[20][1][2][2] = object1[20][1][2][2] - (deltaTime*30)
@@ -276,6 +300,8 @@ s_b = sin({b})
 cameraRotationVector = {0-s_a*c_b,s_b,c_a*c_b}
 
 junk = executeScript({playerHoldFunc})
+
+junk = executeScript({playerPortalFunc})
 
 
 exit
@@ -404,6 +430,84 @@ exit
 
 
 
+playerPortalFunc::
+
+gB({5}) == falseVar ~ skipPortalPositionCalc
+firePortalOld ~ skipPortalPositionCalc
+	bestT = 65536
+	source = player[1][1]
+
+	i = #portalableSurfaces
+	portalableSurfaceSearch:
+		portalableSurface = portalableSurfaces[i][2]
+		j = #portalableSurface-2
+		portalableSurfaceCheck:
+			intersectTriangle({source,cameraRotationVector,portalableSurface[1],portalableSurface[j+1],portalableSurface[j+2]}) ~ portalableSurfaceCheckPositive
+			j = j - 1
+		j > 0 ~ portalableSurfaceCheck
+		1 ~ portalableSurfaceCheckNegative
+		portalableSurfaceCheckPositive:
+			t > bestT ~ portalableSurfaceCheckNegative
+				bestT = t-0
+				bestObject = portalableSurfaces[i]
+		portalableSurfaceCheckNegative:
+
+		i = i - 1
+	i > 0 ~ portalableSurfaceSearch
+
+
+	bestT == 65536 ~ portalableSurfaceSkip
+		newPos = add3({source,mul3({cameraRotationVector,bestT})})
+		
+		
+		portalableSurface = bestObject[2]
+		planeNormal = crossPointsNorm(portalableSurface)
+		portalUp = {0,1,0}
+		portalSide = cross3({portalUp,planeNormal})
+		i = #portalableSurface
+		point2 = portalableSurface[1]
+		portalableSurfacePositionAdjustment:
+			point1 = portalableSurface[i]
+			
+			
+			edgeNormal = norm3({cross3({sub3({point1,point2}), planeNormal})})
+			edgeD = dot3({edgeNormal, point1})
+			portalD = dot3({edgeNormal, newPos})
+			nm = dot3({edgeNormal,portalSide})
+			nm > 0 ~ madePositive
+				nm = 0 - nm
+			madePositive:
+			nm = (2 - nm) * 28 -- aproximate portal radius in direction
+			cr = portalD-nm-edgeD
+			
+			cr > 0 ~ skipPortalableSurfacePositionAdjustment
+				newPos = sub3({newPos,mul3({edgeNormal,cr})})
+				
+				
+			skipPortalableSurfacePositionAdjustment:
+			
+			point2 = {point1}[1]
+			i = i - 1
+		i > 0 ~ portalableSurfacePositionAdjustment
+			
+			
+
+		portalOrange[18][1] = nilVar
+		index = "portal_orange"
+		conditions = {newPos,[7]=0,[8]=0}
+		junk = executeScript({summonObjectFunc})
+		portalOrange = objects[#objects]
+		portalOrange[17][1] = bestObject[1]
+	portalableSurfaceSkip:
+
+skipPortalPositionCalc:
+
+firePortalOld = gB({5})
+
+exit
+
+
+
 
 postTransformFunc::
 
@@ -450,86 +554,88 @@ portalTeleportLoop:
 				portalSecondarytoPrimaryMatrix = {portalOrangeToBlueMatrix}[1]
 			endPortalChoosingCollision:
 			
-			j = 0
-			cr = #object[9]
-			portalCollisionCheckLoop1:
-				j = j + 1
-				dist3({object[1][j],portalPrimary[1][1]}) > object[13][1][j]+portalPrimary[13][1][1] ~ skipPortalCollision
-			cr > j ~ portalCollisionCheckLoop1
+			1 > portalPrimary[19][1] ~ skipPortalCollision
 			
-			dontSkipPortalCollision1:
-				portalPrimaryPhysMesh1 = portalPrimary[9][1]
-				portalPrimaryPhysMesh2 = portalPrimary[9][2]
 				j = 0
-				portalCollisionCheckLoop2:
+				cr = #object[9]
+				portalCollisionCheckLoop1:
 					j = j + 1
-					isColliding = gjkCollisionDetection({{portalPrimaryPhysMesh1[1],portalPrimaryPhysMesh1[2],portalPrimaryPhysMesh2[1],portalPrimaryPhysMesh2[2]},object[9][j]})
-					isColliding ~ dontSkipPortalCollision2
-				cr > j ~ portalCollisionCheckLoop2
-				1 ~ skipPortalCollision
-				dontSkipPortalCollision2:
-					object[17][2] = portalPrimary[17][1]
-					
-					--object[18][2] ~ skipPortalCollision
-					
-					sideVal = dot3({sub3({object[1][1],portalPrimary[1][1]}), portalPrimary[8][1][1][9]})
-					
-					newPos = add3({multVectorByMatrix({sub3({object[1][1],portalPrimary[1][1]}),portalPrimarytoSecondaryMatrix}), portalSecondary[1][1]})
-					newVel = multVectorByMatrix({sub3({object[2],mul3({object[12],deltaTime})}),portalPrimarytoSecondaryMatrix}) -- the "subtracting gravity" thing is needed to prevent the object from getting double friction on the ground. yes there is probably a better way
-					newSpeed = dist3({object[2],{0,0,0}})
-					object[11] > 0 ~ doTeleportRotate
-						newQuat = object[4][1]
-					1 ~ endTeleportRotate
-					doTeleportRotate:
-						newQuat = multQuaternionByQuaternion({object[4][1],portalPrimarytoSecondaryQuaternion})
-					endTeleportRotate:
-					newRotVel = multVectorByMatrix({object[5],portalPrimarytoSecondaryMatrix})
-					
-					maxThroughPortalSpeed > newSpeed ~ skipObjectSlowing
-						newVel = mul3({newVel, maxThroughPortalSpeed/newSpeed})
-					skipObjectSlowing:
+					dist3({object[1][j],portalPrimary[1][1]}) > object[13][1][j]+portalPrimary[13][1][1] ~ skipPortalCollision
+				cr > j ~ portalCollisionCheckLoop1
+				
+				dontSkipPortalCollision1:
+					portalPrimaryPhysMesh1 = portalPrimary[9][1]
+					portalPrimaryPhysMesh2 = portalPrimary[9][2]
+					j = 0
+					portalCollisionCheckLoop2:
+						j = j + 1
+						isColliding = gjkCollisionDetection({{portalPrimaryPhysMesh1[1],portalPrimaryPhysMesh1[2],portalPrimaryPhysMesh2[1],portalPrimaryPhysMesh2[2]},object[9][j]})
+						isColliding ~ dontSkipPortalCollision2
+					cr > j ~ portalCollisionCheckLoop2
+					1 ~ skipPortalCollision
+					dontSkipPortalCollision2:
+						object[17][2] = portalPrimary[17][1]
 						
-					0 > sideVal ~ skipPortalTeleport
-					holdObject == object ~ skipPortalTeleport 
-						object[1][1] = newPos -- teleport object
-						object[2] = newVel
-						object[4][1] = newQuat
-						object[5] = newRotVel
+						--object[18][2] ~ skipPortalCollision
 						
-						object==player ~ doTeleportPlayerView
-						1 ~ skipTeleportPlayerView
-						cameraRotation = {camRot}[1]
-						doTeleportPlayerView:
-							junk = executeScript({cameraRotationToQuaternionFunc}) -- todo: clean this up
-							cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-							cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalPrimarytoSecondaryQuaternion})
-							cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
-							junk = executeScript({quaternionToCameraRotationFunc})
-						skipTeleportPlayerView:
+						sideVal = dot3({sub3({object[1][1],portalPrimary[1][1]}), portalPrimary[8][1][1][9]})
 						
-						--junk = print(portalOrangeToBlueCamQuaternion)
-						--junk = print(portalOrangeToBluePosQuaternion)
+						newPos = add3({multVectorByMatrix({sub3({object[1][1],portalPrimary[1][1]}),portalPrimarytoSecondaryMatrix}), portalSecondary[1][1]})
+						newVel = multVectorByMatrix({sub3({object[2],mul3({object[12],deltaTime})}),portalPrimarytoSecondaryMatrix}) -- the "subtracting gravity" thing is needed to prevent the object from getting double friction on the ground. yes there is probably a better way
+						newSpeed = dist3({object[2],{0,0,0}})
+						object[11] > 0 ~ doTeleportRotate
+							newQuat = object[4][1]
+						1 ~ endTeleportRotate
+						doTeleportRotate:
+							newQuat = multQuaternionByQuaternion({object[4][1],portalPrimarytoSecondaryQuaternion})
+						endTeleportRotate:
+						newRotVel = multVectorByMatrix({object[5],portalPrimarytoSecondaryMatrix})
 						
-						--junk = print({"OK"})
+						maxThroughPortalSpeed > newSpeed ~ skipObjectSlowing
+							newVel = mul3({newVel, maxThroughPortalSpeed/newSpeed})
+						skipObjectSlowing:
+							
+						0 > sideVal ~ skipPortalTeleport
+						holdObject == object ~ skipPortalTeleport 
+							object[1][1] = newPos -- teleport object
+							object[2] = newVel
+							object[4][1] = newQuat
+							object[5] = newRotVel
+							
+							object==player ~ doTeleportPlayerView
+							1 ~ skipTeleportPlayerView
+							cameraRotation = {camRot}[1]
+							doTeleportPlayerView:
+								junk = executeScript({cameraRotationToQuaternionFunc}) -- todo: clean this up
+								cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+								cameraRotationQuaternion = multQuaternionByQuaternion({cameraRotationQuaternion,portalPrimarytoSecondaryQuaternion})
+								cameraRotationQuaternion = {cameraRotationQuaternion[1], 0-cameraRotationQuaternion[2], 0-cameraRotationQuaternion[3], 0-cameraRotationQuaternion[4]}
+								junk = executeScript({quaternionToCameraRotationFunc})
+							skipTeleportPlayerView:
+							
+							--junk = print(portalOrangeToBlueCamQuaternion)
+							--junk = print(portalOrangeToBluePosQuaternion)
+							
+							--junk = print({"OK"})
 
-					1 ~ skipPortalCollision:
-					skipPortalTeleport:
-						-- create a clone of the object on the opposite side
-					
-						index = object[14]
-						conditions = {newPos,newVel,[4]=newQuat,[5]=newRotVel,[7]=object[10],[8]=object[11],[10]=object[20]}
-						junk = executeScript({summonObjectFunc})
-						newObject = objects[#objects]
-						newObject[18][1] = nilVar
-						newObject[18][2] = object
-						newObject[18][3] = {portalPrimary[1][1],portalSecondary[1][1]}
-						newObject[18][4] = {portalSecondarytoPrimaryQuaternion,portalSecondarytoPrimaryMatrix}
-						junk = transformPhysPoints({newObject})
-						object[18][2] = newObject
-						object[18][3] = {portalSecondary[1][1],portalPrimary[1][1]}
-						object[18][4] = {portalPrimarytoSecondaryQuaternion,portalPrimarytoSecondaryMatrix}
+						1 ~ skipPortalCollision:
+						skipPortalTeleport:
+							-- create a clone of the object on the opposite side
 						
-						newObject[17][2] = portalSecondary[17][1]
+							index = object[14]
+							conditions = {newPos,newVel,[4]=newQuat,[5]=newRotVel,[7]=object[10],[8]=object[11],[10]=object[20]}
+							junk = executeScript({summonObjectFunc})
+							newObject = objects[#objects]
+							newObject[18][1] = nilVar
+							newObject[18][2] = object
+							newObject[18][3] = {portalPrimary[1][1],portalSecondary[1][1]}
+							newObject[18][4] = {portalSecondarytoPrimaryQuaternion,portalSecondarytoPrimaryMatrix}
+							junk = transformPhysPoints({newObject})
+							object[18][2] = newObject
+							object[18][3] = {portalSecondary[1][1],portalPrimary[1][1]}
+							object[18][4] = {portalPrimarytoSecondaryQuaternion,portalPrimarytoSecondaryMatrix}
+							
+							newObject[17][2] = portalSecondary[17][1]
 						
 						
 			skipPortalCollision:
@@ -644,6 +750,21 @@ springsLoop:
 springsLen > i ~ springsLoop
 springsLoopSkip:
 
+portal = {portalOrange}[1]
+portal[19][2] > 30 ~ skipPortalScaling
+	cr = 1/(portal[19][2]/30)
+	portalMatrix = portal[16][1]
+	portalMatrix[1][1] = portalMatrix[1][1]/cr
+	portalMatrix[1][2] = portalMatrix[1][2]/cr
+	portalMatrix[1][3] = portalMatrix[1][3]/cr
+	portalMatrix[2][1] = portalMatrix[2][1]/cr
+	portalMatrix[2][2] = portalMatrix[2][2]/cr
+	portalMatrix[2][3] = portalMatrix[2][3]/cr
+	portalMatrix[3][1] = portalMatrix[3][1]/cr
+	portalMatrix[3][2] = portalMatrix[3][2]/cr
+	portalMatrix[3][3] = portalMatrix[3][3]/cr
+skipPortalScaling:
+
 exit
 
 
@@ -651,6 +772,8 @@ exit
 
 
 renderFunc::
+
+
 
 
 viewPerformanceInfo = {}
@@ -748,7 +871,7 @@ renderingLoop:
 				portalPrimarytoSecondaryMatrix = {portalBlueToOrangeMatrix}[1]
 			endPortalChoosingRender:
 			
-			overallViewNumber > portalPrimary[19] ~ skipCurrentPortal
+			overallViewNumber > portalPrimary[19][1] ~ skipCurrentPortal
 				
 				portalMesh = portalPrimary[7][1]
 				portalTris = portalPrimary[8][1]
@@ -1043,7 +1166,7 @@ newObject={$-- position, velocity, acceleration, orientation, rotation velocity,
 	{},$ -- 16 rotation matrix
 	{},$ -- 17 don't collide with
 	{1},$ -- 18 keep object
-	0,$ -- 19 render itter number
+	{0,1},$ -- 19 render itter number
 	conditions[10], $ -- 20
 	conditions[11], $ -- 21
 	conditions[12], $ -- 22 aditional viewing planes
@@ -1063,6 +1186,7 @@ exit
 onDrawFunc::
 
 text = screen["drawText"]
+rect = screen["drawRectF"]
 stCl = screen["setColor"]
 
 
@@ -1076,5 +1200,7 @@ performanceMetricsLoop:
 	i = i+1
 	junk = text({1,i*6+8,viewPerformanceInfo[i]})
 viewPerformanceInfoLen > i ~ performanceMetricsLoop
+
+junk = rect({screenWidth2-3,screenHeight2-3,6,6})
 
 exit

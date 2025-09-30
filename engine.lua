@@ -56,7 +56,9 @@ function executeScript(line,opcode) -- do not input anything for opcode
 	while opcode ~= 0 do
 		opcode,arg1,arg2,arg3 = unpack(M[5][line])
 		arg2var,arg3var = _ENVvar[arg2],_ENVvar[arg3]
+		--if gB(6) then
 		--print(line,opcode,arg1,arg2,arg3,arg2var,arg3var)
+		--end
 		
 		if opcode == 1 then -- simple set
 			_ENVvar[arg1] = arg2
@@ -602,7 +604,7 @@ function onTick()
 				end
 			end
 			
-			if object[11]>0 or object[19]==0 then
+			if object[11]>0 or object[19][1]==0 then
 				--print(#object[7],#object[8],#object[9])
 				cr = object[21]
 				pos = #cr
@@ -667,7 +669,7 @@ function renderView()
 				
 				if sideVal>-object[13][2][i] then
 					curMeshPoints = object[7][i]
-					object[19] = overallViewNumber
+					object[19][1] = overallViewNumber
 					
 					for j=1,#curMeshPoints do
 						crPoint=curMeshPoints[j]
